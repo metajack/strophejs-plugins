@@ -127,12 +127,13 @@ Strophe.addConnectionPlugin('muc', {
     Parameters:
     (String) room - The multi-user chat room name.
     (String) nick - The nick name used in the chat room.
-    (String) message - The message to send to the room.
+    (String) message - The plaintext message to send to the room.
+    (String) html_message - The message to send to the room with html markup.
     (String) type - "groupchat" for group chat messages or "chat" for private chat messages
     Returns:
     msgiq - the unique id used to send the message
     */
-    message: function(room, nick, message, type) {
+    message: function(room, nick, message, html_message, type) {
         var room_nick = this.test_append_nick(room, nick);        
         type = type || "groupchat";
         var msgid = this._connection.getUniqueId();
@@ -141,7 +142,22 @@ Strophe.addConnectionPlugin('muc', {
                         type: type,
                         id: msgid}).c("body",
                                       {xmlns: Strophe.NS.CLIENT}).t(message);
-        msg.up().c("x", {xmlns: "jabber:x:event"}).c("composing");
+        msg.up();
+        if(typeof html_message !== 'undefined')
+        {
+            msg.c("html", {xmlns: Strophe.NS.XHTML_IM}).c("body", {xmlns: Strophe.NS.XHTML}).h(html_message);
+            if(msg.node.childNodes.length == 0) // html creation or import failed somewhere; fallback to plaintext
+            {
+                parent = msg.node.parentNode;
+                msg.up().up();
+                msg.node.removeChild(parent); // get rid of the empty html element if we got invalid html so we don't send an empty message
+            }
+            else
+            {
+                msg.up().up();
+            }
+        }
+        msg.c("x", {xmlns: "jabber:x:event"}).c("composing");
         this._connection.send(msg);
         return msgid;
     },
