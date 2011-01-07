@@ -1,7 +1,10 @@
-(function(Strophe) {
+(function(Strophe,$) {
 	var INFO = Strophe.NS.DISCO_INFO;
 	var ITEMS = Strophe.NS.DISCO_ITEMS;
 
+	/**
+	 * Node, used for info,  items response
+	 */ 
 	function Node(cfg) {
 		this.name = cfg.name;
 		this.identity = cfg.identity;
@@ -9,44 +12,37 @@
 		this.items = cfg.items;
 	}
 
-	Node.prototype.reply = function(iq) {
-		var _iq = {
+	Node.prototype._reply = function(iq) {
+		var _iq =  {
 			to: iq.getAttribute('from'),
 			type: 'result',
 			id: iq.getAttribute('id')
-		};
-		var _query = { xmlns: iq.childNodes[0].getAttribute('xmlns') };
+		}, _query = { xmlns: iq.childNodes[0].getAttribute('xmlns') };
+
 		if (iq.childNodes[0].getAttribute('node')) {
 			_query.node = iq.childNodes[0].getAttribute('node');
 		}
-		var res =  $iq(_iq).c('query',_query);
-		return this.addContent(res,_query.xmlns);
+		return {
+			res: $iq(_iq).c('query',_query),
+			xmlns: _query.xmlns
+		};
 	};
 
+	Node.prototype.reply = function(iq) {
+		var obj = this._reply(iq);
+		return this.addContent(obj.res, obj.xmlns);
+	};
 
 	Node.prototype.notFound = function(iq) {
-		var _iq = {
-			to: iq.getAttribute('from'),
-			type: 'result',
-			id: iq.getAttribute('id')
-		};
-		var _query = { xmlns: iq.childNodes[0].getAttribute('xmlns') };
-		if (iq.childNodes[0].getAttribute('node')) {
-			_query.node = iq.childNodes[0].getAttribute('node');
-		}
-		var res =  $iq(_iq).c('query',_query);
+		var res = this._reply(iq).res;
 		res.c('error', { type: 'cancel'});
 		res.c('item-not-found', { xmlns: 'urn:ietf:params:xml:ns:xmpp-stanzas' });
 		return res;
 	};
 
 	Node.prototype.addContent = function(iq,xmlns) {
-		if(xmlns === INFO) {
-			return this.addInfo(iq);
-		} 
-		if (xmlns === ITEMS) {
-			return this.addItems(iq);
-		}
+		if(xmlns === INFO) { return this.addInfo(iq); }
+		if(xmlns === ITEMS) { return this.addItems(iq); }
 		return iq;
 	};
 
@@ -55,10 +51,6 @@
 		var items = this.items;
 		for(var i=0; i < items.length; ++i) {
 			item = items[i];
-//			if(item.callback) {
-//				var cb = item.callback.bind(this);
-//				delete item.callback;
-//			}
 			res.c('item',item).up();
 		}
 		return res;
@@ -93,7 +85,7 @@
 			items: []
 		};
 	};
-
+ 
 	var disco = {
 		_conn: null,
 		init: function(conn) {
@@ -132,4 +124,4 @@
 
 	disco.Node = Node;
 
-})(Strophe);
+})(Strophe,jQuery);
