@@ -3,7 +3,7 @@
  "spec_dir" : "/spec/",
 
  "server":{
-   "port":8125
+   "port":8124
  },
  "externals":[
   "https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js",

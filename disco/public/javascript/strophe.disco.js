@@ -6,33 +6,34 @@
 	 * Node, used for info,  items response
 	 */ 
 	function Node(cfg) {
-		this.name = cfg.name;
-		this.identity = cfg.identity;
-		this.features = cfg.features;
-		this.items = cfg.items;
+		$.extend(this, cfg);
+//		this.name = cfg.name;
+//		this.identity = cfg.identity;
+//		this.features = cfg.features;
+//		this.items = cfg.items;
 	}
 
 	Node.prototype._reply = function(iq) {
-		var _iq =  {
-			to: iq.getAttribute('from'),
-			type: 'result',
-			id: iq.getAttribute('id')
-		}, _query = { xmlns: $('query',iq).attr('xmlns') };
-		var node = $('query',iq).attr('node') || null;
-		if(node) { _query.node = node; }	
+		var to = iq.attr('from') || null, id = iq.attr('id'), res;
+		var child = iq.find('> *:eq(0)'), childAttr = {};
+		if (child.attr('xmlns')) { childAttr.xmlns = child.attr('xmlns'); }
+		if (child.attr('node')) { childAttr.node = child.attr('node'); } 
+		res = $iq({ to: to, type: 'result', id: id});
+		if ($.isEmptyObject(childAttr)) { res.c(child[0].tagName); }
+		else { res.c(child[0].tagName, childAttr); }
 		return {
-			res: $iq(_iq).c('query',_query),
-			xmlns: _query.xmlns
+			res: res,
+			xmlns: childAttr.xmlns
 		};
 	};
 
 	Node.prototype.reply = function(iq) {
-		var obj = this._reply(iq);
+		var obj = this._reply($(iq));
 		return this.addContent(obj.res, obj.xmlns);
 	};
 
 	Node.prototype.notFound = function(iq) {
-		var res = this._reply(iq).res;
+		var res = this._reply($(iq)).res;
 		res.c('error', { type: 'cancel'});
 		res.c('item-not-found', { xmlns: 'urn:ietf:params:xml:ns:xmpp-stanzas' });
 		return res;
