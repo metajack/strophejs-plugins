@@ -1,18 +1,21 @@
 describe("Commands", function() {
-	var conn = new Strophe.Connection(), cmds = conn.cmds, disco = conn.disco, nodes = disco._nodes;
-	var CMDS = "http://jabber.org/protocol/commands", INFO = Strophe.NS.DISCO_INFO,
+	var CMDS = "http://jabber.org/protocol/commands", INFO = Strophe.NS.DISCO_INFO;
 		ITEMS = Strophe.NS.DISCO_ITEMS;
+	var conn, cmds, disco, nodes;
 
 	beforeEach(function() {
+		conn = new Strophe.Connection();
 		conn.authenticated = true;
 		conn._processRequest = function() {};
 		conn._changeConnectStatus(Strophe.Status.CONNECTED);
 		successHandler = jasmine.createSpy('successHandler');
 		errorHandler = jasmine.createSpy('errorHandler');
+		cmds = conn.cmds;
+		disco = conn.disco;
+		nodes = disco._nodes;
 	});
 
 	describe("basic", function() {
-
 		it("adds namespace", function() {
 			expect(Strophe.NS.CMDS).toEqual(CMDS);
 		});
@@ -76,20 +79,20 @@ describe("Commands", function() {
 
 
 
-var c1 = new Strophe.Connection('http://localhost/xmpp-httpbind');
-c1.connect('asdf@psi/c1','asdf');
-
-var c2 = new Strophe.Connection('http://localhost/xmpp-httpbind');
-c2.connect('asdf@psi/c2','asdf');
-
-var cmd = { jid: c2.jid, node: 'aNode', name: 'aName' };
-cmd.addContent = function(res) {
-	console.log('cmd executing yo');
-	res.attrs({status: 'completed'});
-	console.log(res);
-	return res;
-};
-c2.cmds.addCommand(cmd);
+//var c1 = new Strophe.Connection('http://localhost/xmpp-httpbind');
+//c1.connect('asdf@psi/c1','asdf');
+//
+//var c2 = new Strophe.Connection('http://localhost/xmpp-httpbind');
+//c2.connect('asdf@psi/c2','asdf');
+//
+//var cmd = { jid: c2.jid, node: 'aNode', name: 'aName' };
+//cmd.addContent = function(res) {
+//	console.log('cmd executing yo');
+//	res.attrs({status: 'completed'});
+//	console.log(res);
+//	return res;
+//};
+//c2.cmds.addCommand(cmd);
 
 
 
