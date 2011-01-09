@@ -36,7 +36,6 @@
 		},
 		addCommand: function(nodeCfg) {
 			var node = new Node(nodeCfg);
-			console.log(this._conn.disco._nodes[CMDS].items.length);
 			this._conn.disco._nodes[CMDS].items.push(node);
 		},
 		execute: function(jid, node, callback) {
