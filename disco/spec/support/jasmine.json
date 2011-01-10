@@ -6,12 +6,8 @@
    "port":8124
  },
  "externals":[
-  "https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js",
-  "https://github.com/velesin/jasmine-jquery/raw/master/lib/jasmine-jquery.js",
-  "https://github.com/pivotal/jasmine-ajax/raw/master/lib/mock-ajax.js",
-  "http://localhost/strophe.js",
-  "http://localhost/strophe.roster.js"
-
+  "http://localhost/jslibs/jquery.js",
+  "http://localhost/jslibs/strophe.js",
+  "http://localhost/jslibs/strophe.roster.js"
  ]
-	
 }
