@@ -7,7 +7,7 @@
 	DiscoNode.prototype.parseRequest = function(iq) {
 		if (iq.tree) { return $(Strophe.serialize(iq.tree()));  }
 		return $(iq);
-	}
+	};
 
 	DiscoNode.prototype.fromTo= function(iq) {
 		var to = iq.attr('from'), id = iq.attr('id'), res;
@@ -49,6 +49,7 @@
 	DiscoItemsNode.prototype.addContent = function(req,res) {
 		var items = this.items || this.disco.items;
 		$.each(items, function(i,item){
+			if(!item.jid) { item.jid = this.disco._conn.jid; }
 			res.c('item', item).up(); 
 		}.bind(this));
 		
@@ -127,7 +128,7 @@
 			request(this._conn, ITEMS, arguments);
 		},
 		addNode: function(node, args) {
-			if(this.features[node]) { throw node + ' exists'; };
+			if(this.features[node]) { throw node + ' exists'; }
 			this.features[node] = args;
 		}
 
