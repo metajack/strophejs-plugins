@@ -10,7 +10,7 @@
 		this.req = req;
 		this.res = res;
 		if (this.callback) {
-			this.callback.call(this,this.addResult);
+			this.callback.call(this,this.addResult.bind(this));
 		} else { 
 			this.addResult({});
 		}
@@ -19,7 +19,7 @@
 	CommandNode.prototype.addResult = function(obj) {
 		var res = this.res;
 		res.c(this.root, { xmlns: 'epic:x' } );
-		if($.isPlainObject(obj)) { throw 'cannot handle object yet'; }
+		if($.isPlainObject(obj)) { res.c('ok'); }
 		if($.isArray(obj)) {
 			$.each(obj, function(i,item) {
 				res.c(this.item).t(item).up();
@@ -50,10 +50,42 @@
 		name: 'Retrieve Urls'
 	});
 
+	var SetUrls = new CommandNode({
+		root: 'urls',
+		item: 'url',
+		node: 'setUrls', 
+		name: 'Sets Urls'
+	});
+
+	function create(node, cb) {
+		var cmd, callback = cb || noop;
+		if (node === 'getUrls') {
+			return new CommandNode({
+				root: 'urls',
+				item: 'url',
+				node: 'getUrls', 
+				name: 'Retrieve Urls',
+				callback: callback
+			});
+		} 
+		if (node === 'setUrls') {
+			return new CommandNode({
+				root: 'urls',
+				item: 'url',
+				node: 'setUrls', 
+				name: 'Sets Urls',
+				callback: callback
+			});
+		}
+		throw 'Strophe.Commands has no implementation for: ' + node;
+	}
+
 
 	Strophe.Commands = {
+		create: create,
 		CommandNode: CommandNode,
 		GetUrls: GetUrls,
+		SetUrls: SetUrls,
 		getUrls: getUrls
 	};
 

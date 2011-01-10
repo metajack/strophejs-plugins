@@ -40,27 +40,34 @@ describe("GetUrlCommand", function() {
 
 	it("#GetUrls", function() {
 		var req = $iq(iq).c('command', { xmlns: Strophe.NS.COMMANDS, node: 'getUrls' });
-		var cmd = Strophe.Commands.GetUrls;
-		cmd.callback = mockGetUrl;
+		var cmd = Strophe.Commands.create('getUrls', mockGetUrl);
 		c.cmds.add(cmd);
 		spyon(c,'send',function(res) {
-			logStanza(res);
 			expect(res.find('urls').attr('xmlns')).toEqual('epic:x');
 			expect(res.find('url').length).toEqual(2);
 		});
 		receive(c,req);
 	});
 
-	xit("#setUrls calls callback with urls", function() {
+	it("#setUrls calls callback with urls", function() {
 		var req = $iq(iq).c('command', { xmlns: Strophe.NS.COMMANDS, node: 'setUrls' });
-		var cmd = Strophe.Commands.setUrls;
-		cmd.callback = jasmine.createSpy('callback');
+		req.c('urls', {xmlns: 'epic:x:urls'});
+		req.c('url').t('http://www.google.com').up();
+		req.c('url').t('chrome://newtab');
+
+		var callback = jasmine.createSpy('callback').andCallFake(function(cb) {
+			var urls = $(this.req).find('url');
+			expect(urls.length).toEqual(2);
+			cb.call(this,{});
+		});
+		var cmd = Strophe.Commands.create('setUrls', callback);
 		c.cmds.add(cmd);
 		spyon(c,'send',function(res) {
-			expect(res.find('urls').attr('xmlns')).toEqual('epic:x:urls');
-			expect(res.find('url').length).toEqual(2);
+			logStanza(res);
 		});
 		receive(c,req);
+		expect(cmd.callback).toHaveBeenCalled();
+
 	});
 
 });
