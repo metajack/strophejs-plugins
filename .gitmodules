@@ -1,0 +1,6 @@
+[submodule "submodules/strophe"]
+	path = submodules/strophe
+	url = https://github.com/metajack/strophejs.git
+[submodule "submodules/jasmine"]
+	path = submodules/jasmine
+	url = https://github.com/pivotal/jasmine.git
