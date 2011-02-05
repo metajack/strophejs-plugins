@@ -1,9 +1,11 @@
-(function() {
+(function(Strophe) {
 	var INFO = Strophe.NS.DISCO_INFO;
 	var ITEMS = Strophe.NS.DISCO_ITEMS;
 
 	function noop(stanza) {
-		console.log(stanza);
+		if (console) {
+			console.log(stanza);
+		}
 	}
 
 	function result(iq,ns) {
@@ -20,12 +22,6 @@
 		var res = result(iq, ITEMS);
 		for(; i < items.length; ++i) {
 			item = items[i];
-			if (item.callback) {
-				var cb = item.callback;
-				// register another handler for that node
-				// do we have suport in addHandler()?
-				delete  item.callback;
-			}
 			res.c('item',item).up();
 		}
 		this._conn.send(res);
