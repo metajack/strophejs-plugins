@@ -1,5 +1,6 @@
 
 var createRequest = function(iq) {
+	iq = typeof iq.tree == "function" ? iq.tree() : iq;
 	var req = new Strophe.Request(iq, function() {});
 	req.getResponse = function() { 
 		var env = new Strophe.Builder('env', {type: 'mock'}).tree();
