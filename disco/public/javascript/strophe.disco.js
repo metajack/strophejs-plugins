@@ -2,70 +2,117 @@
 	var INFO = Strophe.NS.DISCO_INFO;
 	var ITEMS = Strophe.NS.DISCO_ITEMS;
 
+	function Node(cfg) {
+		this.name = cfg.name;
+		this.identity = cfg.identity;
+		this.features = cfg.features;
+		this.items = cfg.items;
+	}
+
+	Node.prototype.reply = function(iq) {
+		var _iq = {
+			to: iq.getAttribute('from'),
+			type: 'result',
+			id: iq.getAttribute('id')
+		};
+		var _query = { xmlns: iq.childNodes[0].getAttribute('xmlns') };
+		if (iq.childNodes[0].getAttribute('node')) {
+			_query.node = iq.childNodes[0].getAttribute('node');
+		}
+		var res =  $iq(_iq).c('query',_query);
+		return this.addContent(res,_query.xmlns);
+	};
+
+	Node.prototype.addContent = function(iq,xmlns) {
+		if(xmlns === INFO) {
+			return this.addInfo(iq);
+		} 
+		if (xmlns === ITEMS) {
+			return this.addItems(iq);
+		}
+		return iq;
+	};
+
+
+	Node.prototype.addItems = function(res) {
+		var items = this.items;
+		for(var i=0; i < items.length; ++i) {
+			item = items[i];
+//			if(item.callback) {
+//				var cb = item.callback.bind(this);
+//				delete item.callback;
+//			}
+			res.c('item',item).up();
+		}
+		return res;
+	};
+
+	Node.prototype.addInfo = function(res) {
+		res.c('identity', this.identity);
+		for(var i=0; i < this.features.length; ++i) {
+			res.up().c('feature', {'var': this.features[i]});
+		}
+		return res;
+	};
+
 	function noop(stanza) {
 		if (console) {
 			console.log(stanza);
 		}
 	}
 
-	function result(iq,ns) {
-		var cfg = {
-			to: iq.getAttribute('from'),
-			type: 'result',
-			id: iq.getAttribute('id')
+	var defaults = function() {
+		return { 
+			identity: { name: 'strophe' },
+			features: [ INFO, ITEMS ],
+			items: []
 		};
-		return $iq(cfg).c('query',{xmlns: ns});
-	}
-
-	function itemsHandler(iq) {
-		var items = this._items, i =0, item;
-		var res = result(iq, ITEMS);
-		for(; i < items.length; ++i) {
-			item = items[i];
-			res.c('item',item).up();
-		}
-		this._conn.send(res);
-		return true;
-	}
-
-	function infoHandler(iq) {
-		var info = this._info;
-		var identity = info.identity, features = info.features;
-		var res = result(iq, INFO);
-		res.c('identity', identity);
-		for(var i=0; i < features.length; ++i) {
-			res.up().c('feature', {'var': info.features[i]});
-		}
-		this._conn.send(res);
-		return true;
-	}
-
+	};
 
 	var disco = {
 		_conn: null,
 		init: function(conn) {
 			this._conn = conn;
-			this._info =  {
-				identity: { name: 'strophe' },
-				features: [ INFO, ITEMS ]
+			this._nodes = { 
+				'root': new Node(defaults())
 			};
-			this._items = [];
 		},
 		statusChanged: function(status) {
 			if (status === Strophe.Status.CONNECTED) {
-				this._conn.addHandler(infoHandler.bind(this), INFO, 'iq');
+				this._conn.addHandler(function(iq) {
+					var node = iq.childNodes[0].getAttribute('node');
+					node = node === null ? "root" : node;
+					var n = this._nodes[node];
+					var res = n.reply(iq);
+					this._conn.send(res);
+					return true;
+				}.bind(this), INFO, 'iq');
+
+				//this._conn.addHandler(infoHandler.bind(this), INFO, 'iq');
 				this._conn.addHandler(itemsHandler.bind(this), ITEMS, 'iq');
 			}
 		},
 		info: function(to, callback) {
-			var iq = $iq({to: to, type: 'get'}).c('query',{xmlns: INFO});
-			this._conn.sendIQ(iq, callback || noop);
+			var args = arguments, last = args[args.length-1], cb = noop, query = {
+				xmlns: INFO
+			}, iq;
+			if (typeof last === "function") { cb = last; }
+			if (args[1] && typeof args[1] === "string") { query.node = arguments[1]; }
+			iq = $iq({to: to, 'type': 'get'}).c('query',query);
+			this._conn.sendIQ(iq, cb);
 		},
 		items: function(to, callback) {
-			var iq = $iq({to: to, type: 'get'}).c('query',{xmlns: ITEMS});
-			this._conn.sendIQ(iq, callback || noop);
+			var args = arguments, last = args[args.length-1], cb = noop, query = {
+				xmlns: ITEMS
+			}, iq;
+			if (typeof last === "function") { cb = last; }
+			if (args[1] && typeof args[1] === "string") { query.node = arguments[1]; }
+			iq = $iq({to: to, 'type': 'get'}).c('query',query);
+			this._conn.sendIQ(iq, cb);
 		}
 	};
 	Strophe.addConnectionPlugin('disco', disco);
+
+	disco.Node = Node;
 
 })(Strophe);
