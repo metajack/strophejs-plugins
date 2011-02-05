@@ -1,14 +1,14 @@
 ** Support for xep-030: Service discovery **
 
-Allows to send disco queries and registers handlers that respond incoming queries.
+Allows to send disco queries and registers handlers that respond to incoming queries.
 
-* Example
+** Example **
 
 var c = new Strophe.Connection('bosh-service');
 c.connect(jid,pw);
 c.disco.info(jid,callback);
 
-* Runspec
+** Run Specs **
 
 use node with jasmine-node plugin to run the specs
 
