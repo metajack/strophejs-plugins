@@ -39,6 +39,7 @@ describe("Strophe.disco", function() {
 			conn = new Strophe.Connection();
 			disco = conn.disco;
 			conn._changeConnectStatus(Strophe.Status.CONNECTED);
+			conn.authenticated = true;
 		});
 
 		it("sends request", function() {
@@ -59,10 +60,9 @@ describe("Strophe.disco", function() {
 			spyOn(conn,'send').andCallFake(function(iq) {
 				expect(clear(iq)).toEqual(stanzas.info.response);
 			});
-			var handler = conn.addHandlers[0];
 			var iq = $iq({type: 'get'}).c('query', { xmlns: NS_INFO });
-			expect(handler.isMatch(iq.tree()));
-			handler.run(iq.tree());
+			conn._dataRecv(createRequest(iq.tree()));
+			expect(conn.send).toHaveBeenCalled();
 		});
 
 		it("responds for node", function() {
@@ -73,10 +73,18 @@ describe("Strophe.disco", function() {
 			spyOn(conn,'send').andCallFake(function(iq) {
 				expect(clear(iq)).toEqual(stanzas.info.response_with_node);
 			});
-			var handler = conn.addHandlers[0];
 			var iq = $iq({type: 'get'}).c('query', { xmlns: NS_INFO, node: 'aNode' });
-			expect(handler.isMatch(iq.tree()));
-			handler.run(iq.tree());
+			conn._dataRecv(createRequest(iq.tree()));
+			expect(conn.send).toHaveBeenCalled();
+		});
+
+		it("responds with error for missing node", function() {
+			spyOn(conn,'send').andCallFake(function(iq) {
+				expect(clear(iq)).toEqual(stanzas.info.response_not_found);
+			});
+			var iq = $iq({type: 'get'}).c('query', { xmlns: NS_INFO, node: 'aNode' });
+			conn._dataRecv(createRequest(iq.tree()));
+			expect(conn.send).toHaveBeenCalled();
 		});
 	});
 

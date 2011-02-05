@@ -23,6 +23,23 @@
 		return this.addContent(res,_query.xmlns);
 	};
 
+
+	Node.prototype.notFound = function(iq) {
+		var _iq = {
+			to: iq.getAttribute('from'),
+			type: 'result',
+			id: iq.getAttribute('id')
+		};
+		var _query = { xmlns: iq.childNodes[0].getAttribute('xmlns') };
+		if (iq.childNodes[0].getAttribute('node')) {
+			_query.node = iq.childNodes[0].getAttribute('node');
+		}
+		var res =  $iq(_iq).c('query',_query);
+		res.c('error', { type: 'cancel'});
+		res.c('item-not-found', { xmlns: 'urn:ietf:params:xml:ns:xmpp-stanzas' });
+		return res;
+	};
+
 	Node.prototype.addContent = function(iq,xmlns) {
 		if(xmlns === INFO) {
 			return this.addInfo(iq);
@@ -82,8 +99,12 @@
 				this._conn.addHandler(function(iq) {
 					var node = iq.childNodes[0].getAttribute('node');
 					node = node === null ? "root" : node;
-					var n = this._nodes[node];
-					var res = n.reply(iq);
+					var n = this._nodes[node], res;
+					if(n) {
+						res = n.reply(iq);
+					} else {
+						res = this._nodes.root.notFound(iq);
+					}
 					this._conn.send(res);
 					return true;
 				}.bind(this), INFO, 'iq');
