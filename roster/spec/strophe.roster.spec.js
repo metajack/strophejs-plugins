@@ -7,6 +7,7 @@ describe("Roster", function() {
 		conn.authenticated = true;
 	});
 
+
 	it("adds contacts on presence stanza", function() {
 		var pres = $pres({from: 'n@d/r'});
 		conn._dataRecv(createRequest(pres));
@@ -61,3 +62,4 @@ describe("Roster", function() {
 		});
 	});
 });
+
