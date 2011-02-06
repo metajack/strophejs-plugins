@@ -1,3 +1,12 @@
+function connect() {
+	var c = new Strophe.Connection('http://localhost/xmpp-httpbind');
+	c.connect('asdf@psi/strophe','asdf');
+	return c;
+}
+function epic() {
+	var html = "<div><h3>Epic</h3></div>";
+	jQuery(html).epic({conn: connect()}).appendTo('body');
+}
 
 var createRequest = function(iq) {
 	iq = typeof iq.tree == "function" ? iq.tree() : iq;
