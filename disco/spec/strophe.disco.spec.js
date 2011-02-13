@@ -47,6 +47,7 @@ describe("Strophe.disco", function() {
 				expect(clear(iq)).toEqual(stanzas.info.request);
 			});
 			disco.info('n@d/r');
+			expect(conn.send).toHaveBeenCalled();
 		});
 		
 		it("sends request for node", function() {
@@ -54,6 +55,7 @@ describe("Strophe.disco", function() {
 				expect(clear(iq)).toEqual(stanzas.info.request_with_node);
 			});
 			disco.info('n@d/r','aNode');
+			expect(conn.send).toHaveBeenCalled();
 		});
 
 		it("responds", function() {
@@ -99,12 +101,14 @@ describe("Strophe.disco", function() {
 				expect(clear(iq)).toEqual(stanzas.items.request);
 			});
 			disco.items('n@d/r');
+			expect(conn.send).toHaveBeenCalled();
 		});
 		it("sends request for node", function() {
 			spyOn(conn,'send').andCallFake(function(iq) {
 				expect(clear(iq)).toEqual(stanzas.items.request_with_node);
 			});
 			disco.items('n@d/r','aNode');
+			expect(conn.send).toHaveBeenCalled();
 		});
 
 		it("responds", function() {
