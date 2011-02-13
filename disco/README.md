@@ -17,3 +17,8 @@ use node with jasmine-node plugin to run the specs
 
  * cleanup stanza specs using Strophe.Builder instead of strings
 
+
+** See **
+
+ * http://xmpp.org/extensions/xep-0030.html
+

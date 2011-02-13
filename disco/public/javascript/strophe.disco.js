@@ -78,6 +78,14 @@
 		}
 	}
 
+	function request(conn, type, args) {
+		var to = args[0], node = args[1], cb = args[2], q = { xmlns: type };
+		if(typeof node === 'function') { cb = node; node = undefined; }
+		if(node) { q.node = node; }
+		var	iq = $iq({to: to, 'type': 'get'}).c('query',q);
+		conn.sendIQ(iq, cb || noop);
+	}
+
 	var defaults = function() {
 		return { 
 			identity: { name: 'strophe' },
@@ -113,23 +121,11 @@
 				this._conn.addHandler(itemsHandler.bind(this), ITEMS, 'iq');
 			}
 		},
-		info: function(to, callback) {
-			var args = arguments, last = args[args.length-1], cb = noop, query = {
-				xmlns: INFO
-			}, iq;
-			if (typeof last === "function") { cb = last; }
-			if (args[1] && typeof args[1] === "string") { query.node = arguments[1]; }
-			iq = $iq({to: to, 'type': 'get'}).c('query',query);
-			this._conn.sendIQ(iq, cb);
+		info: function(to, node, callback) {
+			request(this._conn, INFO, arguments);
 		},
-		items: function(to, callback) {
-			var args = arguments, last = args[args.length-1], cb = noop, query = {
-				xmlns: ITEMS
-			}, iq;
-			if (typeof last === "function") { cb = last; }
-			if (args[1] && typeof args[1] === "string") { query.node = arguments[1]; }
-			iq = $iq({to: to, 'type': 'get'}).c('query',query);
-			this._conn.sendIQ(iq, cb);
+		items: function(to, node, callback) {
+			request(this._conn, ITEMS, arguments);
 		}
 	};
 	Strophe.addConnectionPlugin('disco', disco);
