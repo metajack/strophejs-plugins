@@ -1,4 +1,4 @@
-(function(Strophe,$) {
+(function(Strophe) {
 	var INFO = Strophe.NS.DISCO_INFO;
 	var ITEMS = Strophe.NS.DISCO_ITEMS;
 
@@ -124,4 +124,4 @@
 
 	disco.Node = Node;
 
-})(Strophe,jQuery);
+})(Strophe);
