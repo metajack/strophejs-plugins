@@ -35,11 +35,14 @@ describe("Strophe.disco", function() {
 	});
 
 	describe("disco#info", function() {
+		var successHandler, errorHandler;
 		beforeEach(function() {
 			conn = new Strophe.Connection();
 			disco = conn.disco;
 			conn._changeConnectStatus(Strophe.Status.CONNECTED);
 			conn.authenticated = true;
+			successHandler = jasmine.createSpy('successHandler');
+			errorHandler = jasmine.createSpy('errorHandler');
 		});
 
 		it("sends request", function() {
@@ -50,16 +53,27 @@ describe("Strophe.disco", function() {
 			expect(conn.send).toHaveBeenCalled();
 		});
 
-		it("sends request and calls callback", function() {
-			var callback = jasmine.createSpy();
+		it("sends request and calls success callback", function() {
 			spyOn(conn,'send').andCallFake(function(iq) {
 				var id = iq.getAttribute('id');
 				var res = $iq({type: 'result', id: id});
 				conn._dataRecv(createRequest(res));
 			});
-			disco.info('n@d/r', callback);
+			disco.info('n@d/r', successHandler, errorHandler);
 			expect(conn.send).toHaveBeenCalled();
-			expect(callback).toHaveBeenCalled();
+			expect(successHandler).toHaveBeenCalled();
+		});
+
+		it("sends request and calls error callback", function() {
+			var callback = jasmine.createSpy();
+			spyOn(conn,'send').andCallFake(function(iq) {
+				var id = iq.getAttribute('id');
+				var res = $iq({type: 'error', id: id});
+				conn._dataRecv(createRequest(res));
+			});
+			disco.info('n@d/r', successHandler, errorHandler);
+			expect(conn.send).toHaveBeenCalled();
+			expect(errorHandler).toHaveBeenCalled();
 		});
 		
 		it("sends request for node", function() {

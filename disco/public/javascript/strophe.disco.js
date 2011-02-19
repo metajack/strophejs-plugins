@@ -71,11 +71,11 @@
 	}
 
 	function request(conn, type, args) {
-		var to = args[0], node = args[1], cb = args[2], q = { xmlns: type };
-		if(typeof node === 'function') { cb = node; node = undefined; }
+		var to = args[0], node = args[1], cb = args[2], err = args[3], q = { xmlns: type };
+		if(typeof node === 'function') { err = cb; cb = node; node = undefined; }
 		if(node) { q.node = node; }
 		var	iq = $iq({to: to, 'type': 'get'}).c('query',q);
-		conn.sendIQ(iq, cb || noop);
+		conn.sendIQ(iq, cb || noop, err || noop);
 	}
 
 	var defaults = function() {
