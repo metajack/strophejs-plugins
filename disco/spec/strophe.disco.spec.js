@@ -49,6 +49,18 @@ describe("Strophe.disco", function() {
 			disco.info('n@d/r');
 			expect(conn.send).toHaveBeenCalled();
 		});
+
+		it("sends request and calls callback", function() {
+			var callback = jasmine.createSpy();
+			spyOn(conn,'send').andCallFake(function(iq) {
+				var id = iq.getAttribute('id');
+				var res = $iq({type: 'result', id: id});
+				conn._dataRecv(createRequest(res));
+			});
+			disco.info('n@d/r', callback);
+			expect(conn.send).toHaveBeenCalled();
+			expect(callback).toHaveBeenCalled();
+		});
 		
 		it("sends request for node", function() {
 			spyOn(conn,'send').andCallFake(function(iq) {
