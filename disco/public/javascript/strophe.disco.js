@@ -1,4 +1,4 @@
-(function(Strophe) {
+(function(Strophe,$) {
 	var INFO = Strophe.NS.DISCO_INFO;
 	var ITEMS = Strophe.NS.DISCO_ITEMS;
 
@@ -17,11 +17,9 @@
 			to: iq.getAttribute('from'),
 			type: 'result',
 			id: iq.getAttribute('id')
-		}, _query = { xmlns: iq.childNodes[0].getAttribute('xmlns') };
-
-		if (iq.childNodes[0].getAttribute('node')) {
-			_query.node = iq.childNodes[0].getAttribute('node');
-		}
+		}, _query = { xmlns: $('query',iq).attr('xmlns') };
+		var node = $('query',iq).attr('node') || null;
+		if(node) { _query.node = node; }	
 		return {
 			res: $iq(_iq).c('query',_query),
 			xmlns: _query.xmlns
@@ -45,7 +43,6 @@
 		if(xmlns === ITEMS) { return this.addItems(iq); }
 		return iq;
 	};
-
 
 	Node.prototype.addItems = function(res) {
 		var items = this.items;
@@ -71,11 +68,21 @@
 	}
 
 	function request(conn, type, args) {
-		var to = args[0], node = args[1], cb = args[2], err = args[3], q = { xmlns: type };
+		var to = args[0], node = args[1], cb = args[2], err = args[3], 
+			q = { xmlns: type };
 		if(typeof node === 'function') { err = cb; cb = node; node = undefined; }
 		if(node) { q.node = node; }
 		var	iq = $iq({to: to, 'type': 'get'}).c('query',q);
 		conn.sendIQ(iq, cb || noop, err || noop);
+	}
+
+	function reply(iq) { 
+		var node = $('query',iq).attr('node') || "root";
+		var n = this._nodes[node], res;
+		if(n) { res = n.reply(iq); } 
+		else { res = this._nodes.root.notFound(iq); }
+		this._conn.send(res);
+		return true;
 	}
 
 	var defaults = function() {
@@ -96,21 +103,8 @@
 		},
 		statusChanged: function(status) {
 			if (status === Strophe.Status.CONNECTED) {
-				this._conn.addHandler(function(iq) {
-					var node = iq.childNodes[0].getAttribute('node');
-					node = node === null ? "root" : node;
-					var n = this._nodes[node], res;
-					if(n) {
-						res = n.reply(iq);
-					} else {
-						res = this._nodes.root.notFound(iq);
-					}
-					this._conn.send(res);
-					return true;
-				}.bind(this), INFO, 'iq');
-
-				//this._conn.addHandler(infoHandler.bind(this), INFO, 'iq');
-				this._conn.addHandler(itemsHandler.bind(this), ITEMS, 'iq');
+				this._conn.addHandler(reply.bind(this), INFO, 'iq', 'get');
+				this._conn.addHandler(reply.bind(this), ITEMS, 'iq', 'get');
 			}
 		},
 		info: function(to, node, callback) {
@@ -121,7 +115,6 @@
 		}
 	};
 	Strophe.addConnectionPlugin('disco', disco);
-
 	disco.Node = Node;
 
-})(Strophe);
+})(Strophe,jQuery);

@@ -9,10 +9,9 @@
   "https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js",
   "https://github.com/velesin/jasmine-jquery/raw/master/lib/jasmine-jquery.js",
   "https://github.com/pivotal/jasmine-ajax/raw/master/lib/mock-ajax.js",
-  "http://localhost/strophe.js"
- ],
-	
- "_other external files you can add above":[
-  "https://github.com/pivotal/jasmine-ajax/raw/master/lib/mock-ajax.js" 
+  "http://localhost/strophe.js",
+  "http://localhost/strophe.roster.js"
+
  ]
+	
 }

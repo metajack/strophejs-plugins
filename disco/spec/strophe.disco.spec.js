@@ -1,6 +1,7 @@
 
 describe("Strophe.disco", function() {
-	var conn = new Strophe.Connection(), disco = conn.disco;
+	var conn = new Strophe.Connection(), disco = conn.disco,
+		successHandler, errorHandler;
 	var NS_INFO = Strophe.NS.DISCO_INFO,
 		NS_ITEMS = Strophe.NS.DISCO_ITEMS;
 
@@ -35,12 +36,12 @@ describe("Strophe.disco", function() {
 	});
 
 	describe("disco#info", function() {
-		var successHandler, errorHandler;
 		beforeEach(function() {
 			conn = new Strophe.Connection();
 			disco = conn.disco;
-			conn._changeConnectStatus(Strophe.Status.CONNECTED);
 			conn.authenticated = true;
+			conn._processRequest = function() {};
+			conn._changeConnectStatus(Strophe.Status.CONNECTED);
 			successHandler = jasmine.createSpy('successHandler');
 			errorHandler = jasmine.createSpy('errorHandler');
 		});
@@ -120,7 +121,11 @@ describe("Strophe.disco", function() {
 		beforeEach(function() {
 			conn = new Strophe.Connection();
 			disco = conn.disco;
+			conn.authenticated = true;
+			conn._processRequest = function() {};
 			conn._changeConnectStatus(Strophe.Status.CONNECTED);
+			successHandler = jasmine.createSpy('successHandler');
+			errorHandler = jasmine.createSpy('errorHandler');
 		});
 		it("sends request", function() {
 			spyOn(conn,'send').andCallFake(function(iq) {
@@ -141,10 +146,9 @@ describe("Strophe.disco", function() {
 			spyOn(conn,'send').andCallFake(function(iq) {
 				expect(clear(iq)).toEqual(stanzas.items.response);
 			});
-			var handler = conn.addHandlers[0];
 			var iq = $iq({type: 'get'}).c('query', { xmlns: NS_ITEMS });
-			expect(handler.isMatch(iq.tree()));
-			handler.run(iq.tree());
+			conn._dataRecv(createRequest(iq.tree()));
+			expect(conn.send).toHaveBeenCalled();
 		});
 		it("responds for node", function() {
 			disco._nodes.aNode = new disco.Node({
@@ -153,10 +157,15 @@ describe("Strophe.disco", function() {
 			spyOn(conn,'send').andCallFake(function(iq) {
 				expect(clear(iq)).toEqual(stanzas.items.response_with_node);
 			});
-			var handler = conn.addHandlers[0];
 			var iq = $iq({type: 'get'}).c('query', { xmlns: NS_ITEMS, node: 'aNode' });
-			expect(handler.isMatch(iq.tree()));
-			handler.run(iq.tree());
+			conn._dataRecv(createRequest(iq.tree()));
+			expect(conn.send).toHaveBeenCalled();
 		});
 	});
 });
+//var c1 = new Strophe.Connection('http://localhost/xmpp-httpbind');
+//c1.connect('asdf@psi/c1', 'asdf');
+//
+//var c2 = new Strophe.Connection('http://localhost/xmpp-httpbind');
+//c2.connect('asdf@psi/c2', 'asdf');
+
