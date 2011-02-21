@@ -1,33 +1,47 @@
 describe("Commands", function() {
-
 	var conn = new Strophe.Connection(), cmds = conn.cmds, disco = conn.disco;
-	conn._changeConnectStatus(Strophe.Status.CONNECTED);
-	conn.authenticated = true;
-	var CMDS = "http://jabber.org/protocol/commands";
-	it("adds namespace", function() {
+	var CMDS = "http://jabber.org/protocol/commands", INFO = Strophe.NS.DISCO_INFO,
+		ITEMS = Strophe.NS.DISCO_ITEMS;
+
+	beforeEach(function() {
+		conn.authenticated = true;
+		conn._processRequest = function() {};
+		conn._changeConnectStatus(Strophe.Status.CONNECTED);
+		successHandler = jasmine.createSpy('successHandler');
+		errorHandler = jasmine.createSpy('errorHandler');
+	});
+
+
+
+	xit("adds namespace", function() {
 		expect(Strophe.NS.CMDS).toEqual(CMDS);
 	});
-	it("adds feature to disco#info", function() {
+	xit("adds feature to disco#info", function() {
 		expect(disco._nodes.root.features.pop()).toEqual(CMDS);
 	});
 
-	it("can execute command", function() {
-		conn.jid = 'a@b/c';
+	xit("can execute command", function() {
 		spyOn(conn,'send').andCallFake(function(iq) {
 			expect(clear(iq)).toEqual(stanzas.commands.execute);
 		});
 		cmds.execute('n@d/r','aCmd');
 	});
 
-	it("responds with not found for non existing command", function() {
-		var iq = $iq({type: 'get'}).c('query', { node: CMDS, xmlns: Strophe.NS.DISCO_INFO }).tree();
+	it("responds with empty commands", function() {
+		var iq = $iq({type: 'get'}).c('query', { node: CMDS, xmlns: ITEMS }).tree();
 		spyOn(conn,'send').andCallFake(function(iq) {
-			expect(clear(iq)).toEqual(stanzas.commands.response_not_found);
+			expect(clear(iq)).toEqual(stanzas.commands.response_empty);
 		});
 		conn._dataRecv(createRequest(iq));
 	});
 
-
+	it("responds and executes command", function() {
+		var iq = $iq({type: 'get'}).c('query', { node: CMDS, xmlns: ITEMS }).tree();
+		spyOn(conn,'send').andCallFake(function(iq) {
+			expect(clear(iq)).toEqual(stanzas.commands.response_empty);
+		});
+		conn._dataRecv(createRequest(iq));
+	});
 });
 
 var c = new Strophe.Connection('http://localhost/xmpp-httpbind');

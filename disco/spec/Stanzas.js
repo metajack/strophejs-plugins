@@ -44,6 +44,8 @@ var stanzas = {
 		response_with_node: "<iq to='null' type='result' xmlns='jabber:client'><query xmlns='http://jabber.org/protocol/disco#items' node='aNode'><item name='aNother' node='aNotherNode'/></query></iq>"
 	},
 	commands: {
+		response_empty: "<iq to='null' type='result' xmlns='jabber:client'><query xmlns='http://jabber.org/protocol/disco#items' node='http://jabber.org/protocol/commands'/></iq>",
+
 		response_not_found: "<iq to='null' type='result' xmlns='jabber:client'><query xmlns='http://jabber.org/protocol/disco#info' node='http://jabber.org/protocol/commands'><error type='cancel'><item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error></query></iq>",
 		execute: "<iq to='n@d/r' type='set' xmlns='jabber:client'><command xmlns='http://jabber.org/protocol/commands' node='aCmd' action='execute'/></iq>"
 	}

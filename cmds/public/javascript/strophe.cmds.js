@@ -1,8 +1,11 @@
 (function(Strophe) {
-
 	var noop = function(iq) {
 		console.log(iq);
 	};
+
+//	disco._nodes[CMDS] = new disco.Node({
+//		items: [{name: 'play', node: 'play', jid: 'n@d/r'}]
+//	});
 	var CMDS = "http://jabber.org/protocol/commands";
 	var cmds = {
 		_conn: null,
@@ -10,8 +13,11 @@
 			this._conn = conn;
 		}, 
 		statusChanged: function(status,condition) {
+			var disco;
 			if (status === Strophe.Status.CONNECTED) {
-				this._conn.disco._nodes.root.features.push(CMDS);
+				disco = this._conn.disco;
+				disco._nodes.root.features.push(CMDS);
+				disco._nodes[CMDS] = new disco.Node({items: []});
 			}
 		},
 		execute: function(jid, node, callback) {
