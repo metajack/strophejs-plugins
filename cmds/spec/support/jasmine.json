@@ -9,6 +9,7 @@
   "https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js",
   "https://github.com/velesin/jasmine-jquery/raw/master/lib/jasmine-jquery.js",
   "http://localhost/strophe.js",
+  "http://localhost/strophe.roster.js",
   "http://localhost/strophe.disco.js",
   "http://localhost/Stanzas.js"
  ]

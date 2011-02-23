@@ -21,15 +21,27 @@
 		_conn: null,
 		init: function(conn) {
 			this._conn = conn;
+			this._nodes = [];
 		}, 
 		statusChanged: function(status,condition) {
-			var disco;
+			var disco, root, i;
 			if (status === Strophe.Status.CONNECTED) {
 				disco = this._conn.disco;
 				disco._nodes.root.features.push(CMDS);
-				disco._nodes[CMDS] = new disco.Node({items: []});
-
+				root = new disco.Node({items: []});
+				for (i=0; i < this._nodes.length; ++i) {
+					root.items.push(new disco.Node(this._nodes[i]));
+				}
+				disco._nodes[CMDS] = root;
 				this._conn.addHandler(respond.bind(this), CMDS, 'iq', 'set');
+			}
+		},
+		addCommand: function(nodeCfg) {
+			if(this._conn.disco._nodes[CMDS]) {
+				var node = new this._conn.disco.Node(nodeCfg);
+				this._conn.disco._nodes[CMDS].items.push(node);
+			} else {
+				this._nodes.push(nodeCfg); 
 			}
 		},
 		execute: function(jid, node, callback) {
