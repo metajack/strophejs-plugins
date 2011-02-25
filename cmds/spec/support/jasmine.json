@@ -7,6 +7,7 @@
  },
  "externals":[
   "http://localhost/jslibs/jquery.js",
+  "http://localhost/jslibs/underscore.js",
   "http://localhost/jslibs/strophe.js",
   "http://localhost/jslibs/strophe.roster.js",
   "http://localhost/jslibs/strophe.disco.js",
