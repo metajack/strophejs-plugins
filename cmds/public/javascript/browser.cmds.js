@@ -18,6 +18,5 @@
 		}
 	};
 
-	Strophe.Commands = {};
-	Strophe.Commands['getUrls'] = getUrls;
+	//Strophe.Commands.getUrls = getUrls;
 })(Strophe,jQuery,_);

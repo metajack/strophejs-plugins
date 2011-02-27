@@ -1,7 +1,8 @@
 describe("CommandNode", function() {
 	var CommandNode = Strophe.Commands.CommandNode;
-	it("asdf", function() {
-		var n =  new CommandNode();
+
+	it("lasdf", function() {
+		var n = new CommandNode();
 	});
 
 });

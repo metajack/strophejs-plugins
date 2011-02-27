@@ -1,4 +1,3 @@
-
 describe("GetUrlCommand", function() {
 	var res = '';
 	res += ' <iq from="n@d/r1" type="result" to="n@d/r2" id="ab6fa" >';
@@ -19,7 +18,7 @@ describe("GetUrlCommand", function() {
 	var mockGetUrl = function(cb) {
 		var mockData = ['http://www.google.com', 'chrome://newtab'];
 		cb.call(this,mockData);
-	}
+	};
 
 	var c; 
 	beforeEach(function() {
@@ -27,7 +26,7 @@ describe("GetUrlCommand", function() {
 		iq = { type: 'set', to: 'n@d/r2', from: 'n@d/r1', id: 'ab6fa'};
 	});
 
-	it("#getUrls has urls in response", function() {
+	xit("#getUrls has urls in response", function() {
 		var req = $iq(iq).c('command', { xmlns: Strophe.NS.COMMANDS, node: 'getUrls' });
 		var cmd = Strophe.Commands.getUrls;
 		cmd.callback = mockGetUrl;
@@ -39,9 +38,21 @@ describe("GetUrlCommand", function() {
 		receive(c,req);
 	});
 
+	it("#GetUrls", function() {
+		var req = $iq(iq).c('command', { xmlns: Strophe.NS.COMMANDS, node: 'getUrls' });
+		var cmd = Strophe.Commands.GetUrls;
+		cmd.callback = mockGetUrl;
+		c.cmds.add(cmd);
+		spyon(c,'send',function(res) {
+			logStanza(res);
+			expect(res.find('urls').attr('xmlns')).toEqual('epic:x');
+			expect(res.find('url').length).toEqual(2);
+		});
+		receive(c,req);
+	});
+
 	xit("#setUrls calls callback with urls", function() {
 		var req = $iq(iq).c('command', { xmlns: Strophe.NS.COMMANDS, node: 'setUrls' });
-
 		var cmd = Strophe.Commands.setUrls;
 		cmd.callback = jasmine.createSpy('callback');
 		c.cmds.add(cmd);
