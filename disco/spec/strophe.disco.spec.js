@@ -1,5 +1,48 @@
-
 describe("Strophe.disco", function() {
+	var c, iq;
+	beforeEach(function() {
+		c = mockConnection();
+		iq = {to: 'n@d/r2', from: 'n@d/r1', type: 'get', id: 'abc'};
+	});
+	it("responds to disco#info", function() {
+		var req = $iq(iq).c('query', { xmlns: Strophe.NS.DISCO_INFO});
+		spyon(c,'send',function(res) {
+			logStanza(res);
+			expect(res.find('identity').attr('name')).toEqual('strophe');
+			expect(res.find('feature:eq(0)').attr('var')).toEqual(Strophe.NS.DISCO_INFO);
+			expect(res.find('feature:eq(1)').attr('var')).toEqual(Strophe.NS.DISCO_ITEMS);
+		});
+		receive(c,req);
+	});
+
+	it("responds to disco#items", function() {
+		var req = $iq(iq).c('query', { xmlns: Strophe.NS.DISCO_ITEMS});
+		spyon(c,'send',function(res) {
+			expect(res.find('items').size()).toEqual(0);
+		});
+		receive(c,req);
+	});
+
+	it("responds with not found", function() {
+		var req = $iq(iq).c('query', { xmlns: Strophe.NS.DISCO_INFO, node: 'aNode' });
+		spyon(c,'send',function(res) {
+			expect(res.find('error').attr('type')).toEqual('cancel');
+			expect(res.find('item-not-found').attr('xmlns')).toEqual('urn:ietf:params:xml:ns:xmpp-stanzas');
+		});
+		receive(c,req);
+	});
+
+	it("responds with node", function() {
+		var req = $iq(iq).c('query', { xmlns: Strophe.NS.DISCO_INFO, node: 'aNode' });
+		c.disco.addNode('aNode', { identity: { name: 'aNode'}, features: { 'aFeature': '' } });
+		spyon(c,'send',function(res) {
+			expect(res.find('identity').attr('name')).toEqual('aNode');
+			expect(res.find('feature:eq(0)').attr('var')).toEqual('aFeature');
+		});
+		receive(c,req);
+	});
+});
+xdescribe("Strophe.disco", function() {
 	var conn = new Strophe.Connection(), disco = conn.disco,
 		successHandler, errorHandler;
 	var NS_INFO = Strophe.NS.DISCO_INFO,

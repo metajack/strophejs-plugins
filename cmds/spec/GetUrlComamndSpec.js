@@ -16,50 +16,40 @@ describe("GetUrlCommand", function() {
 	xx.c('url').t('http://www.google.com').up();
 	xx.c('url').t('chrome://newtab');
 
-	var conn, cmds;
-
 	var mockGetUrl = function(cb) {
 		var mockData = ['http://www.google.com', 'chrome://newtab'];
 		cb.call(this,mockData);
 	}
 
-	var getUrls = { node: 'getUrls', name: 'Retrieve Urls',
-		callback: mockGetUrl,
-		addContent: function(res) {
-			var urls = Strophe.xmlElement('urls',[['xmlns','epic:x:urls']]);
-			res.c('urls', {xmlns: 'epic:x:urls'});
-			this.callback(function(urls) {
-				_.each(urls, function(url) {
-					res.c('url').t(url).up();
-				});
-			});
-			return res;
-		}
-	};
-
-	function GetUrls() {
-
-	}
-
-
+	var c; 
 	beforeEach(function() {
-		conn = new Strophe.Connection();
-		conn.authenticated = true;
-		conn._processRequest = function() {};
-		conn._changeConnectStatus(Strophe.Status.CONNECTED);
-		cmds = conn.cmds;
+		c = mockConnection();
+		iq = { type: 'set', to: 'n@d/r2', from: 'n@d/r1', id: 'ab6fa'};
 	});
 
-	it("produces matching response", function() {
-		var iq = $iq({ type: 'set', to: 'n@d/r2', from: 'n@d/r1', id: 'ab6fa'}).c('command', { xmlns: Strophe.NS.CMDS, node: 'getUrls' });
-		conn.cmds.addCommand(getUrls);
-		spyOn(conn,'send').andCallFake(function(result) {
-			var str = Strophe.serialize(result.tree());
-			var expected = Strophe.serialize(xx.tree());
-			expect(str).toEqual(expected);
+	it("#getUrls has urls in response", function() {
+		var req = $iq(iq).c('command', { xmlns: Strophe.NS.COMMANDS, node: 'getUrls' });
+		var cmd = Strophe.Commands.getUrls;
+		cmd.callback = mockGetUrl;
+		c.cmds.add(cmd);
+		spyon(c,'send',function(res) {
+			expect(res.find('urls').attr('xmlns')).toEqual('epic:x:urls');
+			expect(res.find('url').length).toEqual(2);
 		});
-		conn._dataRecv(createRequest(iq));
-		expect(conn.send).toHaveBeenCalled();
+		receive(c,req);
+	});
+
+	xit("#setUrls calls callback with urls", function() {
+		var req = $iq(iq).c('command', { xmlns: Strophe.NS.COMMANDS, node: 'setUrls' });
+
+		var cmd = Strophe.Commands.setUrls;
+		cmd.callback = jasmine.createSpy('callback');
+		c.cmds.add(cmd);
+		spyon(c,'send',function(res) {
+			expect(res.find('urls').attr('xmlns')).toEqual('epic:x:urls');
+			expect(res.find('url').length).toEqual(2);
+		});
+		receive(c,req);
 	});
 
 });

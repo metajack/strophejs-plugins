@@ -1,42 +1,46 @@
 (function(Strophe,$) {
+	var DiscoNode = Strophe.Disco.DiscoNode;
+	var noop = Strophe.Disco.noop;
+
+	CommandNode = function() {
+		DiscoNode.apply(this,arguments);
+	}
+	CommandNode.prototype = new DiscoNode();
+	Strophe.Commands = {
+		CommandNode: CommandNode
+	};
+
+})(Strophe,jQuery);
 
 
-//	disco._nodes[CMDS] = new disco.Node({
-//		items: [{name: 'play', node: 'play', jid: 'n@d/r'}]
-//	});
+(function(Strophe,$) {
+	var CMDS = "http://jabber.org/protocol/commands";
+	var CommandNode = Strophe.Commands.CommandNode;
 
-	var Node = Strophe._connectionPlugins.disco.Node;
-
-	var noop = function(iq) { console.log(iq); };
-
-
-
-	function respond(iq) {
-		var node = $('command',iq).attr('node') || "root", res;
-		var cmds = this._conn.disco._nodes[CMDS];
-		var n = $.grep(cmds.items, function(i) { return i.node === node; });
-		if (n.length === 1 ) { res = n[0].reply(iq); }
-		else { res = this._conn.disco._nodes.root.notFound(iq); }
-		this._conn.send(res);
+	function reply(iq) {
+		var node = $('command',iq).attr('node'), nodeImpl;
+		var n = $.grep(this.cmds.items, function(n) { return n.node == node; });
+		if(n.length === 0) { nodeImpl = new DiscoNodeNotFound();  }
+		else { nodeImpl = new CommandNode(this,n[0]); }
+		this._conn.send(nodeImpl.reply(iq));
+		return true;
 	}
 
-	var CMDS = "http://jabber.org/protocol/commands";
 	var cmds = {
 		_conn: null,
 		init: function(conn) {
 			this._conn = conn;
-			this._nodes = [];
-			conn.disco._nodes.root.features.push(CMDS);
-			conn.disco._nodes[CMDS] = new Node({items: []});
+			this.cmds = conn.disco.features[CMDS] = { items: [] };
 		}, 
 		statusChanged: function(status,condition) {
 			if (status === Strophe.Status.CONNECTED) {
-				this._conn.addHandler(respond.bind(this), CMDS, 'iq', 'set');
+				this._conn.addHandler(reply.bind(this), CMDS, 'iq', 'set');
 			}
 		},
-		addCommand: function(nodeCfg) {
-			var node = new Node(nodeCfg);
-			this._conn.disco._nodes[CMDS].items.push(node);
+		add: function(item) {
+			if(!item.node) { throw 'item needs a node'; }
+			if(!item.jid) { item.jid = this._conn.jid; }
+			this.cmds.items.push(item);
 		},
 		execute: function(jid, node, callback) {
 			var iq = $iq({to: jid, type: 'set'});
@@ -44,6 +48,7 @@
 			this._conn.sendIQ(iq, callback || noop);
 		}
 	};
+
 	Strophe.addConnectionPlugin('cmds', cmds);
-	Strophe.addNamespace('CMDS', CMDS);
+	Strophe.addNamespace('COMMANDS', CMDS);
 })(Strophe,jQuery);

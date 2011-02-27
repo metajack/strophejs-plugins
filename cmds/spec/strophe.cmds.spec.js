@@ -1,37 +1,62 @@
-describe("Commands", function() {
-	var CMDS = "http://jabber.org/protocol/commands", INFO = Strophe.NS.DISCO_INFO;
-		ITEMS = Strophe.NS.DISCO_ITEMS;
-	var conn, cmds, disco, nodes;
+describe("CommandNode", function() {
+	var CommandNode = Strophe.Commands.CommandNode;
+	it("asdf", function() {
+		var n =  new CommandNode();
+	});
 
+});
+
+xdescribe("Commands", function() {
+	var c, iq;
 	beforeEach(function() {
-		conn = new Strophe.Connection();
-		conn.authenticated = true;
-		conn._processRequest = function() {};
-		conn._changeConnectStatus(Strophe.Status.CONNECTED);
-		successHandler = jasmine.createSpy('successHandler');
-		errorHandler = jasmine.createSpy('errorHandler');
-		cmds = conn.cmds;
-		disco = conn.disco;
-		nodes = disco._nodes;
+		c = mockConnection();
+		iq = {to: 'n@d/r2', from: 'n@d/r1', type: 'get', id: 'abc'};
 	});
 
-	describe("basic", function() {
-		it("adds namespace", function() {
-			expect(Strophe.NS.CMDS).toEqual(CMDS);
+	it("disco#info includes command feature", function() {
+		var req = $iq(iq).c('query', { xmlns: Strophe.NS.DISCO_INFO});
+		spyon(c,'send',function(res) {
+			expect(res.find('feature:eq(2)').attr('var')).toEqual(Strophe.NS.COMMANDS);
 		});
-		it("adds feature to disco#info", function() {
-			expect(nodes.root.features.pop()).toEqual(CMDS);
-		});
-		it("can execute command", function() {
-			spyOn(conn,'send').andCallFake(function(iq) {
-				expect(clear(iq)).toEqual(stanzas.commands.execute);
-			});
-			cmds.execute('n@d/r','aCmd');
-			expect(conn.send).toHaveBeenCalled();
-		});
+		receive(c,req);
 	});
 
-	it("responds with empty commands", function() {
+	it("disco#items includes added commands", function() {
+		c.cmds.add({node: 'a'});
+		var req = $iq(iq).c('query', { xmlns: Strophe.NS.DISCO_ITEMS, node: Strophe.NS.COMMANDS});
+		spyon(c,'send',function(res) {
+			expect(res.find('item:eq(0)').attr('jid')).toEqual('n@d/r2');
+			expect(res.find('item:eq(0)').attr('node')).toEqual('a');
+		});
+		receive(c,req);
+	});
+
+	it("responds to command execution", function() {
+		var cmd = { node: 'aNode', name: 'aName' };
+		cmd.callback = jasmine.createSpy('callback');
+		cmd.addContent = jasmine.createSpy('addContent').andCallFake(function(req,res) {
+			res.attrs({status: 'completed'});
+		});
+		c.cmds.add(cmd);
+		var iq = $iq({type: 'set'}).c('command', {action: 'execute', node: 'aNode', xmlns: Strophe.NS.COMMANDS});
+		spyon(c,'send',function(res) {
+			expect(res.find('command').attr('status')).toEqual('completed');
+		});
+		receive(c,iq);
+		expect(cmd.addContent).toHaveBeenCalled();
+	});
+
+
+
+	xit("can execute command", function() {
+		spyOn(conn,'send').andCallFake(function(iq) {
+			expect(clear(iq)).toEqual(stanzas.commands.execute);
+		});
+		cmds.execute('n@d/r','aCmd');
+		expect(conn.send).toHaveBeenCalled();
+	});
+
+	xit("responds with empty commands", function() {
 		var iq = $iq({type: 'get'}).c('query', { node: CMDS, xmlns: ITEMS }).tree();
 		spyOn(conn,'send').andCallFake(function(iq) {
 			expect(clear(iq)).toEqual(stanzas.commands.response_empty);
@@ -40,7 +65,7 @@ describe("Commands", function() {
 		expect(conn.send).toHaveBeenCalled();
 	});
 
-	it("responds with notFound if we dont have it", function() {
+	xit("responds with notFound if we dont have it", function() {
 		var iq = $iq({type: 'set'}).c('command', { action: 'execute', node: 'aNode', xmlns: CMDS }).tree();
 		spyOn(conn,'send').andCallFake(function(iq) {
 			expect(clear(iq)).toEqual(stanzas.commands.response_node_not_found);
@@ -49,7 +74,7 @@ describe("Commands", function() {
 		expect(conn.send).toHaveBeenCalled();
 	});
 
-	it("allows to add commands via discos node", function() {
+	xit("allows to add commands via discos node", function() {
 		conn.cmds.addCommand({ jid: conn.jid, node: 'aNode', name: 'aName' });
 		var iq = $iq({type: 'get'}).c('query', { node: CMDS, xmlns: ITEMS }).tree();
 		spyOn(conn,'send').andCallFake(function(iq) {
@@ -59,7 +84,7 @@ describe("Commands", function() {
 		expect(conn.send).toHaveBeenCalled();
 	});
 
-	it("responds to command execution", function() {
+	xit("responds to command execution", function() {
 		var cmd = { jid: conn.jid, node: 'aNode', name: 'aName' };
 		cmd.addContent = jasmine.createSpy('addContent').andCallFake(function(res) {
 			res.attrs({status: 'completed'});
@@ -93,6 +118,5 @@ describe("Commands", function() {
 //	return res;
 //};
 //c2.cmds.addCommand(cmd);
-
 
 
