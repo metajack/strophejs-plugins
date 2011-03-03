@@ -6,43 +6,31 @@
 		$.extend(this,cfg);
 	};
 	CommandNode.prototype = new DiscoNode();
+	CommandNode.prototype.send = function() {
+		var iq = $iq({});
+	};
+
+	CommandNode.prototype.callback = function(onSucces,onError) {
+		this.onSuccess({});
+	};
+	// our hook
 	CommandNode.prototype.addContent = function(req,res) {
 		this.req = req;
 		this.res = res;
-		if (this.callback) {
-			this.callback.call(this,this.addResult.bind(this));
-		} else { 
-			this.addResult({});
-		}
+		this.callback.call(this,this.onSuccess.bind(this), this.onError.bind(this));
+	};
+	CommandNode.prototype.onError = function() {
+		res.attrs({status: 'error'});
 	};
 
-	CommandNode.prototype.addResult = function(obj) {
-		var res = this.res;
-		res.c(this.root, { xmlns: 'epic:x' } );
-		if($.isPlainObject(obj)) { res.c('ok'); }
+	CommandNode.prototype.onSuccess = function(obj) {
+		var res = this.res, item = this.item;
+		res.attrs({status: 'completed'});
 		if($.isArray(obj)) {
-			$.each(obj, function(i,item) {
-				res.c(this.item).t(item).up();
-			}.bind(this));
+			$.each(obj, function(i,entry) { res.c(item).t(entry).up(); });
 		}
 	};
 
-
-	var getUrls = { 
-		node: 'getUrls', 
-		name: 'Retrieve Urls',
-		addContent: function(req,res) {
-			if(!this.callback) {  throw 'No callback provided'; }
-			var urls = Strophe.xmlElement('urls',[['xmlns','epic:x:urls']]);
-			res.c('urls', {xmlns: 'epic:x:urls'});
-			this.callback(function(urls) {
-				_.each(urls, function(url) {
-					res.c('url').t(url).up();
-				});
-			});
-			return res;
-		}
-	};
 	var GetUrls = new CommandNode({
 		root: 'urls',
 		item: 'url',
@@ -61,16 +49,13 @@
 		var cmd, callback = cb || noop;
 		if (node === 'getUrls') {
 			return new CommandNode({
-				root: 'urls',
 				item: 'url',
 				node: 'getUrls', 
 				name: 'Retrieve Urls',
 				callback: callback
 			});
-		} 
-		if (node === 'setUrls') {
+		} else if (node === 'setUrls') {
 			return new CommandNode({
-				root: 'urls',
 				item: 'url',
 				node: 'setUrls', 
 				name: 'Sets Urls',
@@ -83,10 +68,7 @@
 
 	Strophe.Commands = {
 		create: create,
-		CommandNode: CommandNode,
-		GetUrls: GetUrls,
-		SetUrls: SetUrls,
-		getUrls: getUrls
+		CommandNode: CommandNode
 	};
 
 })(Strophe,jQuery);
@@ -95,16 +77,22 @@
 (function(Strophe,$) {
 	var CMDS = "http://jabber.org/protocol/commands";
 	var CommandNode = Strophe.Commands.CommandNode;
-
+	var noop = Strophe.Disco.noop;
 	function reply(iq) {
 		var node = $('command',iq).attr('node'), nodeImpl;
 		var n = $.grep(this.cmds.items, function(n) { return n.node == node; });
 		if(n.length === 0) { nodeImpl = new DiscoNodeNotFound();  }
 		else {
-			nodeImpl = $.isPlainObject(n[0]) ? new CommandNode(this,n[0]) : n[0]; 
+			nodeImpl = $.isPlainObject(n[0]) ? new CommandNode(n[0]) : n[0]; 
 		}
 		this._conn.send(nodeImpl.reply(iq));
 		return true;
+	}
+
+	function request(conn, jid, node, args) {
+		var iq = $iq({to: jid, type: 'set'}), data, onSucces, onError;
+		iq.c('command', { xmlns: CMDS, node: node, action: 'execute'});
+		data = $.grep($.makeArray(args), function(arg) { $.isArray(arg); });
 	}
 
 	var cmds = {
@@ -119,14 +107,16 @@
 			}
 		},
 		add: function(item) {
-			if(!item.node) { throw 'item needs a node'; }
+			if(!item.node) { throw 'command needs a node'; }
 			if(!item.jid) { item.jid = this._conn.jid; }
 			this.cmds.items.push(item);
 		},
-		execute: function(jid, node, callback) {
+		execute: function(jid, node) {
 			var iq = $iq({to: jid, type: 'set'});
 			iq.c('command', { xmlns: CMDS, node: node, action: 'execute'});
-			this._conn.sendIQ(iq, callback || noop);
+			this._conn.sendIQ(iq, noop);
+
+			//request(this._conn, jid, node, arguments);
 		}
 	};
 
