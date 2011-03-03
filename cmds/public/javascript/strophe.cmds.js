@@ -82,9 +82,7 @@
 		var node = $('command',iq).attr('node'), nodeImpl;
 		var n = $.grep(this.cmds.items, function(n) { return n.node == node; });
 		if(n.length === 0) { nodeImpl = new DiscoNodeNotFound();  }
-		else {
-			nodeImpl = $.isPlainObject(n[0]) ? new CommandNode(n[0]) : n[0]; 
-		}
+		else { nodeImpl = n[0]; }
 		this._conn.send(nodeImpl.reply(iq));
 		return true;
 	}
@@ -93,6 +91,7 @@
 		var iq = $iq({to: jid, type: 'set'}), data, onSucces, onError;
 		iq.c('command', { xmlns: CMDS, node: node, action: 'execute'});
 		data = $.grep($.makeArray(args), function(arg) { $.isArray(arg); });
+		conn.sendIQ(iq);
 	}
 
 	var cmds = {
@@ -109,14 +108,19 @@
 		add: function(item) {
 			if(!item.node) { throw 'command needs a node'; }
 			if(!item.jid) { item.jid = this._conn.jid; }
-			this.cmds.items.push(item);
+			this.cmds.items.push(new CommandNode(item));
 		},
-		execute: function(jid, node) {
+		execute: function(jid, node, data, onSuccess, onError) {
+			var n = $.grep(this.cmds.items, function(n) { return n.node == node; });
 			var iq = $iq({to: jid, type: 'set'});
 			iq.c('command', { xmlns: CMDS, node: node, action: 'execute'});
-			this._conn.sendIQ(iq, noop);
-
-			//request(this._conn, jid, node, arguments);
+			if(n.length == 1) {
+				$.each(data, function(i,item) { iq.c(n[0].item).t(item).up(); });
+			} else {
+				onSuccess = data;
+				onError = onSuccess;
+			}
+			this._conn.sendIQ(iq, onSuccess || noop, onError || noop);
 		}
 	};
 

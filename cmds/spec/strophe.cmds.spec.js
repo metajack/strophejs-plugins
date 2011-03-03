@@ -47,6 +47,7 @@ describe("Commands", function() {
 			expect(req.find('command').attr('action')).toEqual('execute');
 		});
 		c.cmds.execute('n@d/r','aCmd');
+		expect(c.send).toHaveBeenCalled();
 	});
 }); 
 

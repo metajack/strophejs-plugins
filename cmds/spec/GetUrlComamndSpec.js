@@ -38,13 +38,15 @@ describe("GetUrlCommand", function() {
 		expect(cmd.callback).toHaveBeenCalled();
 	});
 
-	xit("populates request for known command", function() {
+	it("populates request for known command", function() {
 		var cmd = Strophe.Commands.create('setUrls', function() {});
+		var urls = ['http://www.google.com', 'chrome://newtab'];
 		c.cmds.add(cmd);
 		spyon(c,'send',function(res) {
 			expect(res.find('url').length).toEqual(2);
+			expect(res.find('url:eq(0)').text()).toEqual('http://www.google.com');
 		});
-		c.cmds.execute('n@d/r', 'setUrls', mockGetUrl());
+		c.cmds.execute('n@d/r', 'setUrls', urls);
 	});
 
 });
