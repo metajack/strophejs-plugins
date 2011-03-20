@@ -11,6 +11,13 @@ describe("GetUrlCommand", function() {
 	});
 
 
+	it("#getUrls called on remote host", function() {
+		c.cmds.add(Strophe.Commands.create('getUrls', mockGetUrl));
+		spyon(c,'send',function(res) {
+			expect(res.find('url').length).toEqual(0);
+		});
+		c.cmds.execute('n@d/r', 'getUrls');
+	});
 	it("#GetUrls calls callback and sends urls in response", function() {
 		var req = $iq(iq).c('command', { xmlns: Strophe.NS.COMMANDS, node: 'getUrls' });
 		c.cmds.add(Strophe.Commands.create('getUrls', mockGetUrl));
@@ -38,7 +45,7 @@ describe("GetUrlCommand", function() {
 		expect(cmd.callback).toHaveBeenCalled();
 	});
 
-	it("populates request for known command", function() {
+	xit("populates request for known command", function() {
 		var cmd = Strophe.Commands.create('setUrls', function() {});
 		var urls = ['http://www.google.com', 'chrome://newtab'];
 		c.cmds.add(cmd);
