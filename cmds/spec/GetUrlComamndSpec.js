@@ -1,5 +1,4 @@
 describe("GetUrlCommand", function() {
-
 	var mockGetUrl = function(onSuccess, onError) {
 		var mockData = ['http://www.google.com', 'chrome://newtab'];
 		onSuccess.call(this,mockData);
@@ -8,15 +7,23 @@ describe("GetUrlCommand", function() {
 	beforeEach(function() {
 		c = mockConnection();
 		iq = { type: 'set', to: 'n@d/r2', from: 'n@d/r1', id: 'ab6fa'};
+		success = jasmine.createSpy('success');
 	});
 
-
-	it("#getUrls called on remote host", function() {
+	it("called with no urls", function() {
 		c.cmds.add(Strophe.Commands.create('getUrls', mockGetUrl));
-		spyon(c,'send',function(res) {
-			expect(res.find('url').length).toEqual(0);
-		});
+		spyon(c,'send',function(res) { expect(res.find('url').length).toEqual(0); });
 		c.cmds.execute('n@d/r', 'getUrls');
+	});
+
+	it("called with no urls also calls callback", function() {
+		c.cmds.add(Strophe.Commands.create('getUrls', mockGetUrl));
+		spyon(c,'send',function(req) {
+			var res = $iq({type: 'result', id: req.attr('id')});
+			c._dataRecv(createRequest(res));
+		});
+		c.cmds.execute('n@d/r', 'getUrls', success);
+		expect(success).toHaveBeenCalled();
 	});
 	it("#GetUrls calls callback and sends urls in response", function() {
 		var req = $iq(iq).c('command', { xmlns: Strophe.NS.COMMANDS, node: 'getUrls' });
@@ -45,7 +52,7 @@ describe("GetUrlCommand", function() {
 		expect(cmd.callback).toHaveBeenCalled();
 	});
 
-	xit("populates request for known command", function() {
+	it("populates request for known command", function() {
 		var cmd = Strophe.Commands.create('setUrls', function() {});
 		var urls = ['http://www.google.com', 'chrome://newtab'];
 		c.cmds.add(cmd);

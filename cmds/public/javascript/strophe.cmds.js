@@ -114,12 +114,13 @@
 			var n = $.grep(this.cmds.items, function(n) { return n.node == node; });
 			var iq = $iq({to: jid, type: 'set'});
 			iq.c('command', { xmlns: CMDS, node: node, action: 'execute'});
-			if(n.length == 1 && $.isFunction(data)) {
+
+			if ($.isArray(data)) {
 				$.each(data, function(i,item) { iq.c(n[0].item).t(item).up(); });
 			} else {
 				onSuccess = data;
 				onError = onSuccess;
-			}
+			} 
 			this._conn.sendIQ(iq, onSuccess || noop, onError || noop);
 		}
 	};
