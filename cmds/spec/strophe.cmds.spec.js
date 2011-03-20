@@ -1,4 +1,3 @@
-
 describe("Commands", function() {
 	var c, iq;
 	beforeEach(function() {
@@ -47,6 +46,19 @@ describe("Commands", function() {
 			expect(req.find('command').attr('action')).toEqual('execute');
 		});
 		c.cmds.execute('n@d/r','aCmd');
+		expect(c.send).toHaveBeenCalled();
+	});
+
+	it("can execute command with data", function() {
+		c.cmds.add({name: 'foo', node: 'foo', item: 'foo'});
+		spyon(c,'send',function(req) {
+			expect(req.find('command').attr('node')).toEqual('foo');
+			expect(req.find('command').attr('action')).toEqual('execute');
+			expect(req.find('foo').size()).toEqual(2);
+			// somethings wronte with SpecHelper#createRequest
+			expect(req.find('command foo').size()).toEqual(0);
+		});
+		c.cmds.execute('n@d/r','foo', ['foo','bar']);
 		expect(c.send).toHaveBeenCalled();
 	});
 }); 
