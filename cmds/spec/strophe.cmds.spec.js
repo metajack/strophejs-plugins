@@ -55,7 +55,7 @@ describe("Commands", function() {
 			expect(req.find('command').attr('node')).toEqual('foo');
 			expect(req.find('command').attr('action')).toEqual('execute');
 			expect(req.find('foo').size()).toEqual(2);
-			// somethings wronte with SpecHelper#createRequest
+			// somethings wrong with SpecHelper#createRequest
 			expect(req.find('command foo').size()).toEqual(0);
 		});
 		c.cmds.execute('n@d/r','foo', ['foo','bar']);
