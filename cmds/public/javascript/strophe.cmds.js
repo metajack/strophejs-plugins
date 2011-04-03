@@ -13,6 +13,20 @@
 	CommandNode.prototype.callback = function(onSucces,onError) {
 		this.onSuccess({});
 	};
+
+
+	// we have to overrite reply, because we pass in the callback fn form
+	// node requests handler, we can only send a response
+	// once our cmd callback has returned
+	DiscoNode.prototype.reply = function(iq,fn) {
+		var req = this.parseRequest(iq);
+		var res = this.fromTo(req);
+		this.fn = fn;
+		this.addFirstChild(req,res);
+		this.addContent(req,res);
+		return res;
+	};
+
 	// our hook
 	CommandNode.prototype.addContent = function(req,res) {
 		this.req = req;
@@ -21,6 +35,7 @@
 	};
 	CommandNode.prototype.onError = function() {
 		res.attrs({status: 'error'});
+		this.fn.call(this,res);
 	};
 
 	CommandNode.prototype.onSuccess = function(obj) {
@@ -29,6 +44,7 @@
 		if($.isArray(obj)) {
 			$.each(obj, function(i,entry) { res.c(item).t(entry).up(); });
 		}
+		this.fn.call(this,res);
 	};
 
 	var GetUrls = new CommandNode({
@@ -81,9 +97,15 @@
 	function reply(iq) {
 		var node = $('command',iq).attr('node'), nodeImpl;
 		var n = $.grep(this.cmds.items, function(n) { return n.node == node; });
-		if(n.length === 0) { nodeImpl = new DiscoNodeNotFound();  }
-		else { nodeImpl = n[0]; }
-		this._conn.send(nodeImpl.reply(iq));
+		if(n.length === 0) { 
+			nodeImpl = new DiscoNodeNotFound();  
+			this._conn.send(nodeImpl.reply(iq));
+		} else { 
+			nodeImpl = n[0]; 
+			nodeImpl.reply(iq, function(res) {
+				this._conn.send(res);
+			}.bind(this));
+		}
 		return true;
 	}
 
