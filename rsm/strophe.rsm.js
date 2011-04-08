@@ -1,5 +1,3 @@
-/** Copyright 2009 Rosetta Stone LTD */
-
 // http://xmpp.org/extensions/xep-0059.html
 
 Strophe.addNamespace('RSM', 'http://jabber.org/protocol/rsm');
