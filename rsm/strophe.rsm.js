@@ -1,3 +1,5 @@
+/** Copyright 2009 Rosetta Stone LTD */
+
 // http://xmpp.org/extensions/xep-0059.html
 
 Strophe.addNamespace('RSM', 'http://jabber.org/protocol/rsm');
@@ -21,7 +23,7 @@ Strophe.RSM.prototype = {
     for (var ii = 0; ii < this.attribs.length; ii++) {
       var attrib = this.attribs[ii];
       if (typeof this[attrib] != 'undefined') {
-        xml = xml.c(attrib).t(this[attrib]).up();
+        xml = xml.c(attrib).t(this[attrib].toString()).up();
       }
     }
     return xml.tree();
