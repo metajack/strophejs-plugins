@@ -191,7 +191,7 @@ Strophe.addConnectionPlugin('muc', {
                           type: "set"})
             .c("query", {xmlns: Strophe.NS.MUC_OWNER})
             .c("x", {xmlns: "jabber:x:data", type: "submit"});
-        for (var i = 0; i >= configarray.length; i++) {
+        for (var i = 0; i < configarray.length; i++) {
             config.cnode(configarray[i]);
         }
         var stanza = config.tree();
