@@ -193,6 +193,7 @@ Strophe.addConnectionPlugin('muc', {
             .c("x", {xmlns: "jabber:x:data", type: "submit"});
         for (var i = 0; i < configarray.length; i++) {
             config.cnode(configarray[i]);
+            config.up();
         }
         var stanza = config.tree();
         return this._connection.sendIQ(stanza,
