@@ -131,12 +131,13 @@ Strophe.addConnectionPlugin('muc', {
     Returns:
     msgiq - the unique id used to send the message
     */
-    message: function(room, nick, message) {
+    message: function(room, nick, message, type) {
         var room_nick = this.test_append_nick(room, nick);        
+        type = type ? "groupchat";
         var msgid = this._connection.getUniqueId();
         var msg = $msg({to: room_nick,
                         from: this._connection.jid,
-                        type: "groupchat",
+                        type: type,
                         id: msgid}).c("body",
                                       {xmlns: Strophe.NS.CLIENT}).t(message);
         msg.up().c("x", {xmlns: "jabber:x:event"}).c("composing");
