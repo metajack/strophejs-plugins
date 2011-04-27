@@ -133,7 +133,7 @@ Strophe.addConnectionPlugin('muc', {
     */
     message: function(room, nick, message, type) {
         var room_nick = this.test_append_nick(room, nick);        
-        type = type ? "groupchat";
+        type = type || "groupchat";
         var msgid = this._connection.getUniqueId();
         var msg = $msg({to: room_nick,
                         from: this._connection.jid,
