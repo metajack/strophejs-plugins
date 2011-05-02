@@ -128,6 +128,7 @@ Strophe.addConnectionPlugin('muc', {
     (String) room - The multi-user chat room name.
     (String) nick - The nick name used in the chat room.
     (String) message - The message to send to the room.
+    (String) type - "groupchat" for group chat messages or "chat" for private chat messages
     Returns:
     msgiq - the unique id used to send the message
     */
