@@ -55,7 +55,7 @@ Strophe.addConnectionPlugin('muc', {
                 var from = stanza.getAttribute('from');
                 var roomname = from.split("/");
                 // filter on room name
-                if (roomname.length > 1 && roomname[0] == room)
+                if (roomname[0] == room)
                 {
                     return msg_handler_cb(stanza);
                 }
