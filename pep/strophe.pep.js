@@ -2,20 +2,35 @@
   This plugin is distributed under the terms of the MIT licence.
   Please see the LICENCE file for details.
 
-  Copyright (c) Markus Kohlhase, 2009-2010
+  Copyright (c) Markus Kohlhase <mail@markus-kohlhase.de>, 2009-2010
+  
+  Some parts are inspired by the pep plugin of François de Metz <francois@2metz.fr>.
+  See https://github.com/owengriffin/strophejs/blob/master/plugins/strophe.pep.js
 */
 
 /**
 * File: strophe.pep.js
 * A Strophe plugin for XMPP Personal Eventing Protocol.
+* No pubsub plugin is needed.
 */
-
 
 // Extend the Strophe.Connection object.
 
 Strophe.addConnectionPlugin('pep',
 {
   _connection: null,
+    
+  /**
+  * Obejct for global options.
+  */
+  
+  defaults: {
+    
+    matchBare: true,
+    success: null,
+    error: null
+    
+  },
   
   // called by the Strophe.Connection constructor
 
@@ -27,13 +42,6 @@ Strophe.addConnectionPlugin('pep',
     
   },
   
-  /**
-   * Obejct for global options.
-   */
-  
-  defaults: {
-    matchBare: true
-  },
   
   /**
   * Function: subscribe
@@ -53,16 +61,14 @@ Strophe.addConnectionPlugin('pep',
     var that = this;
     
     this._connection.sendIQ(    
-      this.createSubscriptionIQ( jid, node, matchBare ),
+      this._createSubscriptionIQ( jid, node, matchBare ),
       function( iq ){
-	if( handler ){	  
-	  that._addPepHandler( handler, jid, node, matchBare );	  
+	if( handler ){
+	  that._addPepHandler( handler, jid, node, matchBare );
 	}
-	if( success ){
-	  success( iq );
-	}
+	that._getAppropriateHandler( success, "success" )( iq );
       },      
-      error      
+      that._getAppropriateHandler( error, "error" )
     );    
   },
   
@@ -72,17 +78,17 @@ Strophe.addConnectionPlugin('pep',
    * Parameters:
    * (String) jid		- Jabber ID
    * (String) node		- The node
-   * (Function) sucess		- The success callback function
+   * (Function) success		- The success callback function
    * (Function) error		- The error callback function
    * (Boolean) matchBare	- 
    */
   
   unsubscribe: function( jid, node, success, error, matchBare ){
-    
+            
     this._connection.sendIQ(    
-      this.createUnsubscriptionIQ( jid, node, matchBare ),
-      success,
-      error
+      this._createUnsubscriptionIQ( jid, node, matchBare ),
+      this._getAppropriateHandler( success, "success" ),
+      this._getAppropriateHandler( error, "error" )      
     );  
   },
   
@@ -90,8 +96,10 @@ Strophe.addConnectionPlugin('pep',
    * Function: publish
    * 
    * Parameters:
-   * (String) node -	The node.
-   * (Object) content	- The DOM Object(s)
+   * (String) node -		The node.
+   * (Object) content	-	The content object that should be published. 
+   *				It can be either a single content object or an array of content objects.
+   *				The content object can be a text string, an valid XML string or an DOM object.
    * (Function) success - The callback function on success.
    * (Function) error - The callback function on error.
    */
@@ -99,10 +107,39 @@ Strophe.addConnectionPlugin('pep',
   publish: function( node, content, success, error ){
 
     this._connection.sendIQ(    
-      this.createPublishIQ( node, content ),
-      success,
-      error
+      this._createPublishIQ( node, content ),
+      this._getAppropriateHandler( success, "success" ),
+      this._getAppropriateHandler( error, "error" )
     );
+  },
+  
+  
+  /**
+   * PrivateFunction: _getAppropriateHandler
+   * 
+   * Parameters:
+   * (Function) handler
+   * (String) type
+   * 
+   * Returns:
+   * (Function) handler
+   */
+  
+  _getAppropriateHandler: function( handler, type ){
+    
+    if( typeof( handler ) === "function" ){
+      return handler;            
+    } 
+    
+    if( typeof( type ) === "string" ){
+                
+      switch( type.toLowerCase() ){	     
+	case "success":	return this._getAppropriateHandler( this.defaults.success, null );
+	case "error":	return this._getAppropriateHandler( this.defaults.error, null );
+	default:	return function(){};
+      }
+    }
+    return function(){};    
   },
   
   /**
@@ -111,7 +148,7 @@ Strophe.addConnectionPlugin('pep',
   * Parameters:
   * (Function) handler	- Callback function
   * (String) jid	- JID
-  * (String) node 	- The node
+  * (String) node	- The node
   * (Boolean) matchBare	-
   * 
   * Returns:
@@ -122,17 +159,11 @@ Strophe.addConnectionPlugin('pep',
     
     var that = this;
     
-    if( matchBare === true ){
-      jid = Strophe.getBareJidFromJid( jid );
-    }
-    
-    if( matchBare !== false && matchBare !== true ){
-      matchBare = this.defaults.matchBare;
-    }
+    jid = this._getAppropriateJid( jid, matchBare );    
     
     return this._connection.addHandler(
       function( msg ){	
-	if( that.isCorrectNode( msg, node ) ){	  
+	if( that._isCorrectNode( msg, node ) ){	  
 	  return handler( msg );
 	}
 	return true;
@@ -143,11 +174,61 @@ Strophe.addConnectionPlugin('pep',
       null,
       jid,
       { matchBare: matchBare } 
-    );    
+    ); 
+        
   },
   
   /**
-   * PrivateFunction: isCorrectNode
+   * PrivateFunction: _getAppropriateJid
+   * 
+   * Checks whether the full qualified JID is desired or not and returns 
+   * the appropriate JID. 
+   * If nothing is defined the global option will be used if it is defined,
+   * otherwise the JID get passed through.
+   * 
+   * Parameters:
+   * 
+   * (String) jid		- full qualified jid
+   * (Boolean) matchBare	- 
+   * 
+   * Returns:
+   * 
+   * (String) jid	- the desired JID
+   */
+  
+  _getAppropriateJid: function( jid, matchBare ){
+    
+    if( jid !== null && 
+	jid !== undefined && 
+	jid !== "" &&
+	jid !== " "){
+    
+      if( matchBare === true ){
+	return Strophe.getBareJidFromJid( jid );
+      } 
+      else if( matchBare !== false && matchBare !== true ){
+	if( this.defaults.matchBare ){
+	  return this._getAppropriateJid( jid, this.defaults.matchBare );	  
+	} else {
+	  return jid;
+	}
+      }
+      return jid;
+    }
+    return jid;      
+  },
+  
+  /**
+   * PrivateFunction: _deletePepHandler
+   * 
+   */
+  
+  _deletePepHandler: function( handler ){
+    this._connection.deleteHandler( handler );
+  },
+  
+  /**
+   * PrivateFunction: _isCorrectNode
    * 
    * Parameters: 
    * (Object) msg	- The message
@@ -157,7 +238,7 @@ Strophe.addConnectionPlugin('pep',
    * True if the node mathes.
    */
     
-  isCorrectNode: function( msg, node ){
+  _isCorrectNode: function( msg, node ){
     
     if( msg.childNodes.length > 0 ){
   
@@ -174,7 +255,7 @@ Strophe.addConnectionPlugin('pep',
   },
   
   /** 
-  * PrivateFunction: createSubscriptionIQ
+  * PrivateFunction: _createSubscriptionIQ
   * 
   * Parameters:
   * (String) jid	- JabberID
@@ -185,17 +266,17 @@ Strophe.addConnectionPlugin('pep',
   * (Object) iq	- IQ stanza to subscibe
   */
   
-  createSubscriptionIQ: function( jid, node, matchBare ){
+  _createSubscriptionIQ: function( jid, node, matchBare ){
     
     var iqid = this._connection.getUniqueId("pepsubscriptioniq");
     
     return $iq({ type: 'set', to: jid, id: iqid })
       .c("pubsub", { xmlns: Strophe.NS.PUBSUB })
-      .c("subscribe", { node: node, jid: this.getJid( matchBare ) } );
+      .c("subscribe", { node: node, jid: this._getJid( matchBare ) } );
   },
     
   /** 
-  * PrivateFunction: createUnsubscriptionIQ
+  * PrivateFunction: _createUnsubscriptionIQ
   * 
   * Parameters:
   * (String) jid	- JabberID
@@ -206,29 +287,30 @@ Strophe.addConnectionPlugin('pep',
   * (Obejct) iq	- IQ stanza to unsubscribe
   */
   
-  createUnsubscriptionIQ: function( jid, node, matchBare ){
+  _createUnsubscriptionIQ: function( jid, node, matchBare ){
       
     var iqid = this._connection.getUniqueId("pepunsubscriptioniq");
     
     return $iq({ type: 'set', to: jid, id: iqid })
       .c("pubsub", { xmlns: Strophe.NS.PUBSUB })
-      .c("unsubscribe", { node: node, jid: this.getJid( matchBare ) } );
+      .c("unsubscribe", { node: node, jid: this._getJid( matchBare ) } );
 
   },
     
   /**
-  * PrivateFunction: createPublishIQ
+  * PrivateFunction: _createPublishIQ
   * 
   * Parameters:
   * (String) node	- The node
-  * (Object) content	- The content as an DOM object or an array of DOM objets
+  * (Object) content	- The content object
   */
 
-  createPublishIQ: function( node, content ){
+  _createPublishIQ: function( node, content ){
   
     var pubid = this._connection.getUniqueId("peppublishiq");
         
-    if( !this.isArray(content) ){
+    // convert to array if needed
+    if( !this._isArray(content) ){
       content = [content];
     }
     
@@ -239,19 +321,94 @@ Strophe.addConnectionPlugin('pep',
     for( var i in content ){
       
       if( content[i] ){
-
-	var c = content[i];
-	
-	if( this.isNode(c) || this.isElement ){
-	  iq.c("item").cnode( c ).up().up();
-	}
+	iq.cnode( this._createPublishItem( content[i] ) ).up();
       }
     }    
     return iq;
   },
   
   /**
-   * PrivateFunction: getJid
+   * PrivateFunction: _createPublishItem
+   *
+   * Parameters: 
+   * (Object) c		- The content to publish
+   *
+   * Returns:
+   * (Obejct) dom	- The appropriate XML item object
+   */
+  
+  _createPublishItem: function( c ){
+   
+    var item = Strophe.xmlElement("item",[]);
+       
+    switch( typeof( c ) ){
+	
+      case "number":
+      case "boolean":
+	item.appendChild( Strophe.xmlTextNode( c + '' ) );
+	break;
+	
+      case "string":
+
+	var dom = this._textToXml( c );
+	
+	if( dom !== null ){
+	  item.appendChild( dom );
+	} else {	 
+	  item.appendChild( Strophe.xmlTextNode( c + '' ) );
+	}
+	break;
+      
+      case "object":
+
+	if( this._isNode(c) || this._isElement(c) ){
+	  item.appendChild( c );
+	}
+	break;	    
+    }
+    return item;
+  },
+  
+  /**
+   * PrivateFunction: _textToXml
+   * 
+   * Parameters:
+   * (String) text	- XML String
+   * 
+   * Returns:
+   * (Object) dom	- DOM Object
+   */
+  
+  _textToXml: function( text ){
+    
+    var doc = null;
+
+    if( window.DOMParser ){
+      var parser = new DOMParser();
+      doc = parser.parseFromString( text, 'text/xml');
+    } else if( window.ActiveXObject ){
+      doc = new ActiveXObject("MSXML2.DOMDocument");
+      doc.async = false;
+      doc.loadXML(text);
+    } else{
+      throw{
+	type: 'Parse error',
+	message: "No DOM parser object found."
+      };      
+    }
+       
+    var error = doc.getElementsByTagName("parsererror");
+    
+    if( error.length > 0 ){
+      return null;
+    }
+    
+    var node = document.importNode( doc.documentElement, true );
+    return node;
+  },
+  
+  /**
+   * PrivateFunction: _getJid
    * 
    * Parameters: 
    * (Boolean) matchBare
@@ -261,23 +418,12 @@ Strophe.addConnectionPlugin('pep',
    * If global option matchBare is set to TRUE the bare JID will be returned.
    */  
   
-  getJid: function( matchBare ){
-    if( matchBare === false ){
-      return this._connection.jid;
-    } 
-    else if( matchBare === true ){
-      return Strophe.getBareJidFromJid( this._connection.jid );
-    }else{
-      if( this.defaults.matchBare === true ){
-	return Strophe.getBareJidFromJid( this._connection.jid );       
-      }else{      
-	return this._connection.jid;
-      }          
-    }
+  _getJid: function( matchBare ){
+    return this._getAppropriateJid( this._connection.jid, matchBare );
   },
   
   /**
-   * PrivateFunction: isNode
+   * PrivateFunction: _isNode
    * 
    * Parameters:
    * ( Object ) obj	- The object to test
@@ -286,7 +432,7 @@ Strophe.addConnectionPlugin('pep',
    * True if it is a DOM node
    */
 
-  isNode: function( obj ){
+  _isNode: function( obj ){
           
       if( typeof( Node ) === "object" ){
 	return ( obj instanceof Node );	
@@ -296,7 +442,7 @@ Strophe.addConnectionPlugin('pep',
   },
   
   /**
-   * PrivateFunction: isElement
+   * PrivateFunction: _isElement
    * 
    * Parameters:
    * ( Object ) obj	- The object to test
@@ -305,7 +451,7 @@ Strophe.addConnectionPlugin('pep',
    * True if it is a DOM element.
    */
 
-  isElement: function( obj ){
+  _isElement: function( obj ){
    
     if( typeof( HTMLElement ) === "object"){ 
       return ( obj instanceof HTMLElement ); //DOM2      
@@ -315,7 +461,7 @@ Strophe.addConnectionPlugin('pep',
   },
   
   /** 
-   * PrivateFunction: isArray
+   * PrivateFunction: _isArray
    * Checks if an given object is an array.
    * 
    * Parameters: 
@@ -325,7 +471,7 @@ Strophe.addConnectionPlugin('pep',
    * True if it is an array.
    */
   
-  isArray: function( obj ){
+  _isArray: function( obj ){
     try{
       return obj && obj.constructor.toString().match(/array/i) !== null ;
     } catch( e ){
