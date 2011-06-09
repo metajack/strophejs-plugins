@@ -47,7 +47,7 @@ Strophe.addConnectionPlugin('ping',
    * (Object) ping	-
    * (Function) success	-
    * (Function) error	-
-   */*
+   */
   pong: function( ping, success, error ){
     
     var from = ping.getAttribute('from');
