@@ -35,5 +35,5 @@ var callback = function (status) {
 connection.register.connect("example.com", callback, wait, hold);
 ```
 
-Now you're logged in with a fresh smelling jid.
+After that you're logged in with a fresh smelling jid.
 
