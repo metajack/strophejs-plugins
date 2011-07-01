@@ -96,15 +96,15 @@ Strophe.addConnectionPlugin('register', {
         that.errors = 0;
 
         that.domain = domain || that.domain;
-        this.wait = wait || this.wait;
-        this.hold = hold || this.hold;
+        that.wait = wait || that.wait;
+        that.hold = hold || that.hold;
 
         // build the body tag
         var body = that._buildBody().attrs({
             to: that.domain,
             "xml:lang": "en",
-            wait: this.wait,
-            hold: this.hold,
+            wait: that.wait,
+            hold: that.hold,
             content: "text/xml; charset=utf-8",
             ver: "1.6",
             "xmpp:version": "1.0",
