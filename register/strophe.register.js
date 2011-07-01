@@ -42,6 +42,9 @@ Strophe.addConnectionPlugin('register', {
         Strophe.Status.SBMTFAIL    = i + 5;
         Strophe.Status.REGISTERED  = i + 6;
 
+        if (conn.disco)
+            conn.disco.addFeature(Strophe.NS.REGISTER);
+
         // hooking strophe's connection.reset
         var self = this, reset = conn.reset;
         conn.reset = function () {
