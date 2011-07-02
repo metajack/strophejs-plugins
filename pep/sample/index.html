@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link type="text/css" href="css/ui-lightness/jquery-ui-1.8.6.custom.css" rel="stylesheet" />
+    <link type="text/css" href="css/sample.css" rel="stylesheet" />
+    <script type="text/javascript" src="js/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.6.custom.min.js"></script>
+    <script type="text/javascript" src="js/strophe.min.js"></script>
+    <script type="text/javascript" src="../strophe.pep.js"></script>
+    <script type="text/javascript" src="js/sample.js"></script>
+
+  </head>
+  <body>
+
+    <banner><h1>Personal Eventing Protocol ( XEP-0163 )</h1>
+      <button id="logoutButton">Logout</button>
+    </banner>
+
+
+    <div id="messages">
+      <h2>Messages</h2>
+      <ul id="message-list"></ul>
+      <button id="pepSubscriptionButton">Modify PEP subscription</button>
+    </div>
+
+    <div id="publishing">       
+      <h2>Publishing</h2>
+      <h4>Text</h4>
+      <textarea id="publishinput">Sample text</textarea>
+      <br/>
+      <h4>Node</h4>
+      <input type="text" value="sample" id="publishnode" />
+      <br/>
+      <button id="publishButton">Publish</button>
+    </div>
+
+    </div>
+
+
+
+    <!-- dialogs -->
+
+    <div id="login">
+      <label>Jabber ID:</label>
+      <br/>
+      <input id="jid" type="email" placeholder="YourJabberID@JabberServer.org" reqired />
+      <br/>
+      <label>Password:</label>
+      <br/>
+      <input id="pw" type="password" placeholder="Your secret password" reqired />
+      <br/>
+    </div>
+
+    <div id="subscription-dialog">
+      <label>Jabber ID:</label>
+      <br/>
+      <input id="pep-jid" type="email" placeholder="AnJabberID@JabberServer.org" reqired />
+      <br/>
+      <label>Node:</label>
+      <br/>
+      <input id="pep-node" type="text" value="sample" placeholder="" reqired />
+    </div>
+
+
+    <!-- helper -->
+
+    <div id="progressbar"></div>
+
+  </body>
+</html>
