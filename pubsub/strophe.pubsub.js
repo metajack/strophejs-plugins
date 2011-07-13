@@ -343,13 +343,13 @@ Extend connection object to have plugin name 'pubsub'.
     Used to retrieve the persistent items from the pubsub node.
 
     */
-    items: function(node, call_back) {
+    items: function(node, success, error) {
         //ask for all items
         var iq = $iq({from:this.jid, to:this.service, type:'get'})
           .c('pubsub', { xmlns:Strophe.NS.PUBSUB })
           .c('items', {node:node});
 
-        return this._connection.sendIQ(iq.tree(), call_back, call_back);
+        return this._connection.sendIQ(iq.tree(), success, error);
     },
 
     /** Function: getSubscriptions
