@@ -147,7 +147,7 @@ Extend connection object to have plugin name 'pubsub'.
         }
         this.jid = jid || that.jid;
         this.service = service || null;
-        this._autoService = false,
+        this._autoService = false;
     },
 
     /***Function
