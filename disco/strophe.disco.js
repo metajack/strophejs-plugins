@@ -10,11 +10,8 @@
 Strophe.addConnectionPlugin('disco',
 {
     _connection: null,
-
     _identities : [],
-
     _features : [],
-
     _items : [],
     /** Function: init
      * Plugin init
@@ -103,18 +100,15 @@ Strophe.addConnectionPlugin('disco',
      *   (String) jid
      *   (String) node
      */
-    info: function(call_back, jid, node)
+    info: function(jid, node, success, error)
     {
         var attrs = {xmlns: Strophe.NS.DISCO_INFO};
         if (node)
-        {
             attrs.node = node;
-        }
-        var disco = $iq({from : this._connection.jid,
-                     to   : jid,
-                 type : 'get'}
-                       ).c('query', attrs);
-        this._connection.sendIQ(disco, call_back, call_back);
+
+        var info = $iq({from:this._connection.jid,
+                         to:jid, type:'get'}).c('query', attrs);
+        this._connection.sendIQ(info, success, error);
     },
     /** Function: items
      * Items query
@@ -124,17 +118,15 @@ Strophe.addConnectionPlugin('disco',
      *   (String) jid
      *   (String) node
      */
-    items: function(call_back, jid, node)
+    items: function(jid, node, success, error)
     {
         var attrs = {xmlns: Strophe.NS.DISCO_ITEMS};
         if (node)
-        {
             attrs.node = node;
-        }
-        var disco = $iq({from : this._connection.jid,
-                     to   : jid,
-                         type : 'get'}).c('query', attrs);
-        this._connection.sendIQ(disco, call_back, call_back);
+
+        var items = $iq({from:this._connection.jid,
+                         to:jid, type:'get'}).c('query', attrs);
+        this._connection.sendIQ(items, success, error);
     },
     /** PrivateFunction: _onDiscoInfo
      * Called when receive info request
