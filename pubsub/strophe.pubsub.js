@@ -266,5 +266,23 @@ Strophe.addConnectionPlugin('pubsub', {
 		{ xmlns:Strophe.NS.PUBSUB }).c('items',{node:node});
 	    
 	    return this._connection.sendIQ(pub.tree(),ok_callback,error_back);
+	},
+	/***Function
+	
+	Get all nodes that currently exist.
+	  
+	Parameters:
+	(String) jid - The node owner's jid.
+	(String) service - The name of the pubsub service.
+	(Function) ok_callback - Used to determine if node
+	creation was sucessful.
+	*/    
+	discoverNodes: function(jid,service,ok_callback) {
+	    var pub = $iq({from:jid, to:service, type:'get'})
+	    
+	    //ask for all nodes
+	    pub.c('query', { xmlns:Strophe.NS.DISCO_ITEMS });
+		
+		return this._connection.sendIQ(pub.tree(),ok_callback);
 	}
 });
