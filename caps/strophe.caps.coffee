@@ -8,7 +8,7 @@
 
 # NOTE: This plugin has following dependencies:
 #
-# - Strophe.disco.js
+# - strophe.disco.js (by François de Metz)
 # - sha1.js
 
 Strophe.addConnectionPlugin 'caps', (->
@@ -18,14 +18,16 @@ Strophe.addConnectionPlugin 'caps', (->
   init = ( c ) ->
     conn = c
     Strophe.addNamespace 'CAPS', "http://jabber.org/protocol/caps"
-    conn.disco.addNode Strophe.NS.CAPS
+    conn.disco.addFeature Strophe.NS.CAPS
+    conn.disco.addFeature Strophe.NS.DISCO_INFO
+    conn.disco.addIdentity "client", "pc", "strophe", ""
 
-  addNode = (node, opts) -> conn.disco.addNode node, opts
+  addNode = (feature) -> conn.disco.addFeature feature
 
   sendPres = -> conn.send $pres().c "c",
     xmlns: Strophe.NS.CAPS
     hash: "sha-1"
-    node: conn.disco.identity.name
+    node: conn.disco._identities[0].name
     ver: generateVerificationString()
 
   generateVerificationString = ->
@@ -45,14 +47,11 @@ Strophe.addConnectionPlugin 'caps', (->
     # 3. For each identity, append the 'category/type/lang/name' to S, followed by
     # the '<' character.
 
-    S += "client/pc//#{conn.disco.identity.name}<"
+    S += "client/pc//#{conn.disco._identities[0].name}<"
 
     # 4. Sort the supported service discovery features.
     
-    features = []
-
-    for ns of conn.disco.features
-      features.push ns
+    features = conn.disco._features
     features.sort()
 
     # 5. For each feature, append the feature to S, followed by the '<' character.
