@@ -1,6 +1,6 @@
 (function() {
   Strophe.addConnectionPlugin('caps', (function() {
-    var addFeature, conn, dummyId, generateVerificationString, init, propertySort, removeFeature, sendPres;
+    var addFeature, conn, createCapsNode, dummyId, generateVerificationString, init, propertySort, removeFeature, sendPres;
     conn = null;
     dummyId = {
       category: "client",
@@ -20,19 +20,22 @@
     removeFeature = function(feature) {
       return conn.disco.removeFeature(feature);
     };
-    sendPres = function() {
+    sendPres = function(success, error, timeout) {
+      return conn.send($pres().cnode(createCapsNode().tree()), success, error, timeout);
+    };
+    createCapsNode = function() {
       var node;
       if (conn.disco._identities.length > 0) {
         node = conn.disco._identities[0].name || "";
       } else {
         node = dummyId.name;
       }
-      return conn.send($pres().c("c", {
+      return $build("c", {
         xmlns: Strophe.NS.CAPS,
         hash: "sha-1",
         node: node,
         ver: generateVerificationString()
-      }));
+      });
     };
     propertySort = function(array, property) {
       return array.sort(function(a, b) {
@@ -80,7 +83,8 @@
       removeFeature: removeFeature,
       addFeature: addFeature,
       sendPres: sendPres,
-      generateVerificationString: generateVerificationString
+      generateVerificationString: generateVerificationString,
+      createCapsNode: createCapsNode
     };
   })());
 }).call(this);

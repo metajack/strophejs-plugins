@@ -26,14 +26,17 @@ Strophe.addConnectionPlugin 'caps', (->
 
   removeFeature = (feature) -> conn.disco.removeFeature feature
 
-  sendPres = ->
+  sendPres = (success, error, timeout) ->
+    conn.send $pres().cnode( createCapsNode().tree() ), success, error, timeout
+
+  createCapsNode = ->
 
     if conn.disco._identities.length > 0
       node = conn.disco._identities[0].name || ""
     else
       node = dummyId.name
 
-    conn.send $pres().c "c",
+    $build "c",
       xmlns: Strophe.NS.CAPS
       hash: "sha-1"
       node: node
@@ -141,5 +144,6 @@ Strophe.addConnectionPlugin 'caps', (->
   addFeature: addFeature
   sendPres: sendPres
   generateVerificationString: generateVerificationString
+  createCapsNode: createCapsNode
 
 )()
