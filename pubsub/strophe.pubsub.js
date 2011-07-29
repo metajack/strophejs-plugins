@@ -205,6 +205,24 @@ Extend connection object to have plugin name 'pubsub'.
         return iqid;
     },
 
+    /** Function
+     *
+     * Get all nodes that currently exist.
+     *
+     * Parameters:
+     *   (Function) success - Used to determine if node creation was sucessful.
+     *   (Function) error - Used to determine if node
+     * creation had errors.
+     */
+    discoverNodes: function(success, error) {
+
+        //ask for all nodes
+        var iq = $iq({from:this.jid, to:this.service, type:'get'})
+          .c('query', { xmlns:Strophe.NS.DISCO_ITEMS });
+
+        return this._connection.sendIQ(iq.tree(),success, error);
+    },
+
     /** Function: getConfig
      *  Get node configuration form.
      *
