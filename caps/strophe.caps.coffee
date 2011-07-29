@@ -23,7 +23,7 @@ Strophe.addConnectionPlugin 'caps', (->
     conn.disco.addFeature Strophe.NS.DISCO_INFO
     if conn.disco is undefined
       throw new Error "disco plugin required!"
-    if b64_sha1 is undefined
+    if typeof b64_sha1 isnt 'function'
       throw new Error "SHA-1 library required!"
 
   addFeature = (feature) -> conn.disco.addFeature feature

@@ -16,7 +16,7 @@
       if (conn.disco === void 0) {
         throw new Error("disco plugin required!");
       }
-      if (b64_sha1 === void 0) {
+      if (typeof b64_sha1 !== 'function') {
         throw new Error("SHA-1 library required!");
       }
     };
