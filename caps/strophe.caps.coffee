@@ -21,6 +21,10 @@ Strophe.addConnectionPlugin 'caps', (->
     Strophe.addNamespace 'CAPS', "http://jabber.org/protocol/caps"
     conn.disco.addFeature Strophe.NS.CAPS
     conn.disco.addFeature Strophe.NS.DISCO_INFO
+    if conn.disco is undefined
+      throw new Error "disco plugin required!"
+    if b64_sha1 is undefined
+      throw new Error "SHA-1 library required!"
 
   addFeature = (feature) -> conn.disco.addFeature feature
 

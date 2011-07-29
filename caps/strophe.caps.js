@@ -12,7 +12,13 @@
       conn = c;
       Strophe.addNamespace('CAPS', "http://jabber.org/protocol/caps");
       conn.disco.addFeature(Strophe.NS.CAPS);
-      return conn.disco.addFeature(Strophe.NS.DISCO_INFO);
+      conn.disco.addFeature(Strophe.NS.DISCO_INFO);
+      if (conn.disco === void 0) {
+        throw new Error("disco plugin required!");
+      }
+      if (b64_sha1 === void 0) {
+        throw new Error("SHA-1 library required!");
+      }
     };
     addFeature = function(feature) {
       return conn.disco.addFeature(feature);
