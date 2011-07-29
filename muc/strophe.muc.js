@@ -146,6 +146,27 @@ Strophe.addConnectionPlugin('muc', {
         return msgid;
     },
     /***Function
+    Send a chat room invitation.
+    Parameters:
+    (String) room - The multi-user chat room name.
+    (String) receiver - The invitation's receiver.
+    Returns:
+    msgiq - the unique id used to send the invitation
+    */
+    invite: function(room, receiver) {
+        var msgid = this._connection.getUniqueId();
+        var invitation = $msg({
+            from: this._connection.jid,
+            to: receiver,
+            id: msgid
+        }).c('x', {
+            xmlns: 'jabber:x:conference',
+            jid: room
+        });
+        this._connection.send(invitation);
+        return msgid;
+    },
+    /***Function
     Start a room configuration.
     Parameters:
     (String) room - The multi-user chat room name.
