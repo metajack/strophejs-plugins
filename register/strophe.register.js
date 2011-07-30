@@ -87,6 +87,7 @@ Strophe.addConnectionPlugin('register', {
     connect: function (domain, callback, wait, hold) {
         this.instructions = "";
         this.fields = {};
+        this._connection.domain = domain;
         this._connection.connect(null, null, callback, wait, hold,
                                  /* authentication */ false,
                                  this._register_cb.bind(this));
