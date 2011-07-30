@@ -214,13 +214,13 @@ Extend connection object to have plugin name 'pubsub'.
      *   (Function) error - Used to determine if node
      * creation had errors.
      */
-    discoverNodes: function(success, error) {
+    discoverNodes: function(success, error, timeout) {
 
         //ask for all nodes
         var iq = $iq({from:this.jid, to:this.service, type:'get'})
           .c('query', { xmlns:Strophe.NS.DISCO_ITEMS });
 
-        return this._connection.sendIQ(iq.tree(),success, error);
+        return this._connection.sendIQ(iq.tree(),success, error, timeout);
     },
 
     /** Function: getConfig
@@ -361,13 +361,13 @@ Extend connection object to have plugin name 'pubsub'.
     Used to retrieve the persistent items from the pubsub node.
 
     */
-    items: function(node, success, error) {
+    items: function(node, success, error, timeout) {
         //ask for all items
         var iq = $iq({from:this.jid, to:this.service, type:'get'})
           .c('pubsub', { xmlns:Strophe.NS.PUBSUB })
           .c('items', {node:node});
 
-        return this._connection.sendIQ(iq.tree(), success, error);
+        return this._connection.sendIQ(iq.tree(), success, error, timeout);
     },
 
     /** Function: getSubscriptions
@@ -382,7 +382,7 @@ Extend connection object to have plugin name 'pubsub'.
      *  Returns:
      *    Iq id
      */
-    getSubscriptions: function(call_back) {
+    getSubscriptions: function(call_back, timeout) {
         var that = this._connection;
         var iqid = that.getUniqueId("pubsubsubscriptions");
 
