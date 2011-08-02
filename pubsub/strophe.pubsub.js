@@ -463,10 +463,19 @@ Extend connection object to have plugin name 'pubsub'.
         var that = this._connection;
         var iqid = that.getUniqueId("pubsubaffiliations");
 
+        if (typeof node === 'function') {
+            call_back = node;
+            node = undefined;
+        }
+
+        var attrs = {}, xmlns = {'xmlns':Strophe.NS.PUBSUB};
+        if (node) {
+            attrs.node = node;
+            xmlns = {'xmlns':Strophe.NS.PUBSUB_OWNER};
+        }
+
         var iq = $iq({from:this.jid, to:this.service, type:'get', id:iqid})
-          .c('pubsub', {'xmlns':Strophe.NS.PUBSUB_OWNER})
-          .c('affiliations', {'node':node});
-        if (node) iq.attrs({'node':node});
+          .c('pubsub', xmlns).c('affiliations', attrs);
 
         that.addHandler(call_back, null, 'iq', null, iqid, null);
         that.send(iq.tree());
