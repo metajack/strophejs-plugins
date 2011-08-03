@@ -100,7 +100,7 @@ Strophe.addConnectionPlugin('disco',
      *   (String) jid
      *   (String) node
      */
-    info: function(jid, node, success, error)
+    info: function(jid, node, success, error, timeout)
     {
         var attrs = {xmlns: Strophe.NS.DISCO_INFO};
         if (node)
@@ -108,7 +108,7 @@ Strophe.addConnectionPlugin('disco',
 
         var info = $iq({from:this._connection.jid,
                          to:jid, type:'get'}).c('query', attrs);
-        this._connection.sendIQ(info, success, error);
+        this._connection.sendIQ(info, success, error, timeout);
     },
     /** Function: items
      * Items query
@@ -118,7 +118,7 @@ Strophe.addConnectionPlugin('disco',
      *   (String) jid
      *   (String) node
      */
-    items: function(jid, node, success, error)
+    items: function(jid, node, success, error, timeout)
     {
         var attrs = {xmlns: Strophe.NS.DISCO_ITEMS};
         if (node)
@@ -126,7 +126,7 @@ Strophe.addConnectionPlugin('disco',
 
         var items = $iq({from:this._connection.jid,
                          to:jid, type:'get'}).c('query', attrs);
-        this._connection.sendIQ(items, success, error);
+        this._connection.sendIQ(items, success, error, timeout);
     },
     /** PrivateFunction: _onDiscoInfo
      * Called when receive info request
