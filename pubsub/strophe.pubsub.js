@@ -300,11 +300,11 @@ Extend connection object to have plugin name 'pubsub'.
             iq.up().c('options').form(Strophe.NS.PUBSUB_SUBSCRIBE_OPTIONS, options);
         }
 
-        that.addHandler(call_back, null, 'iq', null, subid, null);
+        that.addHandler(call_back, null, 'iq', null, iqid, null);
 
         //add the event handler to receive items
         that.addHandler(event_cb, null, 'message', null, null, null);
-        that.send(sub.tree());
+        that.send(iq.tree());
         return iqid;
     },
 
