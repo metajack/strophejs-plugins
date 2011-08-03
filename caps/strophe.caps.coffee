@@ -14,17 +14,21 @@
 Strophe.addConnectionPlugin 'caps', (->
 
   conn = null
-  dummyId = category: "client", type:"pc", name: "strophe", lang:""
 
   init = ( c ) ->
     conn = c
     Strophe.addNamespace 'CAPS', "http://jabber.org/protocol/caps"
-    conn.disco.addFeature Strophe.NS.CAPS
-    conn.disco.addFeature Strophe.NS.DISCO_INFO
     if conn.disco is undefined
       throw new Error "disco plugin required!"
-    if typeof b64_sha1 isnt 'function'
+    if b64_sha1 is undefined
       throw new Error "SHA-1 library required!"
+    conn.disco.addFeature Strophe.NS.CAPS
+    conn.disco.addFeature Strophe.NS.DISCO_INFO
+
+    # chek if there are identities
+    if conn.disco._identities.length is 0
+      conn.disco.addIdentity "client","pc", "strophejs", ""
+
 
   addFeature = (feature) -> conn.disco.addFeature feature
 
@@ -60,9 +64,6 @@ Strophe.addConnectionPlugin 'caps', (->
     # copy the original features
     features = []
     features.push(k) for k in conn.disco._features
-
-    # chek if there are identities
-    if ids.length is 0 then ids.push dummyId
 
     ## Generate string
 
