@@ -26,8 +26,8 @@
     removeFeature = function(feature) {
       return conn.disco.removeFeature(feature);
     };
-    sendPres = function(success, error, timeout) {
-      return conn.send($pres().cnode(createCapsNode().tree()), success, error, timeout);
+    sendPres = function() {
+      return conn.send($pres().cnode(createCapsNode().tree()));
     };
     createCapsNode = function() {
       var node;

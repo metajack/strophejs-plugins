@@ -30,8 +30,7 @@ Strophe.addConnectionPlugin 'caps', (->
 
   removeFeature = (feature) -> conn.disco.removeFeature feature
 
-  sendPres = (success, error, timeout) ->
-    conn.send $pres().cnode( createCapsNode().tree() ), success, error, timeout
+  sendPres = -> conn.send $pres().cnode( createCapsNode().tree() )
 
   createCapsNode = ->
 
