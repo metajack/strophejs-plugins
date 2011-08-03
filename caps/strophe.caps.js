@@ -1,23 +1,20 @@
 (function() {
   Strophe.addConnectionPlugin('caps', (function() {
-    var addFeature, conn, createCapsNode, dummyId, generateVerificationString, init, propertySort, removeFeature, sendPres;
+    var addFeature, conn, createCapsNode, generateVerificationString, init, propertySort, removeFeature, sendPres;
     conn = null;
-    dummyId = {
-      category: "client",
-      type: "pc",
-      name: "strophe",
-      lang: ""
-    };
     init = function(c) {
       conn = c;
       Strophe.addNamespace('CAPS', "http://jabber.org/protocol/caps");
-      conn.disco.addFeature(Strophe.NS.CAPS);
-      conn.disco.addFeature(Strophe.NS.DISCO_INFO);
       if (conn.disco === void 0) {
         throw new Error("disco plugin required!");
       }
-      if (typeof b64_sha1 !== 'function') {
+      if (b64_sha1 === void 0) {
         throw new Error("SHA-1 library required!");
+      }
+      conn.disco.addFeature(Strophe.NS.CAPS);
+      conn.disco.addFeature(Strophe.NS.DISCO_INFO);
+      if (conn.disco._identities.length === 0) {
+        return conn.disco.addIdentity("client", "pc", "strophejs", "");
       }
     };
     addFeature = function(feature) {
@@ -65,9 +62,6 @@
       for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
         k = _ref2[_j];
         features.push(k);
-      }
-      if (ids.length === 0) {
-        ids.push(dummyId);
       }
       S = "";
       propertySort(ids, "category");
