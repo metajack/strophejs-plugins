@@ -17,6 +17,7 @@ The homepage for this collection is https://github.com/metajack/strophejs-plugin
 - Result Set Management ( [XEP 0059](http://xmpp.org/extensions/xep-0059.html) )
 - Publish-Subscribe ( [XEP 0060](http://xmpp.org/extensions/xep-0060.html) )
 - In-Band Registration ( [XEP 0077](http://xmpp.org/extensions/xep-0077.html) )
+- Entity Capabilities ( [XEP 0115](http://xmpp.org/extensions/xep-0115.html) )
 - Message Archiving ( [XEP 0136](http://xmpp.org/extensions/xep-0136.html) )
 - Personal Eventing Protocol ( [XEP 0163](http://xmpp.org/extensions/xep-0163.html) )
 - XMPP Ping ( [XEP 0199](http://xmpp.org/extensions/xep-0199.html) )

@@ -74,6 +74,24 @@ Strophe.addConnectionPlugin('disco',
         this._features.push(var_name);
         return true;
     },
+    /** Function: removeFeature
+     *
+     * Parameters:
+     *   (String) var_name - feature name (like jabber:iq:version)
+     *
+     * Returns:
+     *   boolean
+     */
+    removeFeature: function(var_name)
+    {
+        for (var i=0; i<this._features.length; i++)
+        {
+             if (this._features[i] == var_name)
+                 this._features.splice(i,i)
+                 return true;
+        }
+        return false;
+    },
     /** Function: addItem
      *
      * Parameters:
