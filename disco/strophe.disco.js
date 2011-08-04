@@ -87,7 +87,7 @@ Strophe.addConnectionPlugin('disco',
         for (var i=0; i<this._features.length; i++)
         {
              if (this._features[i] === var_name){
-                 this._features.splice(i,i)
+                 this._features.splice(i,1)
                  return true;
              }
         }
