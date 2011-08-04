@@ -275,17 +275,17 @@ Extend connection object to have plugin name 'pubsub'.
         Subscribe to a node in order to receive event items.
 
         Parameters:
-        (String) node -  The name of the pubsub node.
-        (Array) options -  The configuration options for the  node.
-        (Function) event_cb - Used to recieve subscription events.
-        (Function) call_back - Used to determine if node
-        (Boolean) barejid - use barejid
-        creation was sucessful.
+        (String) node         - The name of the pubsub node.
+        (Array) options       - The configuration options for the  node.
+        (Function) event_cb   - Used to recieve subscription events.
+        (Function) success    - callback function for successful node creation.
+        (Function) error      - error callback function.
+        (Boolean) barejid     - use barejid creation was sucessful.
 
         Returns:
         Iq id used to send subscription.
     */
-    subscribe: function(node, options, event_cb, call_back, barejid) {
+    subscribe: function(node, options, event_cb, success, error, barejid) {
         var that = this._connection;
         var iqid = that.getUniqueId("subscribenode");
 
@@ -300,11 +300,9 @@ Extend connection object to have plugin name 'pubsub'.
             iq.up().c('options').form(Strophe.NS.PUBSUB_SUBSCRIBE_OPTIONS, options);
         }
 
-        that.addHandler(call_back, null, 'iq', null, iqid, null);
-
         //add the event handler to receive items
         that.addHandler(event_cb, null, 'message', null, null, null);
-        that.send(iq.tree());
+        that.sendIQ(iq.tree(), success, error);
         return iqid;
     },
 
@@ -312,12 +310,12 @@ Extend connection object to have plugin name 'pubsub'.
         Unsubscribe from a node.
 
         Parameters:
-        (String) node -  The name of the pubsub node.
-        (Function) call_back - Used to determine if node
-        creation was sucessful.
+        (String) node       - The name of the pubsub node.
+        (Function) success  - callback function for successful node creation.
+        (Function) error    - error callback function.
 
     */
-    unsubscribe: function(node, jid, subid, call_back) {
+    unsubscribe: function(node, jid, subid, success, error) {
         var that = this._connection;
         var iqid = that.getUniqueId("pubsubunsubscribenode");
 
@@ -326,9 +324,7 @@ Extend connection object to have plugin name 'pubsub'.
           .c('unsubscribe', {'node':node, 'jid':jid});
         if (subid) iq.attrs({subid:subid});
 
-        that.addHandler(call_back, null, 'iq', null, iqid, null);
-        that.send(iq.tree());
-
+        that.sendIQ(iq.tree(), success, error);
         return iqid;
     },
 
