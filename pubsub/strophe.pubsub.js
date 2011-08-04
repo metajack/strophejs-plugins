@@ -60,10 +60,31 @@ Strophe.Builder.prototype.form = function (ns, options)
 Strophe.Builder.prototype.list = function (tag, array)
 {
     for (var i=0; i < array.length; ++i) {
-        this.node.appendChild(this._makeNode(tag, array[i].attrs))
-          .appendChild(array[i].data.cloneNode
-                     ? array[i].data.cloneNode(true)
-                     : Strophe.xmlTextNode(array[i].data));
+        this.c(tag, array[i].attrs)
+        this.node.appendChild(array[i].data.cloneNode
+                            ? array[i].data.cloneNode(true)
+                            : Strophe.xmlTextNode(array[i].data));
+        this.up();
+    }
+    return this;
+};
+
+Strophe.Builder.prototype.children = function (object) {
+    var key, value;
+    for (key in object) {
+        if (!object.hasOwnProperty(key)) continue;
+        value = object[key];
+        if (Array.isArray(value)) {
+            this.list(key, value);
+        } else if (typeof value === 'string') {
+            this.c(key, {}, value);
+        } else if (typeof value === 'number') {
+            this.c(key, {}, ""+value);
+        } else if (typeof value === 'object') {
+            this.c(key).children(value).up();
+        } else {
+            this.c(key).up();
+        }
     }
     return this;
 };
@@ -118,6 +139,7 @@ Extend connection object to have plugin name 'pubsub'.
                              Strophe.NS.PUBSUB+"#manage-subscriptions");
         Strophe.addNamespace('PUBSUB_META_DATA',
                              Strophe.NS.PUBSUB+"#meta-data");
+        Strophe.addNamespace('ATOM', "http://www.w3.org/2005/Atom");
 
         if (conn.disco)
             conn.disco.addFeature(Strophe.NS.PUBSUB);
@@ -505,32 +527,27 @@ Extend connection object to have plugin name 'pubsub'.
         return iqid;
     },
 
-    /** Function: publishItem
-     *  Publish a single item to the given pubsub node.
-     *
-     *  Parameters:
-     *    (String) node -  The name of the pubsub node.
-     *    (String | XML_element) data -  Item contents.
-     *    (Object) attrs -  Item attributes (optional).
-     *    (Function) call_back - Called on server response.
-     *
-     *  Returns:
-     *    Iq id
+    /** Function: publishAtom
      */
-    publishItem: function(node, data, attrs, call_back) {
-        return this.publish(node, [
-            {data: data, attrs: attrs ? attrs : {}}
-        ], call_back);
-    },
+    publishAtom: function(node, atoms, call_back) {
+        if (!Array.isArray(atoms))
+            atoms = [atoms];
 
-    /** Function: publishAtomEntry
-     *  publishItem variant for ejabberd, which allows only one <item/> and it has to be an Atom entry :-\
-     */
-    publishAtomEntry: function(node, text, attrs, call_back)
-    {
-        var en = Strophe.xmlElement('entry', [['xmlns', 'http://www.w3.org/2005/Atom']]);
-        en.appendChild(Strophe.xmlTextNode(text));
-        return this.publishItem(node, en, attrs, call_back);
+        var i, atom, entries = [];
+        for (i = 0; i < atoms.length; i++) {
+            atom = atoms[i];
+
+            atom.updated = atom.updated || (new Date()).toISOString();
+            if (atom.published && atom.published.toISOString)
+                atom.published = atom.published.toISOString();
+
+            entries.push({
+                data: $build("entry", { xmlns:Strophe.NS.ATOM })
+                        .children(atom).tree(),
+                attrs:(atom.id ? { id:atom.id } : {}),
+            });
+        }
+        return this.publish(node, entries, call_back);
     },
 
 });
