@@ -24,6 +24,7 @@ Strophe.addConnectionPlugin('muc', {
          */
         Strophe.addNamespace('MUC_OWNER', Strophe.NS.MUC+"#owner");
         Strophe.addNamespace('MUC_ADMIN', Strophe.NS.MUC+"#admin");
+        Strophe.addNamespace('MUC_USER', Strophe.NS.MUC+"#user");
     },
     /***Function
     Join a multi-user chat room
@@ -146,7 +147,7 @@ Strophe.addConnectionPlugin('muc', {
         return msgid;
     },
     /***Function
-    Send a chat room invitation.
+    Send a mediated invitation.
     Parameters:
     (String) room - The multi-user chat room name.
     (String) receiver - The invitation's receiver.
@@ -154,6 +155,28 @@ Strophe.addConnectionPlugin('muc', {
     msgiq - the unique id used to send the invitation
     */
     invite: function(room, receiver) {
+        var msgid = this._connection.getUniqueId();
+        var invitation = $msg({
+            from: this._connection.jid,
+            to: room,
+            id: msgid
+        }).c('x', {
+            xmlns: Strophe.NS.MUC_USER
+        }).c('invite', {
+            to: receiver
+        });
+        this._connection.send(invitation);
+        return msgid;
+    },
+    /***Function
+    Send a direct invitation.
+    Parameters:
+    (String) room - The multi-user chat room name.
+    (String) receiver - The invitation's receiver.
+    Returns:
+    msgiq - the unique id used to send the invitation
+    */
+    directInvite: function(room, receiver) {
         var msgid = this._connection.getUniqueId();
         var invitation = $msg({
             from: this._connection.jid,
