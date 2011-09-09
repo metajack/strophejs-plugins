@@ -8,20 +8,20 @@ The homepage for this collection is https://github.com/metajack/strophejs-plugin
 
 ## Available Plugins
 
-- [Data Forms](                  dataforms/) ( [XEP 0004](http://xmpp.org/extensions/xep-0004.html) )
-- [Service Discovery](           disco/    ) ( [XEP 0030](http://xmpp.org/extensions/xep-0030.html) )
-- [Multi-User Chat](             muc/      ) ( [XEP 0045](http://xmpp.org/extensions/xep-0045.html) )
-- [Private XML Storage](         private/  ) ( [XEP 0049](http://xmpp.org/extensions/xep-0049.html) )
-- [Ad-Hoc Commands](             cmds/     ) ( [XEP 0050](http://xmpp.org/extensions/xep-0050.html) )
-- [vcard-temp](                  vcard/    ) ( [XEP 0054](http://xmpp.org/extensions/xep-0054.html) )
-- [Result Set Management](       rsm/      ) ( [XEP 0059](http://xmpp.org/extensions/xep-0059.html) )
-- [Publish-Subscribe](           pubsub/   ) ( [XEP 0060](http://xmpp.org/extensions/xep-0060.html) )
-- [In-Band Registration](        register/ ) ( [XEP 0077](http://xmpp.org/extensions/xep-0077.html) )
-- [Entity Capabilities](         caps/     ) ( [XEP 0115](http://xmpp.org/extensions/xep-0115.html) )
-- [Message Archiving](           archive/  ) ( [XEP 0136](http://xmpp.org/extensions/xep-0136.html) )
-- [Personal Eventing Protocol](  pep/      ) ( [XEP 0163](http://xmpp.org/extensions/xep-0163.html) )
-- [XMPP Ping](                   ping/     ) ( [XEP 0199](http://xmpp.org/extensions/xep-0199.html) )
-- [Roster Versioning](           roster/   ) ( [XEP 0237](http://xmpp.org/extensions/xep-0237.html) )
+- [Data Forms](                  master/dataforms/) ( [XEP 0004](http://xmpp.org/extensions/xep-0004.html) )
+- [Service Discovery](           master/disco/    ) ( [XEP 0030](http://xmpp.org/extensions/xep-0030.html) )
+- [Multi-User Chat](             master/muc/      ) ( [XEP 0045](http://xmpp.org/extensions/xep-0045.html) )
+- [Private XML Storage](         master/private/  ) ( [XEP 0049](http://xmpp.org/extensions/xep-0049.html) )
+- [Ad-Hoc Commands](             master/cmds/     ) ( [XEP 0050](http://xmpp.org/extensions/xep-0050.html) )
+- [vcard-temp](                  master/vcard/    ) ( [XEP 0054](http://xmpp.org/extensions/xep-0054.html) )
+- [Result Set Management](       master/rsm/      ) ( [XEP 0059](http://xmpp.org/extensions/xep-0059.html) )
+- [Publish-Subscribe](           master/pubsub/   ) ( [XEP 0060](http://xmpp.org/extensions/xep-0060.html) )
+- [In-Band Registration](        master/register/ ) ( [XEP 0077](http://xmpp.org/extensions/xep-0077.html) )
+- [Entity Capabilities](         master/caps/     ) ( [XEP 0115](http://xmpp.org/extensions/xep-0115.html) )
+- [Message Archiving](           master/archive/  ) ( [XEP 0136](http://xmpp.org/extensions/xep-0136.html) )
+- [Personal Eventing Protocol](  master/pep/      ) ( [XEP 0163](http://xmpp.org/extensions/xep-0163.html) )
+- [XMPP Ping](                   master/ping/     ) ( [XEP 0199](http://xmpp.org/extensions/xep-0199.html) )
+- [Roster Versioning](           master/roster/   ) ( [XEP 0237](http://xmpp.org/extensions/xep-0237.html) )
 
 ## Contribute
 
