@@ -1,28 +1,33 @@
-# strophe.<PLUGIN_NAME>.js
+# strophe.PLUGIN_NAME.js
 
-strophe.<PLUGIN_NAME>.js is a plugin for the XMPP library [ Strophe.js ]( http://code.stanziq.com/strophe ) 
-to provide <XEP_NAME> ( [XEP-<XEP_NUMBER>](http://xmpp.org/extensions/xep-<XEP_NUMBER>.html) ).  
+strophe.PLUGIN_NAME.js is a plugin for the XMPP library [ Strophe.js ]( http://code.stanziq.com/strophe )
+to provide XEP_NAME ( [XEP-XEP_NUMBER](http://xmpp.org/extensions/xep-XEP_NUMBER.html) ).
 
 ## Usage
-<DESCRIPTION>
+
+DESCRIPTION
 
 ## Dependencies
-- <STROPHE PLUGIN DEPENDENCIE 01>
+
+- STROPHE PLUGIN DEPENDENCY 1
 - ...
-- <STROPHE PLUGIN DEPENDENCIE N>
-- <LIBRARY PLUGIN DEPENDENCIE 01>
+- STROPHE PLUGIN DEPENDENCY N
+- LIBRARY PLUGIN DEPENDENCY 1
 - ...
-- <LIBRARY PLUGIN DEPENDENCIE M>
+- LIBRARY PLUGIN DEPENDENCY M
 
 ## ToDo
-- <TODO 01>
+
+- TODO 1
 - ...
-- <TODO K>
+- TODO K
 
 ## Licence
-strophe.<PLUGIN_NAME>.js is licensed under the [<LICENCE>](<LINK_TO_LICENCE>).
+
+strophe.PLUGIN_NAME.js is licensed under the [LICENCE](LINK_TO_LICENCE).
 
 ## Authors
-- <AUTHOR 01>
+
+- AUTHOR 01
 - ...
-- <AUTHOR J>
+- AUTHOR J
