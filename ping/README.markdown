@@ -1,9 +1,7 @@
 # Strophe.ping.js
 
-Strophe.ping.js is a plugin for the XMPP library [Strophe.js]( http://code.stanziq.com/strophe ) 
-to provide XMPP Ping ( [ XEP-0199 ]( http://xmpp.org/extensions/xep-0199.html ) ).
-
-Strophe.ping.js is licensed under the MIT license.
+Strophe.ping.js is a plugin to provide XMPP Ping
+( [ XEP-0199 ]( http://xmpp.org/extensions/xep-0199.html ) ).
 
 ## Usage
 
@@ -22,3 +20,12 @@ Within your ping handler function you surely want to reply with a pong iq:
       conncection.ping.pong( ping )
       ...
     }
+
+## ToDo
+
+- write specs
+
+## Authors
+
+- [flosse](https://github.com/flosse)
+- [Michael Weibel](https://github.com/mweibel)

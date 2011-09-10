@@ -1,16 +1,16 @@
 # Strophe.caps.js
 
-Strophe.caps.js is a plugin for the XMPP library [Strophe.js]( http://code.stanziq.com/strophe )
-to provide XMPP Entity Capabilities ( [ XEP-0115 ]( http://xmpp.org/extensions/xep-0115.html ) ).
+Strophe.caps.js is a plugin to provide XMPP Entity Capabilities
+( [ XEP-0115 ]( http://xmpp.org/extensions/xep-0115.html ) ).
 
 
 ## Usage
 
-### Adding features:
+### Adding features
 
     connection.caps.add( "myfeature" );
 
-### Removing features:
+### Removing features
 
     connection.caps.remove( "myfeature" );
 
@@ -27,10 +27,6 @@ to provide XMPP Entity Capabilities ( [ XEP-0115 ]( http://xmpp.org/extensions/x
 
 - write specs
 - support service discovery data forms
-
-## Licence
-
-Strophe.caps.js is licensed under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
 
 ## Authors
 

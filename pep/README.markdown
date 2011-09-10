@@ -1,19 +1,16 @@
 # Strophe.pep.js
 
-Strophe.pep.js is a plugin for the XMPP library [ Strophe.js ]( http://code.stanziq.com/strophe ) 
-to provide the Personal Eventing Protocol ( XEP-0163 ). This plugin is intend to be small and simple. 
-It has no dependecies to other plugins.
-You can find a more powerful PEP plugin in [ owengriffin's repository ]( https://github.com/owengriffin/strophejs/blob/master/plugins/strophe.pep.js ).
-
-Strophe.pep.js is licensed under the MIT license.
+Strophe.pep.js is a plugin to provide the Personal Eventing Protocol
+( [XEP-0163](http://xmpp.org/extensions/xep-0163.html) ).
 
 ## Usage
 
-After you connected sucessfully to the XMPP server you can (un-)subscribe to PEP nodes or publish to your own nodes:
+After you connected sucessfully to the XMPP server you can (un-)subscribe to PEP
+nodes or publish to your own nodes:
 
     connection.pep.subscribe( "serviceJID@server.org", "nodename" );
     ...
-    connection.pep.unsubscribe( "serviceJID@server.org", "nodename" );	
+    connection.pep.unsubscribe( "serviceJID@server.org", "nodename" );
     ...
     var elem = document.createElement("mytag");
     elem.appendChild( document.createTextNode("myText") );
@@ -35,3 +32,11 @@ If you have standard handlers you want to use, you can define them globally:
     conncection.pep.defaults.success = myDefaultSuccessHandler
     ...
     conncection.pep.defaults.error = myDefaultErrorHandler
+
+## ToDo
+
+- write specs
+
+## Authors
+
+- flosse

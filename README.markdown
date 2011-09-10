@@ -26,9 +26,11 @@ The homepage for this collection is https://github.com/metajack/strophejs-plugin
 ## Contribute
 
 If you would like to make your plugin available here, simply fork this
-repository, commit your plugin, and issue a pull request. The same
-instructions also work for any changes you wish to make to existing
+repository, commit your plugin (see [boilerplate](master/boilerplate)),
+and issue a pull request.
+The same instructions also work for any changes you wish to make to existing
 plugins.
+
 
 ## Literature
 
