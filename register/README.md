@@ -25,7 +25,7 @@ var callback = function (status) {
         connection.register.submit();
     } else if (status === Strophe.Status.REGISTERED) {
         console.log("registered!");
-        connection.register.authenticate();
+        connection.authenticate();
     } else if (status === Strophe.Status.CONNECTED) {
         console.log("logged in!");
     } else {
