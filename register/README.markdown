@@ -1,6 +1,7 @@
 # strophe.register.js
 
 A Strophe Plugin for In-Band Registration.
+( [XEP 0077](http://xmpp.org/extensions/xep-0077.html) )
 
 ## Usage
 
@@ -37,3 +38,10 @@ connection.register.connect("example.com", callback, wait, hold);
 
 After that you're logged in with a fresh smelling jid.
 
+## ToDo
+
+- write specs
+
+## Authors
+
+- [dodo](https://github.com/dodo) 
