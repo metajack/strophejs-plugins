@@ -254,17 +254,48 @@ Strophe.addConnectionPlugin('pubsub', {
 	    
 	    return pubid;
 	},
-	/*Function: items
-	  Used to retrieve the persistent items from the pubsub node.
-	  
-	*/
-	items: function(jid,service,node,ok_callback,error_back) {
+        /***Function
+          
+          Request a particular item by specifying the node ID and the appropriate itemid
+
+          Parameters:
+          (String) jid - this node owner's jid
+          (String) service - this name of the pubsub service.
+          (String) node - The name of the pubsub node
+          (Function) ok_callback - Executed on successful request
+          (Function) error_callback - Executed on errorneous request
+         
+         */
+	items: function(jid,service,node,ok_callback,error_callback) {
 	    var pub = $iq({from:jid, to:service, type:'get'})
 	    
 	    //ask for all items
 	    pub.c('pubsub', 
 		{ xmlns:Strophe.NS.PUBSUB }).c('items',{node:node});
 	    
-	    return this._connection.sendIQ(pub.tree(),ok_callback,error_back);
-	}
+	    return this._connection.sendIQ(pub.tree(),ok_callback,error_callback);
+	}, 
+        /***Function
+          
+          Request a particular item by specifying the node ID and the appropriate itemid
+
+          Parameters:
+          (String) jid - this node owner's jid
+          (String) service - this name of the pubsub service.
+          (String) node - The name of the pubsub node
+          (String) itemid - The id of item to request
+          (Function) ok_callback - Executed on successful request
+          (Function) error_callback - Executed on errorneous request
+         
+         */
+	item: function(jid,service,node,itemid,ok_callback,error_callback) {
+	    var pub = $iq({from:jid, to:service, type:'get'})
+	    
+	    //ask for all items
+	    pub.c('pubsub', 
+		{ xmlns:Strophe.NS.PUBSUB }).c('items',{node:node}).c('item', {id:itemid});
+	    
+	    return this._connection.sendIQ(pub.tree(),ok_callback,error_callback);
+	}      
+
 });
