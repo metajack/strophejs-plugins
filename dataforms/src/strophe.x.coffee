@@ -10,6 +10,11 @@ class Form
   @_types: ["form","submit","cancel","result"]
 
   constructor: (opt) ->
+
+    @fields = []
+    @items = []
+    @reported = []
+
     if opt
       @type = opt.type if opt.type in Form._types
       @title = opt.title
@@ -19,10 +24,9 @@ class Form
         target.push if f instanceof klass then f else new klass f
 
       if opt.fields
-        helper.fill opt.fields, @fields=[], Field if opt.fields
+        helper.fill opt.fields, @fields, Field if opt.fields
       else if opt.items
-        helper.fill opt.items,  @items=[],  Item  if opt.items
-        @reported = []
+        helper.fill opt.items, @items, Item if opt.items
         for i in @items
           for f in i.fields
             @reported.push f.var if not (f.var in @reported)
@@ -38,11 +42,11 @@ class Form
     xml.c("title").t(@title.toString()).up() if @title
     xml.c("instructions").t(@instructions.toString()).up() if @instructions
 
-    if @fields
+    if @fields.length > 0
       for f in @fields
         xml.cnode(f.toXML()).up()
 
-    else if @items
+    else if @items.length > 0
       xml.c("reported")
 
       for r in @reported
@@ -58,11 +62,12 @@ class Form
     json = {@type}
     json.title = @title if @title
     json.instructions = @instructions if @instructions
-    if @fields
+
+    if @fields.length > 0
       json.fields = []
       for f in @fields
         json.fields.push f.toJSON()
-    if @items
+    else if @items.length > 0
       json.items = []
       json.reported = @reported
       json.items.push i.toJSON() for i in @items
@@ -85,13 +90,42 @@ class Form
     form.append("<h1>#{@title}</h1>") if @title
     form.append("<p>#{@instructions}</p>") if @instructions
 
-    if @fields
+    if @fields.length > 0
       (@_createFieldset @fields).children().appendTo form
 
-    else if @items
+    else if @items.length > 0
       (@_createFieldset i.fields ).appendTo form for i in @items
 
     form[0]
+
+  @fromXML: (xml) ->
+    xml = $ xml
+    f = new Form
+      type: xml.attr "type"
+
+    title = xml.find "title"
+    if title.length is 1
+      f.title = title.text()
+
+    instr = xml.find "instructions"
+    if instr.length is 1
+      f.instructions = instr.text()
+
+    fields = xml.find "field"
+    items = xml.find "item"
+
+    if items.length > 0
+      f.items = ( Item.fromXML i for i in items)
+
+    else if fields.length > 0
+      f.fields = ( Field.fromXML j for j in fields)
+
+    reported = xml.find "reported"
+    if reported.length is 1
+      fields = reported.find "field"
+      f.reported = ( ($ r).attr("var") for r in fields)
+    f
+
 
 class Field
 
@@ -106,10 +140,10 @@ class Field
     @values = []
 
     if opt
-      @type = opt.type if opt.type in Field._types
-      @desc = opt.desc if opt.desc
-      @label = opt.label if opt.label
-      @var = opt.var or "_no_var_was_defined_"
+      @type = opt.type.toString() if opt.type in Field._types
+      @desc = opt.desc.toString() if opt.desc
+      @label = opt.label.toString() if opt.label
+      @var = opt.var?.toString() or "_no_var_was_defined_"
       @required = opt.required is true or opt.required is "true"
       @addOptions opt.options if opt.options
       opt.values = [ opt.value ] if opt.value
@@ -126,7 +160,7 @@ class Field
   addValues: (vals) ->
     multi = @type in Field._multiTypes
     if multi or ( not multi and vals.length is 1 )
-      @values = [@values..., (v for v in vals)...]
+      @values = [@values..., (v.toString() for v in vals)...]
     @
 
   addOption: (opt) -> @addOptions [opt]
@@ -200,12 +234,24 @@ class Field
     el.attr('required', @required ) if @required
     el[0]
 
+  @fromXML: (xml) ->
+    xml = $ xml
+    new Field
+      type:  xml.attr "type"
+      var:   xml.attr "var"
+      label: xml.attr "label"
+      desc:  xml.find("desc").text()
+      required: (xml.find("required").length is 1)
+      values: ( ($ v).text() for v in xml.find "value" )
+      options: ( Option.fromXML o for o in xml.find "option" )
+
+
 class Option
 
   constructor: (opt) ->
     if opt
-      @label = opt.label if opt.label
-      @value = opt.value if opt.value
+      @label = opt.label.toString() if opt.label
+      @value = opt.value.toString() if opt.value
 
   label: ""
   value: ""
@@ -218,6 +264,9 @@ class Option
   toJSON: -> { @label, @value }
 
   toHTML: -> ($ "<option>").attr('value', @value ).text( @label or @value )[0]
+
+  @fromXML: (xml) ->
+    new Option { label: ($ xml).attr("label"), value: ($ xml).text() }
 
 class Item
 
@@ -239,6 +288,12 @@ class Item
       for f in @fields
         json.fields.push f.toJSON()
     json
+
+  @fromXML: (xml) ->
+    xml = $ xml
+    fields = xml.find "field"
+    new Item
+      fields: ( Field.fromXML f for f in fields)
 
 Strophe.x =
   Form: Form

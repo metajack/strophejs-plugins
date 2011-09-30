@@ -21,6 +21,9 @@
     Form._types = ["form", "submit", "cancel", "result"];
     function Form(opt) {
       var f, i, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4;
+      this.fields = [];
+      this.items = [];
+      this.reported = [];
       if (opt) {
         if (_ref = opt.type, __indexOf.call(Form._types, _ref) >= 0) {
           this.type = opt.type;
@@ -38,13 +41,12 @@
         };
         if (opt.fields) {
           if (opt.fields) {
-            helper.fill(opt.fields, this.fields = [], Field);
+            helper.fill(opt.fields, this.fields, Field);
           }
         } else if (opt.items) {
           if (opt.items) {
-            helper.fill(opt.items, this.items = [], Item);
+            helper.fill(opt.items, this.items, Item);
           }
-          this.reported = [];
           _ref2 = this.items;
           for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
             i = _ref2[_i];
@@ -74,13 +76,13 @@
       if (this.instructions) {
         xml.c("instructions").t(this.instructions.toString()).up();
       }
-      if (this.fields) {
+      if (this.fields.length > 0) {
         _ref = this.fields;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           f = _ref[_i];
           xml.cnode(f.toXML()).up();
         }
-      } else if (this.items) {
+      } else if (this.items.length > 0) {
         xml.c("reported");
         _ref2 = this.reported;
         for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
@@ -109,15 +111,14 @@
       if (this.instructions) {
         json.instructions = this.instructions;
       }
-      if (this.fields) {
+      if (this.fields.length > 0) {
         json.fields = [];
         _ref = this.fields;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           f = _ref[_i];
           json.fields.push(f.toJSON());
         }
-      }
-      if (this.items) {
+      } else if (this.items.length > 0) {
         json.items = [];
         json.reported = this.reported;
         _ref2 = this.items;
@@ -147,9 +148,9 @@
       if (this.instructions) {
         form.append("<p>" + this.instructions + "</p>");
       }
-      if (this.fields) {
+      if (this.fields.length > 0) {
         (this._createFieldset(this.fields)).children().appendTo(form);
-      } else if (this.items) {
+      } else if (this.items.length > 0) {
         _ref = this.items;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           i = _ref[_i];
@@ -158,26 +159,78 @@
       }
       return form[0];
     };
+    Form.fromXML = function(xml) {
+      var f, fields, i, instr, items, j, r, reported, title;
+      xml = $(xml);
+      f = new Form({
+        type: xml.attr("type")
+      });
+      title = xml.find("title");
+      if (title.length === 1) {
+        f.title = title.text();
+      }
+      instr = xml.find("instructions");
+      if (instr.length === 1) {
+        f.instructions = instr.text();
+      }
+      fields = xml.find("field");
+      items = xml.find("item");
+      if (items.length > 0) {
+        f.items = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = items.length; _i < _len; _i++) {
+            i = items[_i];
+            _results.push(Item.fromXML(i));
+          }
+          return _results;
+        })();
+      } else if (fields.length > 0) {
+        f.fields = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = fields.length; _i < _len; _i++) {
+            j = fields[_i];
+            _results.push(Field.fromXML(j));
+          }
+          return _results;
+        })();
+      }
+      reported = xml.find("reported");
+      if (reported.length === 1) {
+        fields = reported.find("field");
+        f.reported = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = fields.length; _i < _len; _i++) {
+            r = fields[_i];
+            _results.push(($(r)).attr("var"));
+          }
+          return _results;
+        })();
+      }
+      return f;
+    };
     return Form;
   })();
   Field = (function() {
     Field._types = ["boolean", "fixed", "hidden", "jid-multi", "jid-single", "list-multi", "list-single", "text-multi", "text-private", "text-single"];
     Field._multiTypes = ["list-multi", "jid-multi", "text-multi", "hidden"];
     function Field(opt) {
-      var _ref;
+      var _ref, _ref2;
       this.options = [];
       this.values = [];
       if (opt) {
         if (_ref = opt.type, __indexOf.call(Field._types, _ref) >= 0) {
-          this.type = opt.type;
+          this.type = opt.type.toString();
         }
         if (opt.desc) {
-          this.desc = opt.desc;
+          this.desc = opt.desc.toString();
         }
         if (opt.label) {
-          this.label = opt.label;
+          this.label = opt.label.toString();
         }
-        this["var"] = opt["var"] || "_no_var_was_defined_";
+        this["var"] = ((_ref2 = opt["var"]) != null ? _ref2.toString() : void 0) || "_no_var_was_defined_";
         this.required = opt.required === true || opt.required === "true";
         if (opt.options) {
           this.addOptions(opt.options);
@@ -207,7 +260,7 @@
             _results = [];
             for (_i = 0, _len = vals.length; _i < _len; _i++) {
               v = vals[_i];
-              _results.push(v);
+              _results.push(v.toString());
             }
             return _results;
           })()));
@@ -349,16 +402,47 @@
       }
       return el[0];
     };
+    Field.fromXML = function(xml) {
+      var o, v;
+      xml = $(xml);
+      return new Field({
+        type: xml.attr("type"),
+        "var": xml.attr("var"),
+        label: xml.attr("label"),
+        desc: xml.find("desc").text(),
+        required: xml.find("required").length === 1,
+        values: (function() {
+          var _i, _len, _ref, _results;
+          _ref = xml.find("value");
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            v = _ref[_i];
+            _results.push(($(v)).text());
+          }
+          return _results;
+        })(),
+        options: (function() {
+          var _i, _len, _ref, _results;
+          _ref = xml.find("option");
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            o = _ref[_i];
+            _results.push(Option.fromXML(o));
+          }
+          return _results;
+        })()
+      });
+    };
     return Field;
   })();
   Option = (function() {
     function Option(opt) {
       if (opt) {
         if (opt.label) {
-          this.label = opt.label;
+          this.label = opt.label.toString();
         }
         if (opt.value) {
-          this.value = opt.value;
+          this.value = opt.value.toString();
         }
       }
     }
@@ -377,6 +461,12 @@
     };
     Option.prototype.toHTML = function() {
       return ($("<option>")).attr('value', this.value).text(this.label || this.value)[0];
+    };
+    Option.fromXML = function(xml) {
+      return new Option({
+        label: ($(xml)).attr("label"),
+        value: ($(xml)).text()
+      });
     };
     return Option;
   })();
@@ -409,6 +499,22 @@
         }
       }
       return json;
+    };
+    Item.fromXML = function(xml) {
+      var f, fields;
+      xml = $(xml);
+      fields = xml.find("field");
+      return new Item({
+        fields: (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = fields.length; _i < _len; _i++) {
+            f = fields[_i];
+            _results.push(Field.fromXML(f));
+          }
+          return _results;
+        })()
+      });
     };
     return Item;
   })();

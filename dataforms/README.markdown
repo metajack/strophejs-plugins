@@ -56,3 +56,9 @@ You can also use options
 ### Convert to XML, HTML or JSON
 
 Every object can be converted to xml by using the `toXML`, `toHML` or `toJSON` function
+
+### Parse XML
+
+You can easily create a form by parsing XML:
+
+    var Form = Strophe.x.Form.fromXML(xml); 

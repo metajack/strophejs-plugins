@@ -39,7 +39,7 @@ describe "XMPP Data Forms (0004)", ->
       i = [{ fields: [f1] }]
       form = new @Sx.Form { items:i }
 
-      (expect (new @Sx.Form).items).toBeUndefined()
+      (expect (new @Sx.Form).items).toEqual []
       (expect form.items).toEqual [new @Sx.Item i[0]]
 
     it "has a reported' property if items are defined", ->
@@ -49,14 +49,14 @@ describe "XMPP Data Forms (0004)", ->
       i = [{ fields: [f1,f2] }]
       form = new @Sx.Form { items:i }
 
-      (expect (new @Sx.Form).reported).toBeUndefined()
+      (expect (new @Sx.Form).reported).toEqual []
       (expect form.reported).toEqual ["foo","bar"]
 
 
     it "can have fields", ->
       f1 = new @Sx.Field { var: "foo", value: "bar"}
       f2 = new @Sx.Field { var: "test", value:123, required: true}
-      (expect (new @Sx.Form).fields).toBeUndefined()
+      (expect (new @Sx.Form).fields).toEqual []
       (expect (new @Sx.Form {fields: [f1,f2]}).fields).toEqual [f1,f2]
 
     it "converts a form into an xml object", ->
@@ -123,7 +123,13 @@ describe "XMPP Data Forms (0004)", ->
         type: "submit"
         title: "foo"
         instructions: "bar"
-        fields: [ f1.toJSON(), { type: "text-single", var: "test", values:[123], required: true, options:[]}]
+        fields: [ f1.toJSON(), {
+          type: "text-single",
+          var: "test",
+          values:["123"],
+          required: true,
+          options:[]}
+        ]
 
     describe "conversion to HTML", ->
 
@@ -169,10 +175,36 @@ describe "XMPP Data Forms (0004)", ->
           ]
 
         html = form.toHTML()
-        console.log html
         (expect html.nodeName).toEqual "FORM"
         (expect html.childNodes[0].nodeName).toEqual "FIELDSET"
         (expect html.childNodes[1].nodeName).toEqual "FIELDSET"
+
+    it "can be created from xml", ->
+
+      f1 = new @Sx.Field {var: "foo"}
+      f2 = new @Sx.Field {var: "bar"}
+      f3 = new @Sx.Field {var: "foo"}
+      f4 = new @Sx.Field {var: "bar"}
+
+      form = new @Sx.Form
+        title: "test"
+        type: "result"
+        instructions: "Some text"
+        items: [
+          { fields: [f1,f2] }
+          { fields: [f3,f4] }
+        ]
+
+      (expect @Sx.Form.fromXML( form.toXML()).toJSON() ).toEqual form.toJSON()
+
+      form = new @Sx.Form
+        title: "test"
+        type: "result"
+        instructions: "Some text"
+        fields: [f1,f2, f3,f4]
+
+      (expect @Sx.Form.fromXML( form.toXML()).toJSON() ).toEqual form.toJSON()
+
 
   describe "Field", ->
 
@@ -304,7 +336,7 @@ describe "XMPP Data Forms (0004)", ->
         label: "myLabel"
         desc: "foo"
         required: false
-        values: ["a", 1, false]
+        values: ["a", "1", "false"]
         options: []
 
       (expect f2.toJSON()).toEqual
@@ -321,66 +353,100 @@ describe "XMPP Data Forms (0004)", ->
         values: ["a"]
         options: []
 
-  describe "conversion to HTML", ->
+    describe "conversion to HTML", ->
 
-    beforeEach ->
-      @f = new @Sx.Field { var: "bar" }
+      beforeEach ->
+        @f = new @Sx.Field { var: "bar" }
 
-    it "uses sets the variable as the name property", ->
-      html = @f.toHTML()
-      (expect html.getAttribute "name").toEqual "bar"
+      it "uses sets the variable as the name property", ->
+        html = @f.toHTML()
+        (expect html.getAttribute "name").toEqual "bar"
 
-    it "sets the required property", ->
-      @f.required = true
-      html = @f.toHTML()
-      (expect html.getAttribute "required").toEqual "required"
+      it "sets the required property", ->
+        @f.required = true
+        html = @f.toHTML()
+        (expect html.getAttribute "required").toEqual "required"
 
-    it "sets the description as placeholder property", ->
-      @f.desc = "your name"
-      @f.type = "text-single"
-      html = @f.toHTML()
-      (expect html.getAttribute "placeholder").toEqual "your name"
+      it "sets the description as placeholder property", ->
+        @f.desc = "your name"
+        @f.type = "text-single"
+        html = @f.toHTML()
+        (expect html.getAttribute "placeholder").toEqual "your name"
 
-    it "converts to a single selection", ->
+      it "converts to a single selection", ->
 
-      @f.type = "list-single"
-      @f.addValue 1
-      @f.addOptions ["a", 1, false]
+        @f.type = "list-single"
+        @f.addValue 1
+        @f.addOptions ["a", 1, false]
 
-      html = @f.toHTML()
-      (expect html.nodeName.toLowerCase()).toEqual "select"
-      (expect html.getAttribute "multiple").toEqual null
-      (expect ($ html).children().length).toEqual 3
-      (expect ($ "option:selected", html).val() ).toEqual "1"
+        html = @f.toHTML()
+        (expect html.nodeName.toLowerCase()).toEqual "select"
+        (expect html.getAttribute "multiple").toEqual null
+        (expect ($ html).children().length).toEqual 3
+        (expect ($ "option:selected", html).val() ).toEqual "1"
 
-    it "converts to a multiple selection", ->
+      it "converts to a multiple selection", ->
 
-      @f.type = "list-multi"
-      @f.addValues [1, false]
-      @f.addOptions ["a", 1, false]
+        @f.type = "list-multi"
+        @f.addValues [1, false]
+        @f.addOptions ["a", 1, false]
 
-      html = @f.toHTML()
-      (expect html.nodeName.toLowerCase()).toEqual "select"
-      (expect html.getAttribute "multiple").toEqual "multiple"
-      (expect ($ "option:selected", html).length ).toEqual 2
+        html = @f.toHTML()
+        (expect html.nodeName.toLowerCase()).toEqual "select"
+        (expect html.getAttribute "multiple").toEqual "multiple"
+        (expect ($ "option:selected", html).length ).toEqual 2
 
-    it "converts a boolean field to a checkbox", ->
-      @f.type = "boolean"
-      @f.addValue { note: "i'm not a valid value for boolean fields" }
-      html = @f.toHTML()
-      (expect html.nodeName.toLowerCase()).toEqual "input"
-      (expect html.getAttribute "type").toEqual "checkbox"
-      (expect html.getAttribute "checked").toEqual null
+      it "converts a boolean field to a checkbox", ->
+        @f.type = "boolean"
+        @f.addValue { note: "i'm not a valid value for boolean fields" }
+        html = @f.toHTML()
+        (expect html.nodeName.toLowerCase()).toEqual "input"
+        (expect html.getAttribute "type").toEqual "checkbox"
+        (expect html.getAttribute "checked").toEqual null
 
-    it "sets the checked property if the value is 'true'", ->
-      @f.type = "boolean"
-      @f.addValue true
-      (expect @f.toHTML().getAttribute "checked").toEqual "checked"
+      it "sets the checked property if the value is 'true'", ->
+        @f.type = "boolean"
+        @f.addValue true
+        (expect @f.toHTML().getAttribute "checked").toEqual "checked"
 
-    it "sets the checked property if the value is '1'", ->
-      @f.type = "boolean"
-      @f.addValue 1
-      (expect @f.toHTML().getAttribute "checked").toEqual "checked"
+      it "sets the checked property if the value is '1'", ->
+        @f.type = "boolean"
+        @f.addValue 1
+        (expect @f.toHTML().getAttribute "checked").toEqual "checked"
+
+      it "can be created by an xml element", ->
+        xml = $build("field",{ type:"list-single", label: "News", var: "news" })
+          .c("desc").t("My desc").up()
+          .c("required").up()
+          .c("value").t("blue").up()
+          .c("option",{label: "RED" }).t("red").up()
+          .c("option",{label: "BLUE"}).t("blue").up()
+          .c("option",{label: "YELLOW"}).t("yellow").up()
+          .tree()
+        field = @Sx.Field.fromXML xml
+
+        (expect field.type).toEqual "list-single"
+        (expect field.var).toEqual "news"
+        (expect field.label).toEqual "News"
+        (expect field.desc).toEqual "My desc"
+        (expect field.required).toEqual true
+        (expect field.values).toEqual ["blue"]
+        (expect field.options).toEqual [
+          new @Sx.Option { label: "RED", value: "red"}
+          new @Sx.Option { label: "BLUE", value: "blue"}
+          new @Sx.Option { label: "YELLOW", value: "yellow"}
+        ]
+
+        f1 = new @Sx.Field
+          type: "list-multi"
+          var: "bar"
+          label: "myLabel"
+          desc: "foo"
+          required: false
+          values: ["a",false]
+          option: ["a", 1, false]
+
+        (expect @Sx.Field.fromXML( f1.toXML()).toJSON() ).toEqual f1.toJSON()
 
   describe "Option", ->
 
@@ -412,7 +478,7 @@ describe "XMPP Data Forms (0004)", ->
 
       json = o.toJSON()
       (expect json.label).toEqual "foo"
-      (expect json.value).toEqual 123
+      (expect json.value).toEqual "123"
 
     it "can be convertet into a HTML option object", ->
       o1 = new @Sx.Option { label: "foo", value: 123 }
@@ -424,6 +490,17 @@ describe "XMPP Data Forms (0004)", ->
       (expect o1html.getAttribute "value").toEqual "123"
       (expect o1html.textContent).toEqual "foo"
       (expect o2html.textContent).toEqual "123"
+
+    it "can be created by an xml element", ->
+      xml = $build("option",{ label:"news"}).c("value").t("Great news").tree()
+      option = @Sx.Option.fromXML xml
+
+      (expect option.label).toEqual "news"
+      (expect option.value).toEqual "Great news"
+
+      o = new @Sx.Option { label: "foo", value: 123 }
+
+      (expect @Sx.Option.fromXML( o.toXML()).toJSON()).toEqual o.toJSON()
 
   describe "Item", ->
 
@@ -449,4 +526,12 @@ describe "XMPP Data Forms (0004)", ->
 
       json = o.toJSON()
       (expect json.fields).toEqual [f1.toJSON(),{type: "list-multi", required: true , var:"foo", values:[], options: []}]
+
+    it "can be created from XML", ->
+
+      f1 = new @Sx.Field
+      f2 = {type: "list-multi", required: "true" , var:"foo"}
+      o = new @Sx.Item { fields: [ f1,f2 ] }
+
+      (expect @Sx.Item.fromXML( o.toXML() ).toJSON() ).toEqual o.toJSON()
 
