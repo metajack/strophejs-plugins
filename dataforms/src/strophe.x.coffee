@@ -1,8 +1,9 @@
 # Copyright (c) Markus Kohlhase, 2011
 
 # a little helper
-fill = (src, target, klass) -> for f in src
-  target.push if f instanceof klass then f else new klass f
+helper =
+  fill: (src, target, klass) -> for f in src
+    target.push if f instanceof klass then f else new klass f
 
 class Form
 
@@ -14,13 +15,13 @@ class Form
       @title = opt.title
       @instructions = opt.instructions
 
-      fill = (src, target, klass) -> for f in src
+      helper.fill = (src, target, klass) -> for f in src
         target.push if f instanceof klass then f else new klass f
 
       if opt.fields
-        fill opt.fields, @fields=[], Field if opt.fields
+        helper.fill opt.fields, @fields=[], Field if opt.fields
       else if opt.items
-        fill opt.items,  @items=[],  Item  if opt.items
+        helper.fill opt.items,  @items=[],  Item  if opt.items
         @reported = []
         for i in @items
           for f in i.fields
@@ -68,6 +69,29 @@ class Form
 
     json
 
+  _createFieldset: (fields) ->
+    fieldset = $ "<fieldset>"
+    for f in fields
+      id = "Strophe.x.Field-#{ f.type }-#{f.var}"
+      fieldset
+        .append("<label for='#{id}'>#{f.label or ''}</label>")
+        .append( $(f.toHTML()).attr("id", id ) )
+        .append("<br />")
+    fieldset
+
+  toHTML: ->
+
+    form = $("<form>")
+    form.append("<h1>#{@title}</h1>") if @title
+    form.append("<p>#{@instructions}</p>") if @instructions
+
+    if @fields
+      (@_createFieldset @fields).children().appendTo form
+
+    else if @items
+      (@_createFieldset i.fields ).appendTo form for i in @items
+
+    form[0]
 
 class Field
 
@@ -78,28 +102,41 @@ class Field
 
   constructor: (opt) ->
 
+    @options = []
+    @values = []
+
     if opt
       @type = opt.type if opt.type in Field._types
       @desc = opt.desc if opt.desc
       @label = opt.label if opt.label
       @var = opt.var or "_no_var_was_defined_"
       @required = opt.required is true or opt.required is "true"
-
-      if opt.options and ( @type is "list-single" or @type is "list-multi" )
-        fill opt.options, @options=[], Option
-
-      @values = [ opt.value ] if opt.value
-
-      if opt.values
-        multi = @type in Field._multiTypes
-        if multi or ( not multi and opt.values.length is 1 )
-          @values = (v for v in opt.values)
+      @addOptions opt.options if opt.options
+      opt.values = [ opt.value ] if opt.value
+      @addValues opt.values if opt.values
 
   type: "text-single"
   desc: null
   label: null
   var: "_no_var_was_defined_"
   required: false
+
+  addValue: (val) -> @addValues [val]
+
+  addValues: (vals) ->
+    multi = @type in Field._multiTypes
+    if multi or ( not multi and vals.length is 1 )
+      @values = [@values..., (v for v in vals)...]
+    @
+
+  addOption: (opt) -> @addOptions [opt]
+
+  addOptions: (opts) ->
+    if @type is "list-single" or @type is "list-multi"
+      if typeof opts[0] isnt "object"
+        opts =  (new Option { value: o.toString() } for o in opts)
+      helper.fill opts, @options, Option
+    @
 
   toJSON: ->
     json = { @type, @var, @required }
@@ -131,6 +168,38 @@ class Field
         xml.cnode(o.toXML()).up()
     xml.tree()
 
+  toHTML: ->
+
+    switch @type.toLowerCase()
+
+      when 'text-single'
+        el = ($ "<input type='text' >").attr('placeholder', @desc )
+        el.val "#{@values[0]}" if @values
+
+      when 'list-single', 'list-multi'
+
+        el = ($ "<select>")
+        el.attr 'multiple', 'multiple' if @type is 'list-multi'
+
+        if @options.length > 0
+          for opt in @options when opt
+            o = $ opt.toHTML()
+            for k in @values
+              o.attr 'selected', 'selected' if k.toString() is opt.value.toString()
+            o.appendTo el
+
+      when 'boolean'
+        el = ($ "<input type='checkbox'>")
+        val = @values[0]?.toString?()
+        el.attr('checked','checked') if val and ( val is "true" or val is "1" )
+
+      when 'fixed', 'hidden','jid-multi','jid-single','text-multi','text-private'
+        throw "not implemented yet"
+
+    el.attr('name', @var )
+    el.attr('required', @required ) if @required
+    el[0]
+
 class Option
 
   constructor: (opt) ->
@@ -148,12 +217,14 @@ class Option
 
   toJSON: -> { @label, @value }
 
+  toHTML: -> ($ "<option>").attr('value', @value ).text( @label or @value )[0]
+
 class Item
 
   constructor: (opts) ->
 
     @fields = []
-    fill opts.fields, @fields, Field if opts?.fields
+    helper.fill opts.fields, @fields, Field if opts?.fields
 
   toXML: ->
     xml = $build "item"

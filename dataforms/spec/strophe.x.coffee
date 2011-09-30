@@ -123,7 +123,56 @@ describe "XMPP Data Forms (0004)", ->
         type: "submit"
         title: "foo"
         instructions: "bar"
-        fields: [ f1.toJSON(), { type: "text-single", var: "test", values:[123], required: true}]
+        fields: [ f1.toJSON(), { type: "text-single", var: "test", values:[123], required: true, options:[]}]
+
+    describe "conversion to HTML", ->
+
+      beforeEach ->
+        @f = new @Sx.Form
+          title: "My title"
+          instructions: "Please fillout the form"
+          fields: [{
+            type: "list-multi"
+            label: "My label"
+            var: "alist"
+            options: [ {label: "One", value:"one"}, {label: "Two", value:"two"} ] },
+
+            { type: "text-single", label: "Single label", var: "name" }
+          ]
+
+      it "creates a form as container", ->
+
+        html = @f.toHTML()
+        (expect html.nodeName).toEqual "FORM"
+        (expect html.childNodes[0].nodeName).toEqual "H1"
+        (expect html.childNodes[1].nodeName).toEqual "P"
+
+      it "appends the fields with label to the fieldset", ->
+        fs = @f.toHTML()
+        (expect fs.childNodes[2].nodeName).toEqual "LABEL"
+        (expect fs.childNodes[3].nodeName).toEqual "SELECT"
+        (expect fs.childNodes[4].nodeName).toEqual "BR"
+        (expect fs.childNodes[5].nodeName).toEqual "LABEL"
+        (expect fs.childNodes[6].nodeName).toEqual "INPUT"
+
+      it "appends puts items into fieldsets", ->
+
+        f1 = new @Sx.Field {var: "foo"}
+        f2 = new @Sx.Field {var: "bar"}
+        f3 = new @Sx.Field {var: "foo"}
+        f4 = new @Sx.Field {var: "bar"}
+
+        form = new @Sx.Form
+          items: [
+            { fields: [f1,f2] }
+            { fields: [f3,f4] }
+          ]
+
+        html = form.toHTML()
+        console.log html
+        (expect html.nodeName).toEqual "FORM"
+        (expect html.childNodes[0].nodeName).toEqual "FIELDSET"
+        (expect html.childNodes[1].nodeName).toEqual "FIELDSET"
 
   describe "Field", ->
 
@@ -158,9 +207,9 @@ describe "XMPP Data Forms (0004)", ->
       (expect (new @Sx.Field {required: "true"}).required).toEqual true
 
     it "can have a value" , ->
-      (expect (new @Sx.Field).values).toBeUndefined()
+      (expect (new @Sx.Field).values).toEqual []
       (expect (new @Sx.Field {value: "blub"}).values).toEqual ["blub"]
-      (expect (new @Sx.Field {values: ["blub","foo"]}).values).toBeUndefined()
+      (expect (new @Sx.Field {values: ["blub","foo"]}).values).toEqual []
 
     it "can have multiple values if type is '*-multi' or 'hidden'" , ->
       multiTypes = ["list-multi", "jid-multi","text-multi", "hidden"]
@@ -169,7 +218,7 @@ describe "XMPP Data Forms (0004)", ->
 
     it "can have options if the type is 'list-single' or 'list-multi'" , ->
       optArray = [ new @Sx.Option { label:"foo", value: "bar"} ]
-      (expect (new @Sx.Field).options).toBeUndefined()
+      (expect (new @Sx.Field).options).toEqual []
       (expect (new @Sx.Field {options: optArray, type: "list-single" }).options).toEqual optArray
       (expect (new @Sx.Field {options: optArray, type: "list-multi" }).options).toEqual optArray
       (expect (new @Sx.Field {options: [{label:"test", value: "text"}], type: "list-multi" }).options)
@@ -177,8 +226,39 @@ describe "XMPP Data Forms (0004)", ->
 
     it "can't have options if the type isn't 'list-single' or 'list-multi'" , ->
       opt = [ new @Sx.Option { label:"foo", value: "bar"} ]
-      (expect (new @Sx.Field).options).toBeUndefined()
-      (expect (new @Sx.Field {options: opt, type: "text-single" }).options).toBeUndefined()
+      (expect (new @Sx.Field).options).toEqual []
+      (expect (new @Sx.Field {options: opt, type: "text-single" }).options).toEqual []
+
+    it "provides a function to add a value", ->
+      f = new @Sx.Field {value: "a" }
+      (expect f.addValue("foo").values).toEqual ["a","foo"]
+
+    it "provides a function to add one option", ->
+      f = new @Sx.Field {type: "list-multi"}
+      (expect f.addOption({ label: "foo", value: "bar" }).options)
+        .toEqual [new @Sx.Option {label: "foo", value: "bar" }]
+
+      f = new @Sx.Field {type: "text-single"}
+      (expect f.addOption({ label: "foo", value: "bar" }).options).toEqual []
+
+    it "provides a function to add multiple options", ->
+      f = new @Sx.Field { type: "list-multi", options: ["a"] }
+      (expect f.addOptions(["b","c"]).options)
+        .toEqual [
+          new @Sx.Option {value: "a"}
+          new @Sx.Option {value: "b"}
+          new @Sx.Option {value: "c"}
+        ]
+      f = new @Sx.Field { type: "list-multi" }
+
+      (expect f.addOptions([
+        {label: "a", value: "a"}
+        {label: "b", value: "b"}
+      ]).options)
+        .toEqual [
+          new @Sx.Option {label: "a", value: "a"}
+          new @Sx.Option {label: "b", value: "b"}
+        ]
 
     it "can be convertet into an XML object", ->
       o = new @Sx.Field
@@ -225,18 +305,82 @@ describe "XMPP Data Forms (0004)", ->
         desc: "foo"
         required: false
         values: ["a", 1, false]
+        options: []
 
       (expect f2.toJSON()).toEqual
         type: "text-single"
         var: "bar"
         required: true
         values: ["a"]
+        options: []
 
       (expect f3.toJSON()).toEqual
         type: "text-single"
         var: "bar"
         required: false
         values: ["a"]
+        options: []
+
+  describe "conversion to HTML", ->
+
+    beforeEach ->
+      @f = new @Sx.Field { var: "bar" }
+
+    it "uses sets the variable as the name property", ->
+      html = @f.toHTML()
+      (expect html.getAttribute "name").toEqual "bar"
+
+    it "sets the required property", ->
+      @f.required = true
+      html = @f.toHTML()
+      (expect html.getAttribute "required").toEqual "required"
+
+    it "sets the description as placeholder property", ->
+      @f.desc = "your name"
+      @f.type = "text-single"
+      html = @f.toHTML()
+      (expect html.getAttribute "placeholder").toEqual "your name"
+
+    it "converts to a single selection", ->
+
+      @f.type = "list-single"
+      @f.addValue 1
+      @f.addOptions ["a", 1, false]
+
+      html = @f.toHTML()
+      (expect html.nodeName.toLowerCase()).toEqual "select"
+      (expect html.getAttribute "multiple").toEqual null
+      (expect ($ html).children().length).toEqual 3
+      (expect ($ "option:selected", html).val() ).toEqual "1"
+
+    it "converts to a multiple selection", ->
+
+      @f.type = "list-multi"
+      @f.addValues [1, false]
+      @f.addOptions ["a", 1, false]
+
+      html = @f.toHTML()
+      (expect html.nodeName.toLowerCase()).toEqual "select"
+      (expect html.getAttribute "multiple").toEqual "multiple"
+      (expect ($ "option:selected", html).length ).toEqual 2
+
+    it "converts a boolean field to a checkbox", ->
+      @f.type = "boolean"
+      @f.addValue { note: "i'm not a valid value for boolean fields" }
+      html = @f.toHTML()
+      (expect html.nodeName.toLowerCase()).toEqual "input"
+      (expect html.getAttribute "type").toEqual "checkbox"
+      (expect html.getAttribute "checked").toEqual null
+
+    it "sets the checked property if the value is 'true'", ->
+      @f.type = "boolean"
+      @f.addValue true
+      (expect @f.toHTML().getAttribute "checked").toEqual "checked"
+
+    it "sets the checked property if the value is '1'", ->
+      @f.type = "boolean"
+      @f.addValue 1
+      (expect @f.toHTML().getAttribute "checked").toEqual "checked"
 
   describe "Option", ->
 
@@ -270,6 +414,17 @@ describe "XMPP Data Forms (0004)", ->
       (expect json.label).toEqual "foo"
       (expect json.value).toEqual 123
 
+    it "can be convertet into a HTML option object", ->
+      o1 = new @Sx.Option { label: "foo", value: 123 }
+      o2 = new @Sx.Option { value: 123 }
+
+      o1html = o1.toHTML()
+      o2html = o2.toHTML()
+      (expect o1html.nodeName.toLowerCase()).toEqual "option"
+      (expect o1html.getAttribute "value").toEqual "123"
+      (expect o1html.textContent).toEqual "foo"
+      (expect o2html.textContent).toEqual "123"
+
   describe "Item", ->
 
     it "can have multiple fields", ->
@@ -293,4 +448,5 @@ describe "XMPP Data Forms (0004)", ->
       o = new @Sx.Item { fields: [ f1,f2 ] }
 
       json = o.toJSON()
-      (expect json.fields).toEqual [f1.toJSON(),{type: "list-multi", required: true , var:"foo"}]
+      (expect json.fields).toEqual [f1.toJSON(),{type: "list-multi", required: true , var:"foo", values:[], options: []}]
+

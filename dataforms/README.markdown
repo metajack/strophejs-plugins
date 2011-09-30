@@ -24,7 +24,7 @@ You can also use items within the form:
       items: [ item1, { fields: [f1,f5]}, item3 ]
     });
 
-Here you don't have to define the `reported` property (it is generated 
+Here you don't have to define the `reported` property (it is generated
 automatically).
 
 Creating fields is similar
@@ -53,6 +53,6 @@ You can also use options
         {label:"Three", value: "c"}
     ]});
 
-### Convert to XML or JSON
+### Convert to XML, HTML or JSON
 
-Every object can be converted to xml by using the `toXML` or `toJSON` function 
+Every object can be converted to xml by using the `toXML`, `toHML` or `toJSON` function

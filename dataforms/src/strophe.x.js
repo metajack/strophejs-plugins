@@ -1,19 +1,21 @@
 (function() {
-  var Field, Form, Item, Option, fill;
+  var Field, Form, Item, Option, helper;
   var __indexOf = Array.prototype.indexOf || function(item) {
     for (var i = 0, l = this.length; i < l; i++) {
       if (this[i] === item) return i;
     }
     return -1;
-  };
-  fill = function(src, target, klass) {
-    var f, _i, _len, _results;
-    _results = [];
-    for (_i = 0, _len = src.length; _i < _len; _i++) {
-      f = src[_i];
-      _results.push(target.push(f instanceof klass ? f : new klass(f)));
+  }, __slice = Array.prototype.slice;
+  helper = {
+    fill: function(src, target, klass) {
+      var f, _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = src.length; _i < _len; _i++) {
+        f = src[_i];
+        _results.push(target.push(f instanceof klass ? f : new klass(f)));
+      }
+      return _results;
     }
-    return _results;
   };
   Form = (function() {
     Form._types = ["form", "submit", "cancel", "result"];
@@ -25,7 +27,7 @@
         }
         this.title = opt.title;
         this.instructions = opt.instructions;
-        fill = function(src, target, klass) {
+        helper.fill = function(src, target, klass) {
           var f, _i, _len, _results;
           _results = [];
           for (_i = 0, _len = src.length; _i < _len; _i++) {
@@ -36,11 +38,11 @@
         };
         if (opt.fields) {
           if (opt.fields) {
-            fill(opt.fields, this.fields = [], Field);
+            helper.fill(opt.fields, this.fields = [], Field);
           }
         } else if (opt.items) {
           if (opt.items) {
-            fill(opt.items, this.items = [], Item);
+            helper.fill(opt.items, this.items = [], Item);
           }
           this.reported = [];
           _ref2 = this.items;
@@ -126,13 +128,45 @@
       }
       return json;
     };
+    Form.prototype._createFieldset = function(fields) {
+      var f, fieldset, id, _i, _len;
+      fieldset = $("<fieldset>");
+      for (_i = 0, _len = fields.length; _i < _len; _i++) {
+        f = fields[_i];
+        id = "Strophe.x.Field-" + f.type + "-" + f["var"];
+        fieldset.append("<label for='" + id + "'>" + (f.label || '') + "</label>").append($(f.toHTML()).attr("id", id)).append("<br />");
+      }
+      return fieldset;
+    };
+    Form.prototype.toHTML = function() {
+      var form, i, _i, _len, _ref;
+      form = $("<form>");
+      if (this.title) {
+        form.append("<h1>" + this.title + "</h1>");
+      }
+      if (this.instructions) {
+        form.append("<p>" + this.instructions + "</p>");
+      }
+      if (this.fields) {
+        (this._createFieldset(this.fields)).children().appendTo(form);
+      } else if (this.items) {
+        _ref = this.items;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          i = _ref[_i];
+          (this._createFieldset(i.fields)).appendTo(form);
+        }
+      }
+      return form[0];
+    };
     return Form;
   })();
   Field = (function() {
     Field._types = ["boolean", "fixed", "hidden", "jid-multi", "jid-single", "list-multi", "list-single", "text-multi", "text-private", "text-single"];
     Field._multiTypes = ["list-multi", "jid-multi", "text-multi", "hidden"];
     function Field(opt) {
-      var multi, v, _ref, _ref2;
+      var _ref;
+      this.options = [];
+      this.values = [];
       if (opt) {
         if (_ref = opt.type, __indexOf.call(Field._types, _ref) >= 0) {
           this.type = opt.type;
@@ -145,26 +179,14 @@
         }
         this["var"] = opt["var"] || "_no_var_was_defined_";
         this.required = opt.required === true || opt.required === "true";
-        if (opt.options && (this.type === "list-single" || this.type === "list-multi")) {
-          fill(opt.options, this.options = [], Option);
+        if (opt.options) {
+          this.addOptions(opt.options);
         }
         if (opt.value) {
-          this.values = [opt.value];
+          opt.values = [opt.value];
         }
         if (opt.values) {
-          multi = (_ref2 = this.type, __indexOf.call(Field._multiTypes, _ref2) >= 0);
-          if (multi || (!multi && opt.values.length === 1)) {
-            this.values = (function() {
-              var _i, _len, _ref3, _results;
-              _ref3 = opt.values;
-              _results = [];
-              for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-                v = _ref3[_i];
-                _results.push(v);
-              }
-              return _results;
-            })();
-          }
+          this.addValues(opt.values);
         }
       }
     }
@@ -173,6 +195,48 @@
     Field.prototype.label = null;
     Field.prototype["var"] = "_no_var_was_defined_";
     Field.prototype.required = false;
+    Field.prototype.addValue = function(val) {
+      return this.addValues([val]);
+    };
+    Field.prototype.addValues = function(vals) {
+      var multi, v, _ref;
+      multi = (_ref = this.type, __indexOf.call(Field._multiTypes, _ref) >= 0);
+      if (multi || (!multi && vals.length === 1)) {
+        this.values = __slice.call(this.values).concat(__slice.call((function() {
+            var _i, _len, _results;
+            _results = [];
+            for (_i = 0, _len = vals.length; _i < _len; _i++) {
+              v = vals[_i];
+              _results.push(v);
+            }
+            return _results;
+          })()));
+      }
+      return this;
+    };
+    Field.prototype.addOption = function(opt) {
+      return this.addOptions([opt]);
+    };
+    Field.prototype.addOptions = function(opts) {
+      var o;
+      if (this.type === "list-single" || this.type === "list-multi") {
+        if (typeof opts[0] !== "object") {
+          opts = (function() {
+            var _i, _len, _results;
+            _results = [];
+            for (_i = 0, _len = opts.length; _i < _len; _i++) {
+              o = opts[_i];
+              _results.push(new Option({
+                value: o.toString()
+              }));
+            }
+            return _results;
+          })();
+        }
+        helper.fill(opts, this.options, Option);
+      }
+      return this;
+    };
     Field.prototype.toJSON = function() {
       var json, o, _i, _len, _ref;
       json = {
@@ -231,6 +295,60 @@
       }
       return xml.tree();
     };
+    Field.prototype.toHTML = function() {
+      var el, k, o, opt, val, _i, _j, _len, _len2, _ref, _ref2, _ref3;
+      switch (this.type.toLowerCase()) {
+        case 'text-single':
+          el = ($("<input type='text' >")).attr('placeholder', this.desc);
+          if (this.values) {
+            el.val("" + this.values[0]);
+          }
+          break;
+        case 'list-single':
+        case 'list-multi':
+          el = $("<select>");
+          if (this.type === 'list-multi') {
+            el.attr('multiple', 'multiple');
+          }
+          if (this.options.length > 0) {
+            _ref = this.options;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              opt = _ref[_i];
+              if (opt) {
+                o = $(opt.toHTML());
+                _ref2 = this.values;
+                for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+                  k = _ref2[_j];
+                  if (k.toString() === opt.value.toString()) {
+                    o.attr('selected', 'selected');
+                  }
+                }
+                o.appendTo(el);
+              }
+            }
+          }
+          break;
+        case 'boolean':
+          el = $("<input type='checkbox'>");
+          val = (_ref3 = this.values[0]) != null ? typeof _ref3.toString === "function" ? _ref3.toString() : void 0 : void 0;
+          if (val && (val === "true" || val === "1")) {
+            el.attr('checked', 'checked');
+          }
+          break;
+        case 'fixed':
+        case 'hidden':
+        case 'jid-multi':
+        case 'jid-single':
+        case 'text-multi':
+        case 'text-private':
+          throw "not implemented yet";
+      }
+      el.attr('name', this["var"]);
+      if (this.required) {
+        el.attr('required', this.required);
+      }
+      return el[0];
+    };
     return Field;
   })();
   Option = (function() {
@@ -257,13 +375,16 @@
         value: this.value
       };
     };
+    Option.prototype.toHTML = function() {
+      return ($("<option>")).attr('value', this.value).text(this.label || this.value)[0];
+    };
     return Option;
   })();
   Item = (function() {
     function Item(opts) {
       this.fields = [];
       if (opts != null ? opts.fields : void 0) {
-        fill(opts.fields, this.fields, Field);
+        helper.fill(opts.fields, this.fields, Field);
       }
     }
     Item.prototype.toXML = function() {
