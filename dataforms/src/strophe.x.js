@@ -735,4 +735,20 @@
     Option: Option,
     Item: Item
   };
+  Strophe.addConnectionPlugin('x', {
+    init: function(conn) {
+      Strophe.addNamespace('DATA', 'jabber:x:data');
+      if (conn.disco) {
+        return conn.disco.addFeature(Strophe.NS.DATA);
+      }
+    },
+    parseFromResult: function(result) {
+      var _ref;
+      if (result.nodeName.toLowerCase() === "x") {
+        return Form.fromXML(result);
+      } else {
+        return Form.fromXML((_ref = ($(result)).find("x")) != null ? _ref[0] : void 0);
+      }
+    }
+  });
 }).call(this);

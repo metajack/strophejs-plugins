@@ -424,3 +424,15 @@ Strophe.x =
   Field: Field
   Option:Option
   Item:Item
+
+Strophe.addConnectionPlugin 'x',
+
+  init : (conn) ->
+    Strophe.addNamespace 'DATA', 'jabber:x:data'
+    conn.disco.addFeature Strophe.NS.DATA if conn.disco
+
+  parseFromResult: (result) ->
+    if result.nodeName.toLowerCase() is "x"
+      Form.fromXML result
+    else
+      Form.fromXML ($ result).find("x")?[0]

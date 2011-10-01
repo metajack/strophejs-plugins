@@ -14,6 +14,17 @@ describe "XMPP Data Forms (0004)", ->
     @errorHandler   = jasmine.createSpy "errorHandler"
     @Sx = Strophe.x
 
+  it "is installed to the connection object", ->
+    (expect typeof @con.x).toEqual "object"
+
+  it "can parse a result", ->
+
+    res = $build("command").c("x",{type:"result"}).c("title").t("My title").tree()
+    form = @con.x.parseFromResult res
+
+    (expect form.type).toEqual "result"
+    (expect form.title).toEqual "My title"
+
   describe "Form", ->
 
     it "has one of four possible type attributes", ->
