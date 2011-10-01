@@ -18,5 +18,6 @@ DESCRIPTION
 
 ## Authors
 
-- [amaierhofer](https//github.com/amaierhofer)   
+- [amaierhofer](https://github.com/amaierhofer)
 - [tjahma](https://github.com/tjahma)
+- [flosse](https://github.com/flosse)
