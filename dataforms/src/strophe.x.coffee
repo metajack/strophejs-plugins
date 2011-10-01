@@ -2,8 +2,22 @@
 
 # a little helper
 helper =
+
   fill: (src, target, klass) -> for f in src
     target.push if f instanceof klass then f else new klass f
+
+  createHtmlFieldCouple: (f) ->
+    div = $ "<div>"
+    id = "Strophe.x.Field-#{ f.type }-#{f.var}"
+    div
+      .append("<label for='#{id}'>#{f.label or ''}</label>")
+      .append( $(f.toHTML()).attr("id", id ) )
+      .append("<br />")
+    div.children()
+
+  getHtmlFields: (html) ->
+    html = $ html
+    [html.find("input")..., html.find("select")..., html.find("textarea")...]
 
 class Form
 
@@ -74,27 +88,18 @@ class Form
 
     json
 
-  _createFieldset: (fields) ->
-    fieldset = $ "<fieldset>"
-    for f in fields
-      id = "Strophe.x.Field-#{ f.type }-#{f.var}"
-      fieldset
-        .append("<label for='#{id}'>#{f.label or ''}</label>")
-        .append( $(f.toHTML()).attr("id", id ) )
-        .append("<br />")
-    fieldset
 
   toHTML: ->
 
-    form = $("<form>")
+    form = $("<form data-type='#{@type}'>")
     form.append("<h1>#{@title}</h1>") if @title
     form.append("<p>#{@instructions}</p>") if @instructions
 
     if @fields.length > 0
-      (@_createFieldset @fields).children().appendTo form
+      (helper.createHtmlFieldCouple f).appendTo form for f in @fields
 
     else if @items.length > 0
-      (@_createFieldset i.fields ).appendTo form for i in @items
+      ($ i.toHTML()).appendTo form for i in @items
 
     form[0]
 
@@ -124,6 +129,34 @@ class Form
     if reported.length is 1
       fields = reported.find "field"
       f.reported = ( ($ r).attr("var") for r in fields)
+    f
+
+  @fromHTML: (html) ->
+    html = $ html
+    
+
+    f = new Form
+      type: html.attr "data-type"
+
+    title = html.find("h1").text()
+    f.title = title if title
+
+    instructions = html.find("p").text()
+    f.instructions = instructions if instructions
+
+    items = html.find "fieldset"
+    fields = helper.getHtmlFields html
+
+    if items.length > 0
+      f.items = ( Item.fromHTML i for i in items)
+
+      for item in f.items
+        for field in item.fields
+          f.reported.push field.var if not (field.var in f.reported)
+
+    else if fields.length > 0
+      f.fields = ( Field.fromHTML j for j in fields )
+
     f
 
 
@@ -206,9 +239,6 @@ class Field
 
     switch @type.toLowerCase()
 
-      when 'text-single'
-        el = ($ "<input type='text' >").attr('placeholder', @desc )
-        el.val "#{@values[0]}" if @values
 
       when 'list-single', 'list-multi'
 
@@ -222,13 +252,41 @@ class Field
               o.attr 'selected', 'selected' if k.toString() is opt.value.toString()
             o.appendTo el
 
-      when 'boolean'
-        el = ($ "<input type='checkbox'>")
-        val = @values[0]?.toString?()
-        el.attr('checked','checked') if val and ( val is "true" or val is "1" )
+      when 'text-multi', 'jid-multi'
+        el = $ "<textarea>"
+        txt = (line for line in @values).join '\n'
+        el.text txt if txt
 
-      when 'fixed', 'hidden','jid-multi','jid-single','text-multi','text-private'
-        throw "not implemented yet"
+      when 'text-single', 'boolean','text-private', 'hidden', 'fixed', 'jid-single'
+
+        el = $ "<input>"
+        el.val @values[0] if @values
+
+        switch @type.toLowerCase()
+
+          when 'text-single'
+            el.attr 'type', 'text'
+            el.attr 'placeholder', @desc
+
+          when 'boolean'
+            el.attr 'type', 'checkbox'
+            val = @values[0]?.toString?()
+            el.attr('checked','checked') if val and ( val is "true" or val is "1" )
+
+          when 'text-private'
+            el.attr 'type', 'password'
+
+          when 'hidden'
+            el.attr 'type', 'hidden'
+
+          when 'fixed'
+            el.attr('type','text').attr('readonly','readonly')
+
+          when 'jid-single'
+            el.attr 'type', 'email'
+
+      else
+        el = $ "<input type='text'>"
 
     el.attr('name', @var )
     el.attr('required', @required ) if @required
@@ -245,6 +303,61 @@ class Field
       values: ( ($ v).text() for v in xml.find "value" )
       options: ( Option.fromXML o for o in xml.find "option" )
 
+  @_htmlElementToFieldType: (el) ->
+
+    el = $ el
+
+    switch el[0].nodeName.toLowerCase()
+
+      when "textarea"
+        type = "text-multi" # or jid-multi
+
+      when "select"
+
+        if el.attr("multiple") is "multiple"
+          type = "list-multi"
+        else
+          type = "list-single"
+
+      when "input"
+        switch el.attr "type"
+          when "checkbox"
+            type = "boolean"
+          when "email"
+            type = "jid-single"
+          when "hidden"
+            type = "hidden"
+          when "password"
+            type = "text-private"
+          when "text"
+            r = (el.attr "readonly" is "readonly")
+            if r
+              type = "fixed"
+            else
+              type = "text-single"
+    type
+
+  @fromHTML: (html) ->
+
+    html = $ html
+    type =  Field._htmlElementToFieldType html
+
+    f = new Field
+      type:type
+      var: html.attr "name"
+      required: (html.attr("required") is "required")
+
+    switch type
+      when "list-multi","list-single"
+        f.values = ( ($ el).val() for el in html.find "option:selected" )
+        f.options= ( Option.fromHTML el for el in html.find "option" )
+      when "text-multi","jid-multi"
+        txt = html.text()
+        f.values = txt.split('\n') if txt.trim() isnt ""
+      when 'text-single', 'boolean','text-private', 'hidden', 'fixed', 'jid-single'
+        f.values = [ html.val() ] if html.val().trim() isnt ""
+
+    f
 
 class Option
 
@@ -268,6 +381,9 @@ class Option
   @fromXML: (xml) ->
     new Option { label: ($ xml).attr("label"), value: ($ xml).text() }
 
+  @fromHTML: (html) ->
+    new Option { value: ($ html).attr("value"), label: ($ html).text() }
+
 class Item
 
   constructor: (opts) ->
@@ -289,11 +405,19 @@ class Item
         json.fields.push f.toJSON()
     json
 
+  toHTML: ->
+    fieldset = $ "<fieldset>"
+    (helper.createHtmlFieldCouple f).appendTo fieldset for f in @fields
+    fieldset[0]
+
   @fromXML: (xml) ->
     xml = $ xml
     fields = xml.find "field"
     new Item
       fields: ( Field.fromXML f for f in fields)
+
+  @fromHTML: (html) ->
+    new Item fields: ( Field.fromHTML f for f in helper.getHtmlFields(html))
 
 Strophe.x =
   Form: Form

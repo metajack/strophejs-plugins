@@ -205,6 +205,32 @@ describe "XMPP Data Forms (0004)", ->
 
       (expect @Sx.Form.fromXML( form.toXML()).toJSON() ).toEqual form.toJSON()
 
+    it "can be created from HTML", ->
+
+      f1 = new @Sx.Field {var: "foo"}
+      f2 = new @Sx.Field {var: "bar"}
+      f3 = new @Sx.Field {var: "foo"}
+      f4 = new @Sx.Field {var: "bar"}
+
+      form = new @Sx.Form
+        title: "test"
+        type: "result"
+        instructions: "Some text"
+        items: [
+          { fields: [f1,f2] }
+          { fields: [f3,f4] }
+        ]
+
+      (expect @Sx.Form.fromHTML( form.toHTML()).toJSON()).toEqual form.toJSON()
+
+      form = new @Sx.Form
+        title: "test"
+        type: "result"
+        instructions: "Some text"
+        fields: [f1,f2, f3,f4]
+
+      (expect @Sx.Form.fromHTML( form.toHTML()).toJSON() ).toEqual form.toJSON()
+
 
   describe "Field", ->
 
@@ -414,21 +440,125 @@ describe "XMPP Data Forms (0004)", ->
         @f.addValue 1
         (expect @f.toHTML().getAttribute "checked").toEqual "checked"
 
-      it "can be created by an xml element", ->
-        xml = $build("field",{ type:"list-single", label: "News", var: "news" })
-          .c("desc").t("My desc").up()
-          .c("required").up()
-          .c("value").t("blue").up()
-          .c("option",{label: "RED" }).t("red").up()
-          .c("option",{label: "BLUE"}).t("blue").up()
-          .c("option",{label: "YELLOW"}).t("yellow").up()
-          .tree()
-        field = @Sx.Field.fromXML xml
+      it "sets the checked property if the value is '1'", ->
+        @f.type = "boolean"
+        @f.addValue 1
+        (expect @f.toHTML().getAttribute "checked").toEqual "checked"
 
-        (expect field.type).toEqual "list-single"
+      it "converts 'text-multi' to a textarea", ->
+        @f.type = "text-multi"
+        @f.addValues ["This is a multi","line text"]
+        html = @f.toHTML()
+        (expect html.nodeName).toEqual "TEXTAREA"
+        (expect ($ html).text()).toEqual "This is a multi\nline text"
+
+      it "converts 'jid-multi' to a textarea", ->
+        @f.type = "text-multi"
+        @f.addValues ["myjid@domain.tld/resource","yourjid@domain.tld"]
+        html = @f.toHTML()
+        (expect html.nodeName).toEqual "TEXTAREA"
+        (expect ($ html).text()).toEqual "myjid@domain.tld/resource\nyourjid@domain.tld"
+
+      it "converts 'text-private' to a password input field", ->
+        @f.type = "text-private"
+        html = @f.toHTML()
+        (expect html.nodeName).toEqual "INPUT"
+        (expect html.getAttribute "type").toEqual "password"
+
+      it "converts 'hidden' to a hidden input field", ->
+        @f.type = "hidden"
+        html = @f.toHTML()
+        (expect html.nodeName).toEqual "INPUT"
+        (expect html.getAttribute "type").toEqual "hidden"
+
+      it "converts 'fixed' to a read-only input field", ->
+        @f.type = "fixed"
+        html = @f.toHTML()
+        (expect html.nodeName).toEqual "INPUT"
+        (expect html.getAttribute "type").toEqual "text"
+        (expect html.getAttribute "readonly").toEqual "readonly"
+
+      it "converts 'jid-single' to an email input field", ->
+        @f.type = "jid-single"
+        html = @f.toHTML()
+        (expect html.nodeName).toEqual "INPUT"
+        (expect html.getAttribute "type").toEqual "email"
+
+    it "can be created by an xml element", ->
+      xml = $build("field",{ type:"list-single", label: "News", var: "news" })
+        .c("desc").t("My desc").up()
+        .c("required").up()
+        .c("value").t("blue").up()
+        .c("option",{label: "RED" }).t("red").up()
+        .c("option",{label: "BLUE"}).t("blue").up()
+        .c("option",{label: "YELLOW"}).t("yellow").up()
+        .tree()
+      field = @Sx.Field.fromXML xml
+
+      (expect field.type).toEqual "list-single"
+      (expect field.var).toEqual "news"
+      (expect field.label).toEqual "News"
+      (expect field.desc).toEqual "My desc"
+      (expect field.required).toEqual true
+      (expect field.values).toEqual ["blue"]
+      (expect field.options).toEqual [
+        new @Sx.Option { label: "RED", value: "red"}
+        new @Sx.Option { label: "BLUE", value: "blue"}
+        new @Sx.Option { label: "YELLOW", value: "yellow"}
+      ]
+
+      f1 = new @Sx.Field
+        type: "list-multi"
+        var: "bar"
+        label: "myLabel"
+        desc: "foo"
+        required: false
+        values: ["a",false]
+        option: ["a", 1, false]
+
+      (expect @Sx.Field.fromXML( f1.toXML()).toJSON() ).toEqual f1.toJSON()
+
+    describe "parsing HTML", ->
+
+      it "detects the correct field type", ->
+
+        html = $ "<select>"
+        (expect @Sx.Field.fromHTML(html).type).toEqual "list-single"
+
+        html = $ "<select multiple='multiple'>"
+        (expect @Sx.Field.fromHTML(html).type).toEqual "list-multi"
+
+        html = $ "<textarea>"
+        (expect @Sx.Field.fromHTML(html).type).toEqual "text-multi"
+
+        html = $ "<input>"
+        (expect @Sx.Field.fromHTML(html).type).toEqual "text-single"
+
+        html = $ "<input type='email'>"
+        (expect @Sx.Field.fromHTML(html).type).toEqual "jid-single"
+
+        html = $ "<input type='hidden'>"
+        (expect @Sx.Field.fromHTML(html).type).toEqual "hidden"
+
+        html = $ "<input type='password'>"
+        (expect @Sx.Field.fromHTML(html).type).toEqual "text-private"
+
+        html = $ "<input type='text'>"
+        (expect @Sx.Field.fromHTML(html).type).toEqual "text-single"
+
+        html = $ "<input type='checkbox'>"
+        (expect @Sx.Field.fromHTML(html).type).toEqual "boolean"
+
+      it "parses the properties", ->
+
+        html = $ """<select name ='news' required='required'>
+            <option value="red">RED</option>
+            <option value="blue" selected='selected'>BLUE</option>
+            <option value="yellow">YELLOW</option>"""
+
+        field = @Sx.Field.fromHTML html
+
         (expect field.var).toEqual "news"
-        (expect field.label).toEqual "News"
-        (expect field.desc).toEqual "My desc"
         (expect field.required).toEqual true
         (expect field.values).toEqual ["blue"]
         (expect field.options).toEqual [
@@ -437,16 +567,33 @@ describe "XMPP Data Forms (0004)", ->
           new @Sx.Option { label: "YELLOW", value: "yellow"}
         ]
 
-        f1 = new @Sx.Field
-          type: "list-multi"
-          var: "bar"
-          label: "myLabel"
-          desc: "foo"
-          required: false
-          values: ["a",false]
-          option: ["a", 1, false]
+        html = $ """<select name ='news' multiple='multiple'>
+            <option value="red"  selected='selected'>RED</option>
+            <option value="blue" selected='selected'>BLUE</option>
+            <option value="yellow">YELLOW</option>"""
 
-        (expect @Sx.Field.fromXML( f1.toXML()).toJSON() ).toEqual f1.toJSON()
+        field = @Sx.Field.fromHTML html
+
+        (expect field.values).toEqual ["red","blue"]
+
+      it "parses the textarea text", ->
+
+        l1 = "Hello world!"
+        l2 = "A new line"
+        html = $ "<textarea>#{l1}\n#{l2}</textarea>"
+
+        field = @Sx.Field.fromHTML html
+
+        (expect field.values).toEqual [ l1,l2 ]
+
+      it "parses the textfield text", ->
+
+        text = "Hello world!"
+        html = $ "<input type='text' value='#{text}' >"
+
+        field = @Sx.Field.fromHTML html
+
+        (expect field.values).toEqual [ text ]
 
   describe "Option", ->
 
@@ -502,6 +649,19 @@ describe "XMPP Data Forms (0004)", ->
 
       (expect @Sx.Option.fromXML( o.toXML()).toJSON()).toEqual o.toJSON()
 
+    it "can be parsed from HTML", ->
+
+      html = $ "<option value='news'>Great news</option>"
+      option = @Sx.Option.fromHTML html
+
+      (expect option.value).toEqual "news"
+      (expect option.label).toEqual "Great news"
+
+      o = new @Sx.Option { label: "foo", value: 123 }
+
+      (expect @Sx.Option.fromHTML( o.toHTML()).toJSON()).toEqual o.toJSON()
+
+
   describe "Item", ->
 
     it "can have multiple fields", ->
@@ -535,3 +695,10 @@ describe "XMPP Data Forms (0004)", ->
 
       (expect @Sx.Item.fromXML( o.toXML() ).toJSON() ).toEqual o.toJSON()
 
+    it "can be created from HTML", ->
+
+      f1 = new @Sx.Field
+      f2 = {type: "list-multi", required: "true" , var:"foo"}
+      o = new @Sx.Item { fields: [ f1,f2 ] }
+
+      (expect @Sx.Item.fromHTML( o.toHTML() ).toJSON() ).toEqual o.toJSON()

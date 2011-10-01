@@ -62,3 +62,9 @@ Every object can be converted to xml by using the `toXML`, `toHML` or `toJSON` f
 You can easily create a form by parsing XML:
 
     var Form = Strophe.x.Form.fromXML(xml); 
+
+The same can be done with `fromHML` for HTML as source.
+
+## Dependencies
+
+- jQuery

@@ -1,11 +1,11 @@
 (function() {
   var Field, Form, Item, Option, helper;
-  var __indexOf = Array.prototype.indexOf || function(item) {
+  var __slice = Array.prototype.slice, __indexOf = Array.prototype.indexOf || function(item) {
     for (var i = 0, l = this.length; i < l; i++) {
       if (this[i] === item) return i;
     }
     return -1;
-  }, __slice = Array.prototype.slice;
+  };
   helper = {
     fill: function(src, target, klass) {
       var f, _i, _len, _results;
@@ -15,6 +15,17 @@
         _results.push(target.push(f instanceof klass ? f : new klass(f)));
       }
       return _results;
+    },
+    createHtmlFieldCouple: function(f) {
+      var div, id;
+      div = $("<div>");
+      id = "Strophe.x.Field-" + f.type + "-" + f["var"];
+      div.append("<label for='" + id + "'>" + (f.label || '') + "</label>").append($(f.toHTML()).attr("id", id)).append("<br />");
+      return div.children();
+    },
+    getHtmlFields: function(html) {
+      html = $(html);
+      return __slice.call(html.find("input")).concat(__slice.call(html.find("select")), __slice.call(html.find("textarea")));
     }
   };
   Form = (function() {
@@ -129,19 +140,9 @@
       }
       return json;
     };
-    Form.prototype._createFieldset = function(fields) {
-      var f, fieldset, id, _i, _len;
-      fieldset = $("<fieldset>");
-      for (_i = 0, _len = fields.length; _i < _len; _i++) {
-        f = fields[_i];
-        id = "Strophe.x.Field-" + f.type + "-" + f["var"];
-        fieldset.append("<label for='" + id + "'>" + (f.label || '') + "</label>").append($(f.toHTML()).attr("id", id)).append("<br />");
-      }
-      return fieldset;
-    };
     Form.prototype.toHTML = function() {
-      var form, i, _i, _len, _ref;
-      form = $("<form>");
+      var f, form, i, _i, _j, _len, _len2, _ref, _ref2;
+      form = $("<form data-type='" + this.type + "'>");
       if (this.title) {
         form.append("<h1>" + this.title + "</h1>");
       }
@@ -149,12 +150,16 @@
         form.append("<p>" + this.instructions + "</p>");
       }
       if (this.fields.length > 0) {
-        (this._createFieldset(this.fields)).children().appendTo(form);
-      } else if (this.items.length > 0) {
-        _ref = this.items;
+        _ref = this.fields;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          i = _ref[_i];
-          (this._createFieldset(i.fields)).appendTo(form);
+          f = _ref[_i];
+          (helper.createHtmlFieldCouple(f)).appendTo(form);
+        }
+      } else if (this.items.length > 0) {
+        _ref2 = this.items;
+        for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+          i = _ref2[_j];
+          ($(i.toHTML())).appendTo(form);
         }
       }
       return form[0];
@@ -205,6 +210,56 @@
           for (_i = 0, _len = fields.length; _i < _len; _i++) {
             r = fields[_i];
             _results.push(($(r)).attr("var"));
+          }
+          return _results;
+        })();
+      }
+      return f;
+    };
+    Form.fromHTML = function(html) {
+      var f, field, fields, i, instructions, item, items, j, title, _i, _j, _len, _len2, _ref, _ref2, _ref3;
+      html = $(html);
+      f = new Form({
+        type: html.attr("data-type")
+      });
+      title = html.find("h1").text();
+      if (title) {
+        f.title = title;
+      }
+      instructions = html.find("p").text();
+      if (instructions) {
+        f.instructions = instructions;
+      }
+      items = html.find("fieldset");
+      fields = helper.getHtmlFields(html);
+      if (items.length > 0) {
+        f.items = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = items.length; _i < _len; _i++) {
+            i = items[_i];
+            _results.push(Item.fromHTML(i));
+          }
+          return _results;
+        })();
+        _ref = f.items;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          item = _ref[_i];
+          _ref2 = item.fields;
+          for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+            field = _ref2[_j];
+            if (!(_ref3 = field["var"], __indexOf.call(f.reported, _ref3) >= 0)) {
+              f.reported.push(field["var"]);
+            }
+          }
+        }
+      } else if (fields.length > 0) {
+        f.fields = (function() {
+          var _k, _len3, _results;
+          _results = [];
+          for (_k = 0, _len3 = fields.length; _k < _len3; _k++) {
+            j = fields[_k];
+            _results.push(Field.fromHTML(j));
           }
           return _results;
         })();
@@ -349,14 +404,8 @@
       return xml.tree();
     };
     Field.prototype.toHTML = function() {
-      var el, k, o, opt, val, _i, _j, _len, _len2, _ref, _ref2, _ref3;
+      var el, k, line, o, opt, txt, val, _i, _j, _len, _len2, _ref, _ref2, _ref3;
       switch (this.type.toLowerCase()) {
-        case 'text-single':
-          el = ($("<input type='text' >")).attr('placeholder', this.desc);
-          if (this.values) {
-            el.val("" + this.values[0]);
-          }
-          break;
         case 'list-single':
         case 'list-multi':
           el = $("<select>");
@@ -381,20 +430,60 @@
             }
           }
           break;
-        case 'boolean':
-          el = $("<input type='checkbox'>");
-          val = (_ref3 = this.values[0]) != null ? typeof _ref3.toString === "function" ? _ref3.toString() : void 0 : void 0;
-          if (val && (val === "true" || val === "1")) {
-            el.attr('checked', 'checked');
+        case 'text-multi':
+        case 'jid-multi':
+          el = $("<textarea>");
+          txt = ((function() {
+            var _k, _len3, _ref3, _results;
+            _ref3 = this.values;
+            _results = [];
+            for (_k = 0, _len3 = _ref3.length; _k < _len3; _k++) {
+              line = _ref3[_k];
+              _results.push(line);
+            }
+            return _results;
+          }).call(this)).join('\n');
+          if (txt) {
+            el.text(txt);
           }
           break;
-        case 'fixed':
-        case 'hidden':
-        case 'jid-multi':
-        case 'jid-single':
-        case 'text-multi':
+        case 'text-single':
+        case 'boolean':
         case 'text-private':
-          throw "not implemented yet";
+        case 'hidden':
+        case 'fixed':
+        case 'jid-single':
+          el = $("<input>");
+          if (this.values) {
+            el.val(this.values[0]);
+          }
+          switch (this.type.toLowerCase()) {
+            case 'text-single':
+              el.attr('type', 'text');
+              el.attr('placeholder', this.desc);
+              break;
+            case 'boolean':
+              el.attr('type', 'checkbox');
+              val = (_ref3 = this.values[0]) != null ? typeof _ref3.toString === "function" ? _ref3.toString() : void 0 : void 0;
+              if (val && (val === "true" || val === "1")) {
+                el.attr('checked', 'checked');
+              }
+              break;
+            case 'text-private':
+              el.attr('type', 'password');
+              break;
+            case 'hidden':
+              el.attr('type', 'hidden');
+              break;
+            case 'fixed':
+              el.attr('type', 'text').attr('readonly', 'readonly');
+              break;
+            case 'jid-single':
+              el.attr('type', 'email');
+          }
+          break;
+        default:
+          el = $("<input type='text'>");
       }
       el.attr('name', this["var"]);
       if (this.required) {
@@ -433,6 +522,97 @@
         })()
       });
     };
+    Field._htmlElementToFieldType = function(el) {
+      var r, type;
+      el = $(el);
+      switch (el[0].nodeName.toLowerCase()) {
+        case "textarea":
+          type = "text-multi";
+          break;
+        case "select":
+          if (el.attr("multiple") === "multiple") {
+            type = "list-multi";
+          } else {
+            type = "list-single";
+          }
+          break;
+        case "input":
+          switch (el.attr("type")) {
+            case "checkbox":
+              type = "boolean";
+              break;
+            case "email":
+              type = "jid-single";
+              break;
+            case "hidden":
+              type = "hidden";
+              break;
+            case "password":
+              type = "text-private";
+              break;
+            case "text":
+              r = el.attr("readonly" === "readonly");
+              if (r) {
+                type = "fixed";
+              } else {
+                type = "text-single";
+              }
+          }
+      }
+      return type;
+    };
+    Field.fromHTML = function(html) {
+      var el, f, txt, type;
+      html = $(html);
+      type = Field._htmlElementToFieldType(html);
+      f = new Field({
+        type: type,
+        "var": html.attr("name"),
+        required: html.attr("required") === "required"
+      });
+      switch (type) {
+        case "list-multi":
+        case "list-single":
+          f.values = (function() {
+            var _i, _len, _ref, _results;
+            _ref = html.find("option:selected");
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              el = _ref[_i];
+              _results.push(($(el)).val());
+            }
+            return _results;
+          })();
+          f.options = (function() {
+            var _i, _len, _ref, _results;
+            _ref = html.find("option");
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              el = _ref[_i];
+              _results.push(Option.fromHTML(el));
+            }
+            return _results;
+          })();
+          break;
+        case "text-multi":
+        case "jid-multi":
+          txt = html.text();
+          if (txt.trim() !== "") {
+            f.values = txt.split('\n');
+          }
+          break;
+        case 'text-single':
+        case 'boolean':
+        case 'text-private':
+        case 'hidden':
+        case 'fixed':
+        case 'jid-single':
+          if (html.val().trim() !== "") {
+            f.values = [html.val()];
+          }
+      }
+      return f;
+    };
     return Field;
   })();
   Option = (function() {
@@ -468,6 +648,12 @@
         value: ($(xml)).text()
       });
     };
+    Option.fromHTML = function(html) {
+      return new Option({
+        value: ($(html)).attr("value"),
+        label: ($(html)).text()
+      });
+    };
     return Option;
   })();
   Item = (function() {
@@ -500,6 +686,16 @@
       }
       return json;
     };
+    Item.prototype.toHTML = function() {
+      var f, fieldset, _i, _len, _ref;
+      fieldset = $("<fieldset>");
+      _ref = this.fields;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        f = _ref[_i];
+        (helper.createHtmlFieldCouple(f)).appendTo(fieldset);
+      }
+      return fieldset[0];
+    };
     Item.fromXML = function(xml) {
       var f, fields;
       xml = $(xml);
@@ -511,6 +707,21 @@
           for (_i = 0, _len = fields.length; _i < _len; _i++) {
             f = fields[_i];
             _results.push(Field.fromXML(f));
+          }
+          return _results;
+        })()
+      });
+    };
+    Item.fromHTML = function(html) {
+      var f;
+      return new Item({
+        fields: (function() {
+          var _i, _len, _ref, _results;
+          _ref = helper.getHtmlFields(html);
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            f = _ref[_i];
+            _results.push(Field.fromHTML(f));
           }
           return _results;
         })()
