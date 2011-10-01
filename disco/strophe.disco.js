@@ -190,7 +190,7 @@ Strophe.addConnectionPlugin('disco',
         if (node)
         {
             query_attrs.node = node;
-            var items = null;
+            var items = [];
             for (var i = 0; i < this._items.length; i++)
             {
                 if (this._items[i].node == node)
