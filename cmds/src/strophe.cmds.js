@@ -1,6 +1,11 @@
 (function() {
-  var CommandNode, create;
-  var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
+  var CMD, CommandNode, RemoteCommand, create, createExecIQ;
+  var __indexOf = Array.prototype.indexOf || function(item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (this[i] === item) return i;
+    }
+    return -1;
+  }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
     ctor.prototype = parent.prototype;
@@ -8,6 +13,7 @@
     child.__super__ = parent.prototype;
     return child;
   }, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  CMD = "http://jabber.org/protocol/commands";
   create = function(node, callback) {
     if (callback == null) {
       callback = Strophe.Disco.noop;
@@ -31,6 +37,30 @@
         throw "Strophe.Commands has no implementation for: " + node;
     }
   };
+  createExecIQ = function(opt) {
+    var cfg, i, iq, item, _ref;
+    iq = $iq({
+      to: opt.jid,
+      type: "set"
+    });
+    cfg = {
+      xmlns: CMD,
+      node: opt.node
+    };
+    cfg.action = opt.action || "execute";
+    if (opt.sid) {
+      cfg.sessionid = opt.sid;
+    }
+    iq.c("command", cfg);
+    if ($.isArray(opt.data)) {
+      _ref = opt.data;
+      for (i in _ref) {
+        item = _ref[i];
+        iq.c(opt.item[0].item).t(item).up();
+      }
+    }
+    return iq;
+  };
   Strophe.Disco.DiscoNode.prototype.reply = function(iq, fn) {
     var req, res;
     req = this.parseRequest(iq);
@@ -40,6 +70,86 @@
     this.addContent(req, res);
     return res;
   };
+  RemoteCommand = (function() {
+    function RemoteCommand(conn, jid, node) {
+      this.conn = conn;
+      this.jid = jid;
+      this.node = node;
+      this.executeAction = "execute";
+      this.actions = [];
+      this.sessionid = null;
+      this.data = null;
+      this.form = null;
+      this.status = null;
+    }
+    RemoteCommand.prototype.parseCmdResult = function(res) {
+      var a, actions, cmd;
+      cmd = ($(res)).find("command");
+      this.sessionid = cmd.attr("sessionid");
+      this.stauts = cmd.attr("status");
+      actions = cmd.find("actions");
+      this.execueAction = actions.attr("execute");
+      this.actions = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = actions.length; _i < _len; _i++) {
+          a = actions[_i];
+          _results.push(a.nodeName);
+        }
+        return _results;
+      })();
+      return this.form = cmd.find("x");
+    };
+    RemoteCommand.prototype.onSuccess = function(res) {};
+    RemoteCommand.prototype.onError = function(res) {};
+    RemoteCommand.prototype.execute = function() {
+      return this.conn.cmds.execute(this.jid, this.node, {
+        success: this.parseCmdResult,
+        error: this.onError
+      });
+    };
+    RemoteCommand.prototype.next = function(responseForm) {
+      return this.conn.cmds.execute(this.jid, this.node, {
+        action: "next",
+        success: this.parseCmdResult,
+        error: this.onError
+      });
+    };
+    RemoteCommand.prototype.prev = function() {
+      return this.conn.cmds.execute(this.jid, this.node, {
+        action: "prev",
+        success: this.parseCmdResult,
+        error: this.onError
+      });
+    };
+    RemoteCommand.prototype.complete = function(responseForm) {
+      return this.conn.cmds.execute(this.jid, this.node, {
+        action: "complete",
+        success: this.onSuccess,
+        error: this.onError
+      });
+    };
+    RemoteCommand.prototype.cancel = function() {
+      return this.conn.cmds.execute(this.jid, this.node, {
+        action: "cancel",
+        success: this.onSuccess,
+        error: this.onError
+      });
+    };
+    RemoteCommand.prototype.isValidAction = function(action) {
+      return __indexOf.call(this.actions, action) >= 0;
+    };
+    RemoteCommand.prototype.toIQ = function() {
+      return createExecIQ({
+        jid: this.jid,
+        node: this.node,
+        action: this.action,
+        sessionid: this.sessionid,
+        data: this.data
+      });
+    };
+    return RemoteCommand;
+  })();
   CommandNode = (function() {
     __extends(CommandNode, Strophe.Disco.DiscoNode);
     function CommandNode(cfg) {
@@ -68,6 +178,7 @@
     };
     CommandNode.prototype.onSuccess = function(obj) {
       var entry, i, item, res;
+      console.warn(this.fn);
       res = this.res;
       item = this.item;
       res.attrs({
@@ -85,11 +196,11 @@
   })();
   Strophe.Commands = {
     CommandNode: CommandNode,
+    RemoteCommand: RemoteCommand,
     create: create
   };
   Strophe.addConnectionPlugin("cmds", (function() {
-    var CMD, add, cmds, conn, execute, init, reply, request, statusChanged;
-    CMD = "http://jabber.org/protocol/commands";
+    var add, cmds, conn, execute, init, reply, statusChanged;
     conn = cmds = null;
     init = function(c) {
       conn = c;
@@ -124,58 +235,35 @@
       }
       return true;
     };
-    request = function(conn, jid, node, args) {
-      var data, iq;
-      iq = $iq({
-        to: jid,
-        type: "set"
-      });
-      iq.c("command", {
-        xmlns: CMD,
-        node: node,
-        action: "execute"
-      });
-      data = $.grep($.makeArray(args), function(arg) {
-        return $.isArray(arg);
-      });
-      return conn.sendIQ(iq);
-    };
     statusChanged = function(status, condition) {
       if (status === Strophe.Status.CONNECTED) {
         return conn.addHandler(reply.bind(this), CMD, "iq", "set");
       }
     };
-    execute = function(jid, node, data, onSuccess, onError) {
-      var i, iq, item, n, noop;
-      n = $.grep(cmds.items, function(n) {
-        return n.node === node;
-      });
-      iq = $iq({
-        to: jid,
-        type: "set"
-      });
-      iq.c("command", {
-        xmlns: CMD,
-        node: node,
-        action: "execute"
-      });
-      if ($.isArray(data)) {
-        for (i in data) {
-          item = data[i];
-          iq.c(n[0].item).t(item).up();
-        }
-      } else {
-        onSuccess = data;
-        onError = onSuccess;
+    execute = function(jid, node, opt) {
+      var iq, noop;
+      if (opt == null) {
+        opt = {};
       }
+      iq = createExecIQ({
+        jid: jid,
+        node: node,
+        action: opt.action,
+        sessionid: opt.sid,
+        data: opt.data,
+        item: $.grep(cmds.items, function(n) {
+          return n.node === node;
+        })
+      });
       noop = Strophe.Disco.noop;
-      return conn.sendIQ(iq, onSuccess || noop, onError || noop);
+      return conn.sendIQ(iq, opt.success || noop, opt.error || noop);
     };
     return {
       init: init,
       statusChanged: statusChanged,
       add: add,
-      execute: execute
+      execute: execute,
+      exec: execute
     };
   })());
 }).call(this);
