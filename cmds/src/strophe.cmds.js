@@ -1,6 +1,6 @@
 (function() {
   var CMD, CommandNode, RemoteCommand, create, createExecIQ;
-  var __indexOf = Array.prototype.indexOf || function(item) {
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __indexOf = Array.prototype.indexOf || function(item) {
     for (var i = 0, l = this.length; i < l; i++) {
       if (this[i] === item) return i;
     }
@@ -12,7 +12,7 @@
     child.prototype = new ctor;
     child.__super__ = parent.prototype;
     return child;
-  }, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  };
   CMD = "http://jabber.org/protocol/commands";
   create = function(node, callback) {
     if (callback == null) {
@@ -58,6 +58,8 @@
         item = _ref[i];
         iq.c(opt.item[0].item).t(item).up();
       }
+    } else if (opt.form) {
+      iq.cnode(opt.form.toXML());
     }
     return iq;
   };
@@ -75,66 +77,198 @@
       this.conn = conn;
       this.jid = jid;
       this.node = node;
+      this.openDialog = __bind(this.openDialog, this);
       this.executeAction = "execute";
       this.actions = [];
       this.sessionid = null;
       this.data = null;
       this.form = null;
+      this.resonseForm = null;
       this.status = null;
+      this.error = null;
     }
-    RemoteCommand.prototype.parseCmdResult = function(res) {
-      var a, actions, cmd;
+    RemoteCommand.prototype._parseResult = function(res) {
+      var cmd;
       cmd = ($(res)).find("command");
       this.sessionid = cmd.attr("sessionid");
-      this.stauts = cmd.attr("status");
+      this.status = cmd.attr("status");
+      this._parseActions(cmd);
+      this._parseResultForm(cmd);
+      return this._parseError(res);
+    };
+    RemoteCommand.prototype._parseActions = function(cmd) {
+      var a, actions;
       actions = cmd.find("actions");
-      this.execueAction = actions.attr("execute");
-      this.actions = (function() {
-        var _i, _len, _results;
-        _results = [];
-        for (_i = 0, _len = actions.length; _i < _len; _i++) {
-          a = actions[_i];
-          _results.push(a.nodeName);
+      if (actions.length > 0) {
+        this.executeAction = actions.attr("execute");
+        return this.actions = (function() {
+          var _i, _len, _ref, _results;
+          _ref = actions.children();
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            a = _ref[_i];
+            _results.push(a.nodeName);
+          }
+          return _results;
+        })();
+      }
+    };
+    RemoteCommand.prototype._parseResultForm = function(cmd) {
+      var x;
+      x = cmd.find("x");
+      if (x.length > 0) {
+        return this.form = Strophe.x.Form.fromXML(x);
+      } else {
+        return this.form = null;
+      }
+    };
+    RemoteCommand.prototype._parseError = function(res) {
+      var e, err;
+      res = $(res);
+      err = res.find("error");
+      if (err.length > 0) {
+        return this.error = {
+          code: err.attr("code"),
+          type: err.attr("type"),
+          conditions: (function() {
+            var _i, _len, _ref, _results;
+            _ref = err.children();
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              e = _ref[_i];
+              _results.push(e.nodeName);
+            }
+            return _results;
+          })()
+        };
+      } else {
+        return this.error = null;
+      }
+    };
+    RemoteCommand.prototype._parseSubmitFormFromHTML = function(html) {
+      var f, form, _i, _len, _ref;
+      form = Strophe.x.Form.fromHTML(html);
+      form.type = "submit";
+      _ref = form.fields;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        f = _ref[_i];
+        f.options = [];
+        f.required = false;
+      }
+      return form;
+    };
+    RemoteCommand.prototype._createFn = function(action, div, opt) {
+      var close;
+      close = function() {
+        return div.dialog("close");
+      };
+      switch (action.toLowerCase()) {
+        case "next":
+          return __bind(function() {
+            close();
+            opt.responseForm = this._parseSubmitFormFromHTML(div);
+            return this.next(opt);
+          }, this);
+        case "prev":
+          return __bind(function() {
+            close();
+            return this.prev(opt);
+          }, this);
+        case "complete":
+          return __bind(function() {
+            close();
+            opt.responseForm = this._parseSubmitFormFromHTML(div);
+            return this.complete(opt);
+          }, this);
+        case "cancel":
+          return __bind(function() {
+            close();
+            return this.cancel(opt);
+          }, this);
+        default:
+          return __bind(function() {}, this);
+      }
+    };
+    RemoteCommand.prototype.openDialog = function(opt) {
+      var a, actions, div, _i, _len, _ref;
+      if (!$.fn.dialog) {
+        throw new Error("jQuery dialog is not available");
+      }
+      if (this.form) {
+        actions = {};
+        div = $(this.form.toHTML());
+        _ref = this.actions;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          a = _ref[_i];
+          actions[a] = this._createFn(a, div, opt);
         }
-        return _results;
-      })();
-      return this.form = cmd.find("x");
+        div.find("h1").remove();
+        return div.dialog({
+          autoOpen: true,
+          modal: true,
+          title: this.form.title,
+          buttons: actions
+        });
+      }
     };
-    RemoteCommand.prototype.onSuccess = function(res) {};
-    RemoteCommand.prototype.onError = function(res) {};
-    RemoteCommand.prototype.execute = function() {
+    RemoteCommand.prototype.onSuccess = function(res, cmd) {};
+    RemoteCommand.prototype.onError = function(res, cmd) {
+      if (console && cmd.error) {
+        return console.error("could not exectute command.\nError:\n  Type: " + cmd.error.type + ",\n  Code: " + cmd.error.code + ",\"\n  Conditions: " + (cmd.error.conditions.join(',')));
+      }
+    };
+    RemoteCommand.prototype._exec = function(opt) {
+      if (opt.gui === true) {
+        opt.success = function(res, cmd) {
+          return cmd.openDialog(opt);
+        };
+      }
       return this.conn.cmds.execute(this.jid, this.node, {
-        success: this.parseCmdResult,
-        error: this.onError
+        success: __bind(function(res) {
+          this._parseResult(res);
+          if (opt.success) {
+            return opt.success(res, this);
+          } else {
+            return this.onSuccess(res, this);
+          }
+        }, this),
+        error: __bind(function(res) {
+          this._parseResult(res);
+          if (opt.error) {
+            return opt.error(res, this);
+          } else {
+            return this.onError(res, this);
+          }
+        }, this),
+        sid: this.sessionid,
+        action: this.executeAction,
+        form: this.responseForm
       });
     };
-    RemoteCommand.prototype.next = function(responseForm) {
-      return this.conn.cmds.execute(this.jid, this.node, {
-        action: "next",
-        success: this.parseCmdResult,
-        error: this.onError
-      });
+    RemoteCommand.prototype.execute = function(opt) {
+      return this._exec(opt);
     };
-    RemoteCommand.prototype.prev = function() {
-      return this.conn.cmds.execute(this.jid, this.node, {
-        action: "prev",
-        success: this.parseCmdResult,
-        error: this.onError
-      });
+    RemoteCommand.prototype.next = function(opt) {
+      if (opt.responseForm) {
+        this.responseForm = opt.responseForm;
+      }
+      this.executeAction = "next";
+      return this._exec(opt);
     };
-    RemoteCommand.prototype.complete = function(responseForm) {
-      return this.conn.cmds.execute(this.jid, this.node, {
-        action: "complete",
-        success: this.onSuccess,
-        error: this.onError
-      });
+    RemoteCommand.prototype.prev = function(opt) {
+      this.executeAction = "prev";
+      return this._exec(opt);
     };
-    RemoteCommand.prototype.cancel = function() {
-      return this.conn.cmds.execute(this.jid, this.node, {
-        action: "cancel",
-        success: this.onSuccess,
-        error: this.onError
-      });
+    RemoteCommand.prototype.complete = function(opt) {
+      if (opt.responseForm) {
+        this.responseForm = opt.responseForm;
+      }
+      this.executeAction = "complete";
+      return this._exec(opt);
+    };
+    RemoteCommand.prototype.cancel = function(opt) {
+      this.executeAction = "cancel";
+      return this._exec(opt);
     };
     RemoteCommand.prototype.isValidAction = function(action) {
       return __indexOf.call(this.actions, action) >= 0;
@@ -178,7 +312,6 @@
     };
     CommandNode.prototype.onSuccess = function(obj) {
       var entry, i, item, res;
-      console.warn(this.fn);
       res = this.res;
       item = this.item;
       res.attrs({
@@ -249,8 +382,9 @@
         jid: jid,
         node: node,
         action: opt.action,
-        sessionid: opt.sid,
+        sid: opt.sid,
         data: opt.data,
+        form: opt.form,
         item: $.grep(cmds.items, function(n) {
           return n.node === node;
         })

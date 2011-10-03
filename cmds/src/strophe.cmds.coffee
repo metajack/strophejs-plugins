@@ -21,6 +21,9 @@ createExecIQ = (opt) ->
 
   if $.isArray opt.data
     iq.c(opt.item[0].item).t(item).up() for i,item of opt.data
+
+  else if opt.form
+    iq.cnode opt.form.toXML()
   iq
 
 # we have to overrite reply, because we pass in the callback fn form
@@ -42,49 +45,142 @@ class RemoteCommand
     @sessionid = null
     @data = null
     @form = null
+    @resonseForm = null
     @status = null
+    @error = null
 
-  parseCmdResult: (res) ->
+  _parseResult: (res) ->
     cmd = ($ res).find "command"
     @sessionid = cmd.attr "sessionid"
-    @stauts = cmd.attr "status"
+    @status = cmd.attr "status"
+    @_parseActions cmd
+    @_parseResultForm cmd
+    @_parseError res
+
+  _parseActions: (cmd) ->
     actions = cmd.find "actions"
-    @execueAction = actions.attr "execute"
-    @actions = (a.nodeName for a in actions)
-    @form = cmd.find "x"
+    if actions.length > 0
+      @executeAction = actions.attr "execute"
+      @actions = (a.nodeName for a in actions.children())
 
-  onSuccess: (res) ->
+  _parseResultForm:(cmd) ->
+    x = cmd.find "x"
+    if x.length > 0
+      @form = Strophe.x.Form.fromXML x
+    else
+      @form = null
 
-  onError: (res) ->
+  _parseError: (res) ->
+    res = $ res
+    err = res.find "error"
+    if err.length > 0
+      @error =
+        code: err.attr "code"
+        type: err.attr "type"
+        conditions: ( e.nodeName for e in err.children())
+    else
+      @error = null
 
-  execute: ->
+  _parseSubmitFormFromHTML: (html) ->
+    form = Strophe.x.Form.fromHTML html
+    form.type = "submit"
+    for f in form.fields
+      f.options = []
+      f.required = false
+    form
+
+  _createFn: (action, div, opt) ->
+
+    close = -> div.dialog "close"
+    switch action.toLowerCase()
+
+      when "next" then =>
+        close()
+        opt.responseForm = @_parseSubmitFormFromHTML div
+        @next opt
+
+      when "prev" then =>
+        close()
+        @prev opt
+
+      when "complete" then =>
+        close()
+        opt.responseForm = @_parseSubmitFormFromHTML div
+        @complete opt
+
+      when "cancel" then =>
+        close()
+        @cancel opt
+
+      else =>
+
+  openDialog: (opt) =>
+
+    throw new Error "jQuery dialog is not available" unless $.fn.dialog
+
+    if @form
+      actions = {}
+      div = $ @form.toHTML()
+      actions[a] = @_createFn a, div, opt for a in @actions
+
+      div.find("h1").remove()
+      div.dialog
+        autoOpen: true
+        modal: true
+        title: @form.title
+        buttons: actions
+
+  onSuccess: (res, cmd) ->
+
+  onError: (res, cmd) ->
+    if console and cmd.error
+      console.error """could not exectute command.
+        Error:
+          Type: #{ cmd.error.type },
+          Code: #{ cmd.error.code },"
+          Conditions: #{ cmd.error.conditions.join ',' }"""
+
+  _exec: (opt) ->
+    if opt.gui is true
+      opt.success = (res, cmd) ->
+        cmd.openDialog opt
+
     @conn.cmds.execute @jid, @node,
-      success: @parseCmdResult
-      error: @onError
+      success: (res) =>
+        @_parseResult res
+        if opt.success
+          opt.success res, @
+        else
+          @onSuccess res, @
+      error: (res) =>
+        @_parseResult res
+        if opt.error
+          opt.error res, @
+        else
+          @onError res, @
+      sid: @sessionid
+      action: @executeAction
+      form: @responseForm
 
-  next: (responseForm) ->
-    @conn.cmds.execute @jid, @node,
-      action: "next"
-      success: @parseCmdResult
-      error: @onError
+  execute: (opt) -> @_exec opt
 
-  prev: ->
-    @conn.cmds.execute @jid, @node,
-      action: "prev"
-      success: @parseCmdResult
-      error: @onError
+  next: (opt) ->
+    @responseForm = opt.responseForm if opt.responseForm
+    @executeAction = "next"
+    @_exec opt
 
-  complete: (responseForm) ->
-    @conn.cmds.execute @jid, @node,
-      action: "complete"
-      success: @onSuccess
-      error: @onError
+  prev: (opt)->
+    @executeAction = "prev"
+    @_exec opt
 
-  cancel: ->
-    @conn.cmds.execute @jid, @node,
-      action: "cancel"
-      success: @onSuccess
-      error: @onError
+  complete: (opt) ->
+    @responseForm = opt.responseForm if opt.responseForm
+    @executeAction = "complete"
+    @_exec opt
+
+  cancel: (opt)->
+    @executeAction = "cancel"
+    @_exec opt
 
   isValidAction: (action) -> (action in @actions)
 
@@ -108,7 +204,6 @@ class CommandNode extends Strophe.Disco.DiscoNode
     @fn.call @, res
 
   onSuccess: (obj) ->
-    console.warn @fn
     res = @res
     item = @item
     res.attrs status: "completed"
@@ -154,8 +249,9 @@ Strophe.addConnectionPlugin "cmds", do ->
       jid: jid
       node: node
       action: opt.action
-      sessionid: opt.sid
+      sid: opt.sid
       data: opt.data
+      form: opt.form
       item: $.grep(cmds.items, (n) -> n.node is node)
 
     noop = Strophe.Disco.noop

@@ -5,16 +5,40 @@ strophe.cmds.js is a plugin to provide Ad-Hoc Commands
 
 ## Usage
 
-DESCRIPTION
+### Client side
+
+    cmd = new Strophe.Commands.RemoteCommand(conn, jid, node);
+
+    cmd.execute({
+
+      success: function(res, cmd){
+
+        proccessFields( cmd.form.fields );
+        doSomething();
+        resp = new Strophe.x.Form();
+        cmd.complete({ responseForm: resp });
+
+      error: myErrorFunction
+
+    }});
+
+You can also use the interactive GUI mode
+
+    cmd.execute({gui:true});
+
+### Server side
 
 ## Dependencies
 
 - strophe.disco.js
+- strophe.x.js
 - jQuery
+- jQueryUI (for GUI mode)
 
 ## ToDo
 
-- ?
+- Write specs for UI commands
+- Write better documentation
 
 ## Authors
 
