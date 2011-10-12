@@ -13,7 +13,7 @@ describe("GetUrlCommand", function() {
 	it("called with no urls", function() {
 		c.cmds.add(Strophe.Commands.create('getUrls', mockGetUrl));
 		spyon(c,'send',function(res) { expect(res.find('url').length).toEqual(0); });
-		c.cmds.execute('n@d/r', 'getUrls');
+		c.cmds.exec('n@d/r', 'getUrls');
 	});
 
 	it("called with no urls also calls callback", function() {
@@ -22,7 +22,7 @@ describe("GetUrlCommand", function() {
 			var res = $iq({type: 'result', id: req.attr('id')});
 			c._dataRecv(createRequest(res));
 		});
-		c.cmds.execute('n@d/r', 'getUrls', success);
+		c.cmds.execute('n@d/r', 'getUrls', { success: success});
 		expect(success).toHaveBeenCalled();
 	});
 	it("#GetUrls calls callback and sends urls in response", function() {
@@ -60,7 +60,7 @@ describe("GetUrlCommand", function() {
 			expect(res.find('url').length).toEqual(2);
 			expect(res.find('url:eq(0)').text()).toEqual('http://www.google.com');
 		});
-		c.cmds.execute('n@d/r', 'setUrls', urls);
+		c.cmds.execute('n@d/r', 'setUrls', {data:urls});
 	});
 
 });
