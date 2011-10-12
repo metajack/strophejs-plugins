@@ -15,6 +15,8 @@ https://github.com/metajack/strophejs-plugins .
 
 ## Available Plugins
 
+### XMPP Extensions
+
 - [Data Forms](strophejs-plugins/tree/master/dataforms/)
   ([XEP 0004](http://xmpp.org/extensions/xep-0004.html))
 
@@ -59,6 +61,13 @@ https://github.com/metajack/strophejs-plugins .
 
 - [Roster Versioning](strophejs-plugins/tree/master/roster/)
   ([XEP 0237](http://xmpp.org/extensions/xep-0237.html))
+
+### Other Plugins
+
+- [Serverdate](strophejs-plugins/tree/master/serverdate/) - Syncs a local clock
+  to the servers
+
+- [epic](strophejs-plugins/tree/master/epic/)
 
 ## Contribute
 
