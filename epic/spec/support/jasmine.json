@@ -1,0 +1,22 @@
+{
+ "src_dir"  : "/public/javascript/",
+ "spec_dir" : "/spec/",
+
+ "server":{
+   "port":8124
+ },
+ "externals":[
+  "https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js",
+  "http://localhost/jquery.ui.widget.js",
+  "http://localhost/strophe.js",
+  "http://localhost/strophe.roster.js",
+  "http://localhost/strophe.disco.js",
+  "http://localhost/strophe.cmds.js",
+  "http://localhost/Stanzas.js",
+  "http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"
+ ],
+	
+ "_other external files you can add above":[
+  "https://github.com/pivotal/jasmine-ajax/raw/master/lib/mock-ajax.js" 
+ ]
+}

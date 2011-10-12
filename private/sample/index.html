@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link type="text/css" href="css/ui-lightness/jquery-ui-1.8.6.custom.css" rel="stylesheet" />
+    <link type="text/css" href="css/sample.css" rel="stylesheet" />
+    <script type="text/javascript" src="js/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.6.custom.min.js"></script>
+    <script type="text/javascript" src="js/strophe.min.js"></script>
+    <script type="text/javascript" src="../strophe.private.js"></script>
+    <script type="text/javascript" src="js/sample.js"></script>
+
+  </head>
+  <body>
+
+    <banner>
+      <h1>Private XML Storage ( XEP-0049 )</h1>
+      <button id="logoutButton">Logout</button>
+    </banner>
+
+    <div id="main">
+      <textarea id="input" cols="50" rows="6">
+
+      mytext
+
+      </textarea>
+      <br/>
+      <textarea id="received" cols="50" rows="6" disabled ></textarea>
+      <br/>
+      <button id="saveButton">Save</button>
+      <button id="loadButton">Load</button>
+    </div>
+
+    <!-- dialogs -->
+
+    <div id="login">
+      <label>Jabber ID:</label>
+      <br/>
+      <input id="jid" type="email" placeholder="YourJabberID@JabberServer.org" reqired />
+      <br/>
+      <label>Password:</label>
+      <br/>
+      <input id="pw" type="password" placeholder="Your secret password" reqired />
+      <br/>
+    </div>
+
+    <!-- helper -->
+
+    <div id="progressbar"></div>
+
+  </body>
+</html>

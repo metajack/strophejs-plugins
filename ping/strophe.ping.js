@@ -70,5 +70,5 @@ Strophe.addConnectionPlugin('ping',
   
   addPingHandler: function( handler ){
     return this._connection.addHandler( handler, Strophe.NS.PING, "iq", "get" );    
-  },
+  }
 });
