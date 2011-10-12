@@ -119,12 +119,16 @@ Strophe.addConnectionPlugin('muc', {
                               from: this._connection.jid,
                               to: room_nick})
             .c("x",{xmlns: Strophe.NS.MUC});
-        this._connection.addHandler(handler_cb,
-                                    null,
-                                    "presence",
-                                    null,
-                                    presenceid,
-                                    null);
+        
+        if(handler_cb){
+            this._connection.addHandler(handler_cb,
+                                        null,
+                                        "presence",
+                                        null,
+                                        presenceid,
+                                        null);            
+        }
+
         this._connection.send(presence);
         return presenceid;
     },
