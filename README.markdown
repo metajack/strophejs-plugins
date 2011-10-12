@@ -69,6 +69,9 @@ https://github.com/metajack/strophejs-plugins .
 
 - [epic](strophejs-plugins/tree/master/epic/)
 
+- [iexdomain](strophejs-plugins/tree/master/iexdomain/) - Support for IE 
+  XDomainRequest
+
 ## Contribute
 
 If you would like to make your plugin available here, simply fork this
