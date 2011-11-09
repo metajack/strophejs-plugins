@@ -47,7 +47,7 @@ Strophe.addConnectionPlugin('ping',
    * (Object) ping	-
    * (Function) success	-
    * (Function) error	-
-   */*
+   */
   pong: function( ping, success, error ){
     
     var from = ping.getAttribute('from');
@@ -70,5 +70,5 @@ Strophe.addConnectionPlugin('ping',
   
   addPingHandler: function( handler ){
     return this._connection.addHandler( handler, Strophe.NS.PING, "iq", "get" );    
-  },
+  }
 });
