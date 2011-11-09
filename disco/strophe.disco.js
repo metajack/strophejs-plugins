@@ -147,20 +147,34 @@ Strophe.addConnectionPlugin('disco',
                          to:jid, type:'get'}).c('query', attrs);
         this._connection.sendIQ(items, success, error);
     },
+
+    /** PrivateFunction: _buildIQResult
+     */
+    _buildIQResult: function(stanza, query_attrs)
+    {
+        var id   =  stanza.getAttribute('id');
+        var from = stanza.getAttribute('from');
+        var iqresult = $iq({type: 'result', id: id});
+
+        if (from !== null) {
+            iqresult.attrs({to: from});
+        }
+
+        return iqresult.c('query', query_attrs);
+    },
+
     /** PrivateFunction: _onDiscoInfo
      * Called when receive info request
      */
     _onDiscoInfo: function(stanza)
     {
-        var id   =  stanza.getAttribute('id');
-        var from = stanza.getAttribute('from');
         var node = stanza.getElementsByTagName('query')[0].getAttribute('node');
         var attrs = {xmlns: Strophe.NS.DISCO_INFO};
         if (node)
         {
             attrs.node = node;
         }
-        var iqresult = $iq({type: 'result', id: id, to: from}).c('query', attrs);
+        var iqresult = this._buildIQResult(stanza, attrs);
         for (var i=0; i<this._identities.length; i++)
         {
             var attrs = {category: this._identities[i].category,
@@ -183,8 +197,6 @@ Strophe.addConnectionPlugin('disco',
      */
     _onDiscoItems: function(stanza)
     {
-        var id   = stanza.getAttribute('id');
-        var from = stanza.getAttribute('from');
         var query_attrs = {xmlns: Strophe.NS.DISCO_ITEMS};
         var node = stanza.getElementsByTagName('query')[0].getAttribute('node');
         if (node)
@@ -204,7 +216,7 @@ Strophe.addConnectionPlugin('disco',
         {
             var items = this._items;
         }
-        var iqresult = $iq({type: 'result', id: id, to: from}).c('query', query_attrs);
+        var iqresult = this._buildIQResult(stanza, query_attrs);
         for (var i = 0; i < items.length; i++)
         {
             var attrs = {jid:  items[i].jid};
