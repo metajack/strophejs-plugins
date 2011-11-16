@@ -17,6 +17,9 @@ https://github.com/metajack/strophejs-plugins .
 - [Multi-User Chat](strophejs-plugins/tree/master/muc/)
   ([XEP 0045](http://xmpp.org/extensions/xep-0045.html))
 
+- [Private XML Storage](strophejs-plugins/tree/master/private/)
+  ([XEP 0049](http://xmpp.org/extensions/xep-0049.html))
+
 - [vcard-temp](strophejs-plugins/tree/master/vcard/)
   ([XEP 0054](http://xmpp.org/extensions/xep-0054.html))
 
