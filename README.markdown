@@ -38,6 +38,9 @@ https://github.com/metajack/strophejs-plugins .
 - [Personal Eventing Protocol](strophejs-plugins/tree/master/pep/)
   ([XEP 0163](http://xmpp.org/extensions/xep-0163.html))
 
+- [Message Delivery Receipts](strophejs-plugins/tree/master/receipts/)
+  ([XEP 0184](http://xmpp.org/extensions/xep-0184.html))
+
 - [XMPP Ping](strophejs-plugins/tree/master/ping/)
   ([XEP 0199](http://xmpp.org/extensions/xep-0199.html))
 
