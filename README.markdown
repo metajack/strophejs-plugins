@@ -32,6 +32,9 @@ https://github.com/metajack/strophejs-plugins .
 - [Publish-Subscribe](strophejs-plugins/tree/master/pubsub/)
   ([XEP 0060](http://xmpp.org/extensions/xep-0060.html))
 
+ - [In-Band Registration](strophejs-plugins/tree/master/register/)
+  ([XEP 0077](http://xmpp.org/extensions/xep-0077.html))
+
 - [Message Archiving](strophejs-plugins/tree/master/archive/)
   ([XEP 0136](http://xmpp.org/extensions/xep-0136.html))
 
