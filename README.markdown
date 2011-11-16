@@ -11,6 +11,9 @@ https://github.com/metajack/strophejs-plugins .
 
 ### XMPP Extensions
 
+- [Data Forms](strophejs-plugins/tree/master/dataforms/)
+  ([XEP 0004](http://xmpp.org/extensions/xep-0004.html))
+
 - [Service Discovery](strophejs-plugins/tree/master/disco/)
   ([XEP 0030](http://xmpp.org/extensions/xep-0030.html))
 
