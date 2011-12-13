@@ -63,7 +63,7 @@ Strophe.addConnectionPlugin("rpc", {
 
     for (var i = 0; i < jid.length; i++) {
       if (jid === "*@*") {
-        this._filterJid = trueFunction;
+        this._jidInWhitelist = trueFunction;
       }
 
       var node   = Strophe.getNodeFromJid(jid);
@@ -84,7 +84,7 @@ Strophe.addConnectionPlugin("rpc", {
    * @param  {String} jid Jid to test 
    * @return {Boolean}
    */
-  _filterJid: function(jid) {
+  _jidInWhitelist: function(jid) {
     if (this.nodeWhiteList.length   === 0 &&
         this.domainWhiteList.length === 0 &&
         this.jidWhiteList.length    === 0)
@@ -109,17 +109,17 @@ Strophe.addConnectionPlugin("rpc", {
     params = (typeof(params.sort) === "function") ? params : [params];
 
     var iq = $iq({type: "set", id: id, from: this._connection.jid, to: to})
-      .c("query", { xmlns: Strophe.NS.RPC });
-
-    iq.c("methodCall").c("methodName").t(method);
-    iq.up().c("params");
+      .c("query", {xmlns: Strophe.NS.RPC})
+      .c("methodCall")
+      .c("methodName").t(method)
+      .up()
+      .c("params");
 
     for (var i = 0; i < params.length; i++) {
       iq.c("param").cnode(this._convertToXML(params[i]));
       iq.up();
     }
 
-    console.warn('send iq:', iq.tree());
     this._connection.send(iq.tree());
   },
 
@@ -132,9 +132,8 @@ Strophe.addConnectionPlugin("rpc", {
    */
   sendResponse: function(id, to, result) {
     var iq = $iq({type: "result", id: id, from: this._connection.jid, to: to})
-      .c("query", { xmlns: Strophe.NS.RPC });
-    
-    iq.c("methodResponse")
+      .c("query", {xmlns: Strophe.NS.RPC})
+      .c("methodResponse")
       .c("params")
       .c("param")
       .cnode(this._convertToXML(result));
@@ -158,14 +157,21 @@ Strophe.addConnectionPlugin("rpc", {
     message = String(message);
 
     var iq = $iq({type: "result", id: id, from: this._connection.jid, to: to})
-      .c("query", { xmlns: Strophe.NS.RPC });
-
-    iq.c("methodResponse")
+      .c("query", {xmlns: Strophe.NS.RPC})
+      .c("methodResponse")
       .c("fault")
       .cnode(this._convertToXML({
         faultCode: code,
         faultString: message
       }));
+    
+    this._connection.send(iq.tree());
+  },
+
+  _sendForbiddenAccess: function(id, to) {
+    var iq = $iq({type: "error", id: id, from: this._connection.jid, to: to})
+      .c("error", {code: 403, type: "auth"})
+      .c("forbidden", {xmlns: Strophe.NS.STANZAS});
     
     this._connection.send(iq.tree());
   },
@@ -190,17 +196,7 @@ Strophe.addConnectionPlugin("rpc", {
    * @param {Object} context Context of the handler
    */
   addRequestHandler: function(handler, context) {
-    context = context || this;
-
-    var self = this;
-    var filter = function(doc) {
-      if (!self._filterJid(doc.getAttribute("from"))) {
-        return true;
-      }
-      return handler.apply(context, arguments);
-    };
-
-    this._connection.addHandler(filter, Strophe.NS.RPC, "iq", "set");
+    this._connection.addHandler(this._filteredHandler(handler, context), Strophe.NS.RPC, "iq", "set");
   },
 
   /**
@@ -211,17 +207,20 @@ Strophe.addConnectionPlugin("rpc", {
    * @param {Object} context Context of the handler
    */
   addResponseHandler: function(handler, context) {
-    context = context || this;
+    this._connection.addHandler(this._filteredHandler(handler, context), Strophe.NS.RPC, "iq", "result");
+  },
 
+  _filteredHandler: function(handler, context) {
+    context = context || this;
     var self = this;
-    var filter = function(doc) {
-      if (!self._filterJid(doc.getAttribute("from"))) {
+    return function(doc) {
+      var from = doc.getAttribute("from");
+      if (!self._jidInWhitelist(from)) {
+        self._sendForbiddenAccess(doc.getAttribute("id"), from);
         return true;
       }
       return handler.apply(context, arguments);
     };
-
-    this._connection.addHandler(filter, Strophe.NS.RPC, "iq", "result");
   },
 
   /**
