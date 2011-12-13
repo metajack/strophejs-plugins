@@ -61,13 +61,9 @@ Strophe.addConnectionPlugin("rpc", {
       jid = [jid];
     }
 
-    var trueFunction = function() {
-      return true;
-    };
-
     for (var i = 0; i < jid.length; i++) {
       if (jid === "*@*") {
-        this._jidInWhitelist = trueFunction;
+        this._whitelistEnabled = false;
       }
 
       var node   = Strophe.getNodeFromJid(jid);
