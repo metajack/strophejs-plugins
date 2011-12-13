@@ -12,6 +12,8 @@ Strophe.addConnectionPlugin("rpc", {
 
   _connection : undefined,
 
+  _whitelistEnabled : false,
+
   jidWhiteList : [],
   nodeWhiteList : [],
   domainWhiteList : [],
@@ -24,6 +26,8 @@ Strophe.addConnectionPlugin("rpc", {
   init: function(connection) {
 
     this._connection = connection;
+
+    this._whitelistEnabled = false;
 
     this.jidWhiteList    = [];
     this.nodeWhiteList   = [];
@@ -68,12 +72,15 @@ Strophe.addConnectionPlugin("rpc", {
 
       var node   = Strophe.getNodeFromJid(jid);
       var domain = Strophe.getDomainFromJid(jid);
-      if (node === "*") {
-        this.domainWhiteList.push(domain);
-      } else if (domain === "*") {
-        this.nodeWhiteList.push(node);
-      } else {
-        this.jidWhiteList.push(Strophe.getBareJidFromJid(jid));
+      if (jid) {
+        if (node === "*") {
+          this.domainWhiteList.push(domain);
+        } else if (domain === "*") {
+          this.nodeWhiteList.push(node);
+        } else {
+          this.jidWhiteList.push(jid);
+        }
+        this._whitelistEnabled = true;
       }
     }
   },
@@ -85,15 +92,13 @@ Strophe.addConnectionPlugin("rpc", {
    * @return {Boolean}
    */
   _jidInWhitelist: function(jid) {
-    if (this.nodeWhiteList.length   === 0 &&
-        this.domainWhiteList.length === 0 &&
-        this.jidWhiteList.length    === 0)
+    if (!this._whitelistEnabled)
       return true;
 
     return (
       this.domainWhiteList.indexOf(Strophe.getDomainFromJid(jid)) !== -1  ||
       this.nodeWhiteList.indexOf(Strophe.getNodeFromJid(jid))     !== -1  ||
-      this.jidWhiteList.indexOf(Strophe.getBareJidFromJid(jid))   !== -1
+      this.jidWhiteList.indexOf(jid) !== -1
     );
   },
 
