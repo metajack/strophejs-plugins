@@ -91,6 +91,9 @@ Strophe.addConnectionPlugin("rpc", {
     if (!this._whitelistEnabled)
       return true;
 
+    if (jid === this._connection.jid)
+      return true;
+    
     return (
       this.domainWhiteList.indexOf(Strophe.getDomainFromJid(jid)) !== -1  ||
       this.nodeWhiteList.indexOf(Strophe.getNodeFromJid(jid))     !== -1  ||
