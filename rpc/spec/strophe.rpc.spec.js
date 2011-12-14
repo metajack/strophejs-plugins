@@ -1,4 +1,4 @@
-var createRequest = helper.createRequest, mockConnection = helper.mockConnection,
+var mockConnection = helper.mockConnection,
   spyon = helper.spyon, receive = helper.receive;
 
 describe("Strophe Jabber-RPC plugin", function() {
@@ -154,6 +154,12 @@ describe("Strophe Jabber-RPC plugin", function() {
     });
 
     describe("Forbidden access", function() {
+
+      beforeEach(function() {
+        rpc.addJidToWhiteList(["*@jabber.org", "*@localhost"]);
+        var handler = function() {};
+        rpc.addHandlers(handler, handler);
+      });
       
       it("should send forbidden acces to the wrong nodes", function() {
         spyon(connection, "send", function(iq) {
@@ -172,10 +178,14 @@ describe("Strophe Jabber-RPC plugin", function() {
           expect(forbidden.getAttribute("xmlns")).toEqual(Strophe.NS.STANZAS);
         });
 
-        var handler = function() {};
-        rpc.addHandlers(handler, handler);
-        rpc.addJidToWhiteList(["*@jabber.org", "*@localhost"]);
+        iq = $iq({type: "set", id: "123", from: "foo@bar", to: connection.jid})
+          .c("query", {xmlns: Strophe.NS.RPC});
+        receive(connection, iq);
+      });
 
+      it("should NOT send forbidden acces to the right nodes", function() {
+        spyOn(connection, 'send');
+        expect(connection.send).not.toHaveBeenCalled();
         iq = $iq({type: "set", id: "123", from: "foo@bar", to: connection.jid})
           .c("query", {xmlns: Strophe.NS.RPC});
         

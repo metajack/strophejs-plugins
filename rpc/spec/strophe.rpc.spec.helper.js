@@ -6,6 +6,7 @@ var helper = (function() {
 
 	function spyon (obj, method, cb)  {
 		spyOn(obj,method).andCallFake(function(res) {
+			res = res;
 			cb.call(this,res);
 		});
 	}
@@ -19,7 +20,7 @@ var helper = (function() {
 		return c;
 	}
 
-	 function createRequest(iq) {
+	function createRequest(iq) {
 		iq = typeof iq.tree == "function" ? iq.tree() : iq;
 		var req = new Strophe.Request(iq, function() {});
 		req.getResponse = function() { 
