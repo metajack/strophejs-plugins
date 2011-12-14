@@ -56,14 +56,17 @@ Strophe.addConnectionPlugin("rpc", {
    * 
    * @param {String|Array} jid
    */
-  addJidToWhiteList: function(jid) {
-    if (typeof(jid.sort) !== "function") {
-      jid = [jid];
+  addJidToWhiteList: function(jids) {
+    if (typeof(jids.sort) !== "function") {
+      jids = [jids];
     }
 
-    for (var i = 0; i < jid.length; i++) {
+    for (var i = 0; i < jids.length; i++) {
+      var jid = jids[i];
+
       if (jid === "*@*") {
         this._whitelistEnabled = false;
+        return;
       }
 
       var node   = Strophe.getNodeFromJid(jid);
@@ -112,16 +115,18 @@ Strophe.addConnectionPlugin("rpc", {
   sendRequest: function(id, to, method, params) {
     params = (typeof(params.sort) === "function") ? params : [params];
 
-    var iq = $iq({type: "set", id: id, from: this._connection.jid, to: to})
-      .c("query", {xmlns: Strophe.NS.RPC})
+    var iq = $iq({type: "set", id: id, from: this._connection.jid, to: to});
+    iq.c("query", {xmlns: Strophe.NS.RPC})
       .c("methodCall")
-      .c("methodName").t(method)
+      .c("methodName").t(String(method))
       .up()
       .c("params");
-
+    
+    var value;    
     for (var i = 0; i < params.length; i++) {
-      iq.c("param").cnode(this._convertToXML(params[i]));
-      iq.up();
+      value = this._convertToXML(params[i]);
+      iq.c("param").cnode(value);
+      iq.up().up();
     }
 
     this._connection.send(iq.tree());
