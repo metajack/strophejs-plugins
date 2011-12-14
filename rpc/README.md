@@ -6,6 +6,8 @@ See the XEP abstract :
 
 > This specification defines an XMPP protocol extension for transporting XML-RPC encoded requests and responses between two XMPP entities. The protocol supports all syntax and semantics of XML-RPC except that it uses XMPP instead of HTTP as the underlying transport.
 
+This plugin does not aim at managing your flow of RPC. It is a simple helper to send and handle remote requests between two XMPP nodes.
+
 ## Usage
 
 Just link the rpc plugin below the strophe library in your HTML head section:
@@ -37,7 +39,7 @@ The plugin prototype is accessible from the `connection.rpc` variable
 
 ### Send an RPC
 
-There are three functions to handle RPC :
+There are three functions to send RPC :
 
 - `sendRequest(id, to, method, params)`
   - `method` is the string name of the method to call
