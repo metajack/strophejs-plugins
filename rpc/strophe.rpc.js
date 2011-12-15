@@ -115,21 +115,18 @@ Strophe.addConnectionPlugin("rpc", {
   sendRequest: function(id, to, method, params) {
     params = (typeof(params.sort) === "function") ? params : [params];
 
-    var iq = $iq({type: "set", id: id, from: this._connection.jid, to: to})
-      .c("query", {xmlns: Strophe.NS.RPC})
-      .c("methodCall")
+    var element = new Strophe.Builder("methodCall")
       .c("methodName").t(method)
       .up()
       .c("params");
     
-    var value;    
     for (var i = 0; i < params.length; i++) {
-      iq.c("param")
+      element.c("param")
         .cnode(this._convertToXML(params[i]))
         .up().up();
     }
 
-    this._connection.send(iq.tree());
+    this.sendXMLElement(id, to, "set", element.tree());
   },
 
   /**
@@ -140,14 +137,12 @@ Strophe.addConnectionPlugin("rpc", {
    * @param  {Object} result Result of the function call
    */
   sendResponse: function(id, to, result) {
-    var iq = $iq({type: "result", id: id, from: this._connection.jid, to: to})
-      .c("query", {xmlns: Strophe.NS.RPC})
-      .c("methodResponse")
+    var element = new Strophe.Builder("methodResponse")
       .c("params")
       .c("param")
       .cnode(this._convertToXML(result));
     
-    this._connection.send(iq.tree());
+    this.sendXMLElement(id, to, "result", element.tree());
   },
 
   /**
@@ -164,14 +159,33 @@ Strophe.addConnectionPlugin("rpc", {
       return;
     }
 
-    var iq = $iq({type: "result", id: id, from: this._connection.jid, to: to})
-      .c("query", {xmlns: Strophe.NS.RPC})
-      .c("methodResponse")
+    var element = new Strophe.Builder("methodResponse")
       .c("fault")
       .cnode(this._convertToXML({
         faultCode: code,
         faultString: String(message)
       }));
+
+    this.sendXMLElement(id, to, "result", element.tree());
+  },
+
+  /**
+   * Send a XMLElement as the request
+   * Does not check whether it is properly formed or not
+   * 
+   * @param  {String}  id      ID of the request or response 
+   * @param  {String}  to      JID of the recipient
+   * @param  {String}  type    Type of the request ('set' for a request and 'result' for a response)
+   * @param  {Element} element The XMLElement to send
+   */
+  sendXMLElement: function(id, to, type, element) {
+    if (typeof element.tree === 'function') {
+      element = element.tree();
+    }
+
+    var iq = $iq({type: type, id: id, from: this._connection.jid, to: to})
+      .c("query", {xmlns: Strophe.NS.RPC})
+      .cnode(element);
     
     this._connection.send(iq.tree());
   },
