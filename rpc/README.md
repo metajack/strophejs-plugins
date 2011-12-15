@@ -74,3 +74,14 @@ connection.rpc.addJidToWhiteList("me@jabber.org");
 connection.rpc.addJidToWhiteList(["*@jabber.org", "me@*"]);
 connection.rpc.addJidToWhiteList("*@*");
 ```
+
+## Tests & specs
+
+I use the node module `jasmine-runner` for the tests. Install it and use it as follow :
+
+```bash
+$ npm install jasmine-runner
+$ jasmine mon
+```
+
+The tests run in the browser at the address `localhost:8124`.
