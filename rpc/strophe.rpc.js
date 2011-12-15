@@ -115,18 +115,18 @@ Strophe.addConnectionPlugin("rpc", {
   sendRequest: function(id, to, method, params) {
     params = (typeof(params.sort) === "function") ? params : [params];
 
-    var iq = $iq({type: "set", id: id, from: this._connection.jid, to: to});
-    iq.c("query", {xmlns: Strophe.NS.RPC})
+    var iq = $iq({type: "set", id: id, from: this._connection.jid, to: to})
+      .c("query", {xmlns: Strophe.NS.RPC})
       .c("methodCall")
-      .c("methodName").t(String(method))
+      .c("methodName").t(method)
       .up()
       .c("params");
     
     var value;    
     for (var i = 0; i < params.length; i++) {
-      value = this._convertToXML(params[i]);
-      iq.c("param").cnode(value);
-      iq.up().up();
+      iq.c("param")
+        .cnode(this._convertToXML(params[i]))
+        .up().up();
     }
 
     this._connection.send(iq.tree());
@@ -160,10 +160,9 @@ Strophe.addConnectionPlugin("rpc", {
    */
   sendError: function(id, to, code, message) {
     if (isNaN(code)) {
-      Strophe.error(code + " is NaN");
+      Strophe.error(code + " is not a number");
       return;
     }
-    message = String(message);
 
     var iq = $iq({type: "result", id: id, from: this._connection.jid, to: to})
       .c("query", {xmlns: Strophe.NS.RPC})
@@ -171,7 +170,7 @@ Strophe.addConnectionPlugin("rpc", {
       .c("fault")
       .cnode(this._convertToXML({
         faultCode: code,
-        faultString: message
+        faultString: String(message)
       }));
     
     this._connection.send(iq.tree());

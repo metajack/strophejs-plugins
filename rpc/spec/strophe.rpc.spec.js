@@ -11,46 +11,47 @@ describe("Strophe Jabber-RPC plugin", function() {
   describe("Whitelist filter", function() {
     
     it("should be deactivated be default", function() {
-      expect(rpc._whitelistEnabled).toBe(false);
-      expect(rpc._jidInWhitelist("foo@bar/baz")).toBe(true);
+      expect(rpc._whitelistEnabled).toBeFalsy();
+      expect(rpc._jidInWhitelist("foo@bar/baz")).toBeTruthy();
+      expect(rpc._jidInWhitelist("random@guy")).toBeTruthy();
     });
 
     it("should filter out jids", function() {
       rpc.addJidToWhiteList(["foo@bar/baz", "baz@foo/bar"]);
       
-      expect(rpc._whitelistEnabled).toBe(true);
+      expect(rpc._whitelistEnabled).toBeTruthy();
 
-      expect(rpc._jidInWhitelist("foo@bar/baz")).toBe(true);
-      expect(rpc._jidInWhitelist("baz@foo/bar")).toBe(true);
-      expect(rpc._jidInWhitelist("random@guy")).toBe(false);
+      expect(rpc._jidInWhitelist("foo@bar/baz")).toBeTruthy();
+      expect(rpc._jidInWhitelist("baz@foo/bar")).toBeTruthy();
+      expect(rpc._jidInWhitelist("random@guy")).toBeFalsy();
 
-      expect(rpc._jidInWhitelist(connection.jid)).toBe(true);
+      expect(rpc._jidInWhitelist(connection.jid)).toBeTruthy();
     });
 
-    it("should be possible to use wildcard for the node", function() {
+    it("should allow to use a wildcard for the node", function() {
       rpc.addJidToWhiteList("*@d");
 
-      expect(rpc._whitelistEnabled).toBe(true);
+      expect(rpc._whitelistEnabled).toBeTruthy();
 
-      expect(rpc._jidInWhitelist("foo@d")).toBe(true);
-      expect(rpc._jidInWhitelist("bar@d/r")).toBe(true);
-      expect(rpc._jidInWhitelist("random@guy")).toBe(false);
+      expect(rpc._jidInWhitelist("foo@d")).toBeTruthy();
+      expect(rpc._jidInWhitelist("bar@d/r")).toBeTruthy();
+      expect(rpc._jidInWhitelist("random@guy")).toBeFalsy();
     });
 
-    it("should be possible to use wildcard for the domain", function() {
+    it("should allow the use a wildcard for the domain", function() {
       rpc.addJidToWhiteList("n@*");
 
-      expect(rpc._whitelistEnabled).toBe(true);
+      expect(rpc._whitelistEnabled).toBeTruthy();
 
-      expect(rpc._jidInWhitelist("n@foo")).toBe(true);
-      expect(rpc._jidInWhitelist("n@bar/r")).toBe(true);
-      expect(rpc._jidInWhitelist("random@guy")).toBe(false);
+      expect(rpc._jidInWhitelist("n@foo")).toBeTruthy();
+      expect(rpc._jidInWhitelist("n@bar/r")).toBeTruthy();
+      expect(rpc._jidInWhitelist("random@guy")).toBeFalsy();
     });
 
-    it("should deactivate the filter the *@*", function() {
+    it("should allow the filter *@*", function() {
       rpc.addJidToWhiteList("*@*");
 
-      expect(rpc._whitelistEnabled).toBe(false);
+      expect(rpc._whitelistEnabled).toBeFalsy();
     });
 
   });
@@ -161,7 +162,7 @@ describe("Strophe Jabber-RPC plugin", function() {
         rpc.addHandlers(handler, handler);
       });
       
-      it("should send forbidden acces to the wrong nodes", function() {
+      it("should send forbidden access to the wrong nodes", function() {
         spyon(connection, "send", function(iq) {
           expect(iq.getAttribute("type")).toEqual("error");
           expect(iq.getAttribute("id")).toEqual("123");
@@ -183,7 +184,7 @@ describe("Strophe Jabber-RPC plugin", function() {
         receive(connection, iq);
       });
 
-      it("should NOT send forbidden acces to the right nodes", function() {
+      it("should NOT send forbidden access to the right nodes", function() {
         spyOn(connection, 'send');
         expect(connection.send).not.toHaveBeenCalled();
         iq = $iq({type: "set", id: "123", from: "foo@bar", to: connection.jid})
