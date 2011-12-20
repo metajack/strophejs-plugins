@@ -64,7 +64,7 @@ It is possible to handle incoming RPCs using the functions :
 
 The handlers you pass to these functions take different parameters :
 
-```
+```javascript
 var responseHandler = function(id, from, result, error) {
 	// error is a boolean
 	// it is true if the response was an error message
