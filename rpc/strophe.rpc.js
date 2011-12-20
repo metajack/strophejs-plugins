@@ -392,13 +392,13 @@ Strophe.addConnectionPlugin("rpc", {
 
     try {
       var result = iq.getElementsByTagName("methodResponse")[0].firstChild;
-      var value;
 
       // Response
       var tag = result.tagName;
       if (tag === "params") {
         rpc.result = this._convertFromXML(result.firstChild.firstChild);
       }
+      // Error
       else if (tag === "fault") {
         rpc.fault  = this._convertFromXML(result.firstChild);
       }

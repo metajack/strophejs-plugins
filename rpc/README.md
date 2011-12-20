@@ -80,6 +80,8 @@ var xmlHandler = function(xml) { ... }
 connection.rpc.addXMLHandler(xmlHandler)
 ```
 
+Note that the parser of this module won't throw any exception. However `result`, `method` and `parameters` will be set as `null` if the incoming message is not XML-RPC compliant.
+
 ### Whitelist
 
 By default, this plugin will accept RPC from everyone. However, it is possible to use a whitelist of JID to filter incoming RPCs.
