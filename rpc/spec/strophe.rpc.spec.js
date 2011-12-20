@@ -3,6 +3,8 @@ var mockConnection = helper.mockConnection,
 
 describe("Strophe Jabber-RPC plugin", function() {
 
+  var connection, rpc;
+
   beforeEach(function() {
     connection = mockConnection();
     rpc = connection.rpc;
@@ -154,15 +156,74 @@ describe("Strophe Jabber-RPC plugin", function() {
       rpc.sendError("id231", "foo@bar/baz", -30021 ,"error message");
     });
 
+    describe("Handlers", function() {
+
+      var handler;
+
+      beforeEach(function() {
+        handler = jasmine.createSpy();
+      });
+
+      it("should be possible to add a request handler", function() {
+        rpc.addRequestHandler(handler);
+        var iq = $iq({type: "set", id: "123", from: "foo@bar", to: connection.jid})
+          .c("query", {xmlns: Strophe.NS.RPC})
+          .c("methodCall")
+          .c("methodName").t("pong")
+          .up()
+          .c("params")
+          .c("param")
+          .c("value")
+          .c("string").t("foo")
+          .up().up().up()
+          .c("param")
+          .c("value")
+          .c("i4").t("-32");
+        receive(connection, iq);
+        expect(handler).toHaveBeenCalledWith("123", "foo@bar", "pong", ["foo", -32]);
+      });
+
+      it("should be possible to add a response handler", function() {
+        rpc.addResponseHandler(handler);
+        iq = $iq({ type: "result", id: "id123", from: "foo@bar/baz", to: connection.jid })
+          .c("query", {xmlns: Strophe.NS.RPC})
+          .c("methodResponse")
+          .c("params")
+          .c("param")
+          .c("value")
+          .c("string").t("foo");
+        receive(connection, iq);
+        expect(handler).toHaveBeenCalledWith("id123", "foo@bar/baz", "foo", false);
+      });
+
+      it("should be possible to parse a fault response", function() {
+        rpc.addResponseHandler(handler);
+        var iq =$iq({type: "result", id: "123", from: "foo@bar", to: connection.jid})
+          .c("query", {xmlns: Strophe.NS.RPC})
+          .c("methodResponse")
+          .c("fault")
+          .c("value")
+          .c("struct")
+          .c("member")
+          .c("name").t("faultString")
+          .up()
+          .c("value")
+          .c("string").t("parsererror");
+        receive(connection, iq);
+        expect(handler).toHaveBeenCalledWith("123", "foo@bar", {faultString:"parsererror"}, true)
+      });
+
+    });
+
     describe("Forbidden access", function() {
 
       beforeEach(function() {
         rpc.addJidToWhiteList(["*@jabber.org", "*@localhost"]);
-        var handler = function() {};
-        rpc.addHandlers(handler, handler);
       });
       
       it("should send forbidden access to the wrong nodes", function() {
+        var handler = function() {};
+        rpc.addHandlers(handler, handler);
         spyon(connection, "send", function(iq) {
           expect(iq.getAttribute("type")).toEqual("error");
           expect(iq.getAttribute("id")).toEqual("123");
@@ -179,21 +240,21 @@ describe("Strophe Jabber-RPC plugin", function() {
           expect(forbidden.getAttribute("xmlns")).toEqual(Strophe.NS.STANZAS);
         });
 
-        iq = $iq({type: "set", id: "123", from: "foo@bar", to: connection.jid})
+        var iq = $iq({type: "set", id: "123", from: "foo@bar", to: connection.jid})
           .c("query", {xmlns: Strophe.NS.RPC});
         receive(connection, iq);
       });
 
       it("should NOT send forbidden access to the right nodes", function() {
-        spyOn(connection, 'send');
-        expect(connection.send).not.toHaveBeenCalled();
-        iq = $iq({type: "set", id: "123", from: "foo@bar", to: connection.jid})
+        spyOn(connection, "send");
+        var iq = $iq({type: "set", id: "123", from: "foo@jabber.org", to: connection.jid})
           .c("query", {xmlns: Strophe.NS.RPC});
-        
         receive(connection, iq);
+        expect(connection.send).not.toHaveBeenCalled();
       });
 
     });
+
   });
 
 });

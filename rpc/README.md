@@ -39,7 +39,7 @@ The plugin prototype is accessible from the `connection.rpc` variable
 
 ### Send an RPC
 
-There are three functions to send RPC :
+There are four functions to send RPC :
 
 - `sendRequest(id, to, method, params)`
   - `method` is the string name of the method to call
@@ -49,6 +49,8 @@ There are three functions to send RPC :
 - `sendError(id, to, code, message)`
   - `code` is the number of the error
   - `message` is the message describing the error
+- `sendXMLElement(id, to, xml)`
+  - `xml` is the XML Element that will be sent (whether it is properly formed or not)
 
 The parameters `id` and `to` are respectively the id of the request and the the jid of the recipient.
 
@@ -58,8 +60,25 @@ It is possible to handle incoming RPCs using the functions :
 
 - `addRequestHandler`
 - `addResponseHandler`
+- `addXMLHandler`
 
-Both these functions take a handler function as parameter.
+The handlers you pass to these functions take different parameters :
+
+```
+var responseHandler = function(id, from, result, error) {
+	// error is a boolean
+	// it is true if the response was an error message
+	if (error === true) { ... }
+	else { ... }
+}
+connection.rpc.addResponseHandler(responseHandler);
+
+var requestHandler = function(id, from, method, parameters) { ... }
+connection.rpc.addRequestHandler(requestHandler);
+
+var xmlHandler = function(xml) { ... }
+connection.rpc.addXMLHandler(xmlHandler)
+```
 
 ### Whitelist
 
