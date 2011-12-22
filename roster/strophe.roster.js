@@ -247,8 +247,8 @@ Strophe.addConnectionPlugin('roster',
      */
     _onReceiveIQ : function(iq)
     {
-        var id = iq.id;
-        var from = iq.from;
+        var id = iq.getAttribute('id');
+        var from = iq.getAttribute('from');
         var iqresult = $iq({type: 'result', id: id, to: from});
         this._connection.send(iqresult);
         this._updateItems(iq);
