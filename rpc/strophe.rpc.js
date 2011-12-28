@@ -266,13 +266,11 @@ Strophe.addConnectionPlugin("rpc", {
     var self = this;
     return function(xml) {
       if (self._filter(xml)) {
-        var rpc  = self._parseResponseMessage(xml);
-        var args = [rpc.id, rpc.from];
+        var rpc = self._parseResponseMessage(xml);
         if (rpc.result || rpc.result === null)
-          args.push(rpc.result, false);
+          return handler.call(context, rpc.id, rpc.from, rpc.result, false);
         else if (rpc.fault || rpc.fault === null)
-          args.push(rpc.fault, true);
-        return handler.apply(context, args);
+          return handler.call(context, rpc.id, rpc.from, rpc.fault, true);
       }
       return true;
     };
@@ -283,9 +281,8 @@ Strophe.addConnectionPlugin("rpc", {
     var self = this;
     return function(xml) {
       if (self._filter(xml)) {
-        var rpc  = self._parseRequestMessage(xml);
-        var args = [rpc.id, rpc.from, rpc.method, rpc.params];
-        return handler.apply(context, args);
+        var rpc = self._parseRequestMessage(xml);
+        return handler.call(context, rpc.id, rpc.from, rpc.method, rpc.params);
       }
       return true;
     };
