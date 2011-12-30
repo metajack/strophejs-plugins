@@ -1,7 +1,6 @@
 var helper = (function() {
 	function receive(c,req) {
 		c._dataRecv(createRequest(req));
-		expect(c.send).toHaveBeenCalled();
 	}
 
 	function spyon (obj, method, cb)  {

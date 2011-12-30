@@ -218,7 +218,7 @@ Strophe.addConnectionPlugin("rpc", {
    * @param {Object} context Context of the handler
    */
   addRequestHandler: function(handler, context) {
-    this._connection.addHandler(this._filteredHandler(handler, context), Strophe.NS.RPC, "iq", "set");
+    this._connection.addHandler(this._filteredRequestHandler(handler, context), Strophe.NS.RPC, "iq", "set");
   },
 
   /**
@@ -229,19 +229,62 @@ Strophe.addConnectionPlugin("rpc", {
    * @param {Object} context Context of the handler
    */
   addResponseHandler: function(handler, context) {
-    this._connection.addHandler(this._filteredHandler(handler, context), Strophe.NS.RPC, "iq", "result");
+    this._connection.addHandler(this._filteredResponseHandler(handler, context), Strophe.NS.RPC, "iq", "result");
+  },
+
+  /**
+   * Add a raw XML handler for every RPC message incoming
+   * @param {Function} handler The handler function called every time a rpc is received
+   * @param {Object} context Context of the handler
+   */
+  addXMLHandler: function(handler, context) {
+    this._connection.addHandler(this._filteredHandler(handler, context), Strophe.NS.RPC, "iq");
+  },
+
+  _filter: function(xml) {
+    var from = xml.getAttribute("from");
+    if (!this._jidInWhitelist(from)) {
+      this._sendForbiddenAccess(xml.getAttribute("id"), from);
+      return false;
+    }
+    return true;
   },
 
   _filteredHandler: function(handler, context) {
     context = context || this;
     var self = this;
-    return function(doc) {
-      var from = doc.getAttribute("from");
-      if (!self._jidInWhitelist(from)) {
-        self._sendForbiddenAccess(doc.getAttribute("id"), from);
-        return true;
+    return function(xml) {
+      if (self._filter(xml)) {
+        return handler.apply(context, arguments);
       }
-      return handler.apply(context, arguments);
+      return true;
+    };
+  },
+
+  _filteredResponseHandler: function(handler, context) {
+    context = context || this;
+    var self = this;
+    return function(xml) {
+      if (self._filter(xml)) {
+        var rpc = self._parseResponseMessage(xml);
+        if (rpc.result || rpc.result === null)
+          return handler.call(context, rpc.id, rpc.from, rpc.result, false);
+        else if (rpc.fault || rpc.fault === null)
+          return handler.call(context, rpc.id, rpc.from, rpc.fault, true);
+      }
+      return true;
+    };
+  },
+
+  _filteredRequestHandler: function(handler, context) {
+    context = context || this;
+    var self = this;
+    return function(xml) {
+      if (self._filter(xml)) {
+        var rpc = self._parseRequestMessage(xml);
+        return handler.call(context, rpc.id, rpc.from, rpc.method, rpc.params);
+      }
+      return true;
     };
   },
 
@@ -311,6 +354,111 @@ Strophe.addConnectionPlugin("rpc", {
       num = "0" + num;
     }
     return num;
+  },
+
+  _parseRequestMessage: function(iq) {
+    var rpc  = {};
+    rpc.from = iq.getAttribute("from");
+    rpc.id   = iq.getAttribute("id") || null;
+
+    // Method name
+    var method = iq.getElementsByTagName("methodName")[0];
+    rpc.method = method ? method.textContent : null;
+
+    // Parameters
+    rpc.params = null;
+    try {
+      var params = iq.getElementsByTagName("params")[0]
+                     .childNodes;
+      if (params && params.length > 0) {
+        rpc.params = [];
+        for (var i = 0; i < params.length; i++) {
+          rpc.params.push(this._convertFromXML(params[i].firstChild));
+        }
+      }
+    } catch(e) {
+      rpc.params = null;
+    }
+    return rpc;
+  },
+
+  _parseResponseMessage: function(iq) {
+    var rpc  = {};
+    rpc.from = iq.getAttribute("from");
+    rpc.id   = iq.getAttribute("id") || null;
+
+    try {
+      var result = iq.getElementsByTagName("methodResponse")[0].firstChild;
+
+      // Response
+      var tag = result.tagName;
+      if (tag === "params") {
+        rpc.result = this._convertFromXML(result.firstChild.firstChild);
+      }
+      // Error
+      else if (tag === "fault") {
+        rpc.fault  = this._convertFromXML(result.firstChild);
+      }
+    } catch(e) {
+      rpc.result = null;
+    }
+    return rpc;
+  },
+
+  _convertFromXML: function(obj) {
+    if (!obj)
+      return null;
+
+    var data;
+    var tag = obj.tagName.toLowerCase();
+
+    try {
+      switch (tag) {
+        case "value":
+          return this._convertFromXML(obj.firstChild);
+        case "double":
+        case "i4":
+        case "int":
+          var number = obj.textContent;
+          data = number * 1;
+          break;
+        case "boolean":
+          var bool = obj.textContent;
+          data = (bool === "1" || bool === "true") ? true : false;
+          break;
+        case "datetime.iso8601":
+          var date = obj.textContent;
+          data = new Date();
+          data.setFullYear(date.substring(0,4), date.substring(4,6) - 1, date.substring(6,8));
+          data.setHours(date.substring(9,11), date.substring(12,14), date.substring(15,17));
+          break;
+        case "array":
+          data = [];
+          var datatag = obj.firstChild;
+          for (var k = 0; k < datatag.childNodes.length; k++) {
+            var value = datatag.childNodes[k];
+            data.push(this._convertFromXML(value.firstChild));
+          }
+          break;
+        case "struct":
+          data = {};
+          for (var j = 0; j < obj.childNodes.length; j++) {
+            var membername  = obj.childNodes[j].getElementsByTagName("name")[0].textContent;
+            var membervalue = obj.childNodes[j].getElementsByTagName("value")[0].firstChild;
+            data[membername] = membervalue ? this._convertFromXML(membervalue) : null;
+          }
+          break;
+        case "string":
+          data = obj.textContent;
+          break;
+        default:
+          data = null;
+          break;
+      }
+    } catch(e) {
+      data = null;
+    }
+    return data;
   }
 
 });
