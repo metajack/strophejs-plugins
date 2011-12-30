@@ -1,11 +1,5 @@
 # Strophe.js Plugins
 
-**WARNING:**
-This repository contains almost all community plugins. Some of them
-are in an experimental state. For more stable plugins checkout the original
-repository or all branches of this repository that are based on the `upstream`
-branch.
-
 [Strophe.js](http://code.stanziq.com/strophe) is a JavaScript library for
 speaking XMPP in web applications. It supports extension via a plugin system.
 
@@ -19,6 +13,9 @@ https://github.com/metajack/strophejs-plugins .
 
 - [Data Forms](strophejs-plugins/tree/master/dataforms/)
   ([XEP 0004](http://xmpp.org/extensions/xep-0004.html))
+
+- [Jabber-RPC](strophejs-plugins/tree/master/rpc/)
+  ([XEP 0009](http://xmpp.org/extensions/xep-0009.html))
 
 - [Service Discovery](strophejs-plugins/tree/master/disco/)
   ([XEP 0030](http://xmpp.org/extensions/xep-0030.html))
@@ -56,6 +53,9 @@ https://github.com/metajack/strophejs-plugins .
 - [Personal Eventing Protocol](strophejs-plugins/tree/master/pep/)
   ([XEP 0163](http://xmpp.org/extensions/xep-0163.html))
 
+- [Message Delivery Receipts](strophejs-plugins/tree/master/receipts/)
+  ([XEP 0184](http://xmpp.org/extensions/xep-0184.html))
+
 - [XMPP Ping](strophejs-plugins/tree/master/ping/)
   ([XEP 0199](http://xmpp.org/extensions/xep-0199.html))
 
@@ -80,6 +80,12 @@ and issue a pull request.
 The same instructions also work for any changes you wish to make to existing
 plugins.
 
+## Contribute
+
+If you would like to make your plugin available here, simply fork this
+repository, commit your plugin and issue a pull request.
+The same instructions also work for any changes you wish to make to existing
+plugins.
 
 ## Literature
 
@@ -87,5 +93,5 @@ The book Professional XMPP Programming with JavaScript and
 [jQuery](http://jquery.com/) is also available, which covers Strophe in detail
 in the context of web applications.
 You can find more information and two free chapters ( including one specifically
- on writing Strophe.js plugins ) at the [homepage](http://professionalxmpp.com)
+on writing Strophe.js plugins ) at the [homepage](http://professionalxmpp.com)
 of the book.

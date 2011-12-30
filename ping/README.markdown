@@ -5,7 +5,8 @@ Strophe.ping.js is a plugin to provide XMPP Ping
 
 ## Usage
 
-After you connected sucessfully to the XMPP server you can send a ping to a XMPP client or server:
+After you connected sucessfully to the XMPP server you can send a ping to a XMPP
+client or server:
 
     connection.ping.ping( "serviceJID@server.org", success, error );
 
@@ -24,8 +25,3 @@ Within your ping handler function you surely want to reply with a pong iq:
 ## ToDo
 
 - write specs
-
-## Authors
-
-- [flosse](https://github.com/flosse)
-- [Michael Weibel](https://github.com/mweibel)

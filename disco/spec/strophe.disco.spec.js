@@ -1,3 +1,6 @@
+var createRequest = helper.createRequest, mockConnection = helper.mockConnection,
+	spyon = helper.spyon, receive = helper.receive;
+
 describe("Strophe.disco#info", function() {
 	var c, iq, successHandler, errorHandler;
 	beforeEach(function() {
@@ -143,4 +146,3 @@ describe("Strophe.disco#items", function() {
 //
 //var c2 = new Strophe.Connection('http://localhost/xmpp-httpbind');
 //c2.connect('asdf@psi/c2', 'asdf');
-

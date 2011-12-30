@@ -1,0 +1,10 @@
+{
+	"src_dir": "/",
+	"spec_dir": "/spec/",
+	"server": {
+		"port": 8124
+	},
+	"externals": [
+		"/lib/strophe.js"
+	]
+}

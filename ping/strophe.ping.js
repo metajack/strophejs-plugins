@@ -62,7 +62,6 @@ Strophe.addConnectionPlugin('ping', {
 	 * Returns:
 	 * A reference to the handler that can be used to remove it.
 	 */
-
 	addPingHandler: function(handler)
 	{
 		return this._c.addHandler(handler, Strophe.NS.PING, "iq", "get");
