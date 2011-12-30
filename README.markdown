@@ -69,16 +69,8 @@ https://github.com/metajack/strophejs-plugins .
 
 - [epic](strophejs-plugins/tree/master/epic/)
 
-- [iexdomain](strophejs-plugins/tree/master/iexdomain/) - Support for IE 
+- [iexdomain](strophejs-plugins/tree/master/iexdomain/) - Support for IE
   XDomainRequest
-
-## Contribute
-
-If you would like to make your plugin available here, simply fork this
-repository, commit your plugin (see [boilerplate](master/boilerplate)),
-and issue a pull request.
-The same instructions also work for any changes you wish to make to existing
-plugins.
 
 ## Contribute
 
