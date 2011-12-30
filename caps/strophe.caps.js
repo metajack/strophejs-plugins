@@ -121,8 +121,8 @@
 	 *   (String|null) - capabilities, serialized; or null when not available.
 	 */
 	getCapabilitiesByJid: function(jid) {
-		if (_jidVerIndex[jid]) {
-			return _knownCapabilities[_jidVerIndex[jid]];
+		if (this._jidVerIndex[jid]) {
+			return this._knownCapabilities[this._jidVerIndex[jid]];
 		}
 		return null;
 	},
@@ -140,10 +140,10 @@
 	 */
 	_delegateCapabilities: function(stanza) {
 		var from = stanza.getAttribute('from'),
-			c = stanza.children.item('c'),
+			c = stanza.querySelector('c'),
 			ver = c.getAttribute('ver'),
 			node = c.getAttribute('node');
-		if (!_kownCapabilities[ver]) {
+		if (!this._knownCapabilities[ver]) {
 			return this._requestCapabilities(from, node, ver);
 		}
 		return true;
@@ -164,7 +164,7 @@
 	 *   (Boolean) - true
 	 */
 	_requestCapabilities: function(to, node, ver) {
-		this._connection.disco.info(to, node + '#' + ver);
+		var id = this._connection.disco.info(to, node + '#' + ver);
 		this._connection.addHandler(this._handleDiscoInfoReply.bind(this), Strophe.NS.DISCO_INFO, 'iq', 'result', id, to);
 
 		return true;
@@ -181,12 +181,18 @@
 	 *   (Boolean) - false, to automatically remove the handler.
 	 */
 	_handleDiscoInfoReply: function(stanza) {
-		var query = stanza.children.item('query'),
+		var query = stanza.querySelector('query'),
 			node = query.getAttribute('node').split('#'),
 			ver = node[1];
-		if (!_knownCapabilities[ver]) {
-			_knownCapabilities[ver] = Strophe.serialize(query.children);
-			_jidVerIndex[stanza.getAttribute('from')] = ver;
+		if (!this._knownCapabilities[ver]) {
+			var childNodes = query.childNodes,
+				childNodesLen = childNodes.length;
+			this._knownCapabilities[ver] = [];
+			for(var i = 0; i < childNodesLen; i++) {
+				var node = childNodes[i];
+				this._knownCapabilities[ver].push({name: node.nodeName, attributes: node.attributes});
+			}
+			this._jidVerIndex[stanza.getAttribute('from')] = ver;
 		}
 		return false;
 	},
