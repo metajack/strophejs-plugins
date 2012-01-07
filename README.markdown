@@ -35,6 +35,9 @@ https://github.com/metajack/strophejs-plugins .
 - [Publish-Subscribe](strophejs-plugins/tree/master/pubsub/)
   ([XEP 0060](http://xmpp.org/extensions/xep-0060.html))
 
+- [Jabber Object Access Protocol](strophejs-plugins/tree/master/joap/)
+  ([XEP 0075](http://xmpp.org/extensions/xep-0075.html))
+
 - [In-Band Registration](strophejs-plugins/tree/master/register/)
   ([XEP 0077](http://xmpp.org/extensions/xep-0077.html))
 
