@@ -293,7 +293,7 @@ Strophe.addConnectionPlugin("rpc", {
    * into its XML representation as described in
    * the XML-RPC spec
    * 
-   * @param  {Object} obj The objec to convert
+   * @param  {Object} obj The object to convert
    * @return {Element} A <value> element
    */
   _convertToXML: function(obj) {
@@ -306,7 +306,7 @@ Strophe.addConnectionPlugin("rpc", {
       case "Number":
         // Numbers can only be sent as integers or doubles.
         var number = (Math.floor(obj) !== obj) ? "double" : "i4";
-        xml.c(number).t(obj);
+        xml.c(number).t(obj.toString());
         break;
       case "String":
         xml.c("string").t(obj);
