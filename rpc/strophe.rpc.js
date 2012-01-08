@@ -312,7 +312,7 @@ Strophe.addConnectionPlugin("rpc", {
         xml.c("string").t(obj);
         break;
       case "Boolean":
-        xml.c("boolean").t(obj*1);
+        xml.c("boolean").t((obj*1).toString());
         break;
       case "Object":
         xml.c("struct");
