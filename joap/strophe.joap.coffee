@@ -96,7 +96,7 @@ class Server
     addr = ""
     addr += "#{clazz}@" if clazz if typeof clazz is "string"
     addr += @service
-    addr += "/#{instance}" if typeof instance is "string"
+    addr += "/#{instance}" if (typeof(instance) in ["string", "number"])
     addr
 
   describe: (clazz, instance, cb) ->

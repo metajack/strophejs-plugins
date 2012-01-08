@@ -172,11 +172,13 @@
     };
 
     Server.prototype.getAddress = function(clazz, instance) {
-      var addr;
+      var addr, _ref;
       addr = "";
       if (typeof clazz === "string" ? clazz : void 0) addr += "" + clazz + "@";
       addr += this.service;
-      if (typeof instance === "string") addr += "/" + instance;
+      if (((_ref = typeof instance) === "string" || _ref === "number")) {
+        addr += "/" + instance;
+      }
       return addr;
     };
 
