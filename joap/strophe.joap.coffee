@@ -33,7 +33,9 @@ class Server
     data
 
   @parseNewAddress: (iq) ->
-    address = iq.getElementsByTagName("newAddress")?[0]
+    console.log "parse address"
+    address = iq.getElementsByTagName("newAddress")[0].textContent
+    console.log address
     address.split("/")[1]
 
   @parseSearch: (iq) ->
@@ -60,7 +62,7 @@ class Server
     res
 
   @parseDescription: (iq) ->
-    result = desc: {}, attributes: {}, methods: {}
+    result = desc: {}, attributes: {}, methods: {}, classes: []
     describe = iq.getElementsByTagName("describe")[0]
     for c in describe.childNodes
       switch c.tagName.toLowerCase()
@@ -76,6 +78,8 @@ class Server
           result.superclass = c.textContent
         when "timestamp"
           result.timestamp = c.textContent
+        when "class"
+          classes.push = c.textContent
     result
 
   sendRequest: (type, clazz, cb, opt={}) ->
@@ -108,7 +112,9 @@ class Server
       instance: instance
       onResult: Server.parseDescription
 
-  add: (clazz, attrs, cb) -> @sendRequest "add", clazz, cb,
+  add: (clazz, attrs, cb) ->
+    cb = attrs if typeof attrs is "function"
+    @sendRequest "add", clazz, cb,
       beforeSend: (iq) -> Server.addXMLAttributes iq, attrs
       onResult: Server.parseNewAddress
 

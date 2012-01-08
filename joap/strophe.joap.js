@@ -61,8 +61,10 @@
     };
 
     Server.parseNewAddress = function(iq) {
-      var address, _ref;
-      address = (_ref = iq.getElementsByTagName("newAddress")) != null ? _ref[0] : void 0;
+      var address;
+      console.log("parse address");
+      address = iq.getElementsByTagName("newAddress")[0].textContent;
+      console.log(address);
       return address.split("/")[1];
     };
 
@@ -114,7 +116,8 @@
       result = {
         desc: {},
         attributes: {},
-        methods: {}
+        methods: {},
+        classes: []
       };
       describe = iq.getElementsByTagName("describe")[0];
       _ref = describe.childNodes;
@@ -137,6 +140,9 @@
             break;
           case "timestamp":
             result.timestamp = c.textContent;
+            break;
+          case "class":
+            classes.push = c.textContent;
         }
       }
       return result;
@@ -191,6 +197,7 @@
     };
 
     Server.prototype.add = function(clazz, attrs, cb) {
+      if (typeof attrs === "function") cb = attrs;
       return this.sendRequest("add", clazz, cb, {
         beforeSend: function(iq) {
           return Server.addXMLAttributes(iq, attrs);
