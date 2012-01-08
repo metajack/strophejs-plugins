@@ -226,7 +226,6 @@ describe "strophe.joap loading", ->
           server.describe "Class", (iq, err, result) ->
             (expect typeof iq).toEqual "object"
             (expect typeof result).toEqual "object"
-            console.log result
             (expect result.desc["en-US"]).toEqual "Class description"
             (expect result.attributes.myAttribute.type).toEqual "int"
             (expect result.attributes.myAttribute.desc["en-US"]).toEqual "Foo"

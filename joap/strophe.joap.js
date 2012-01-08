@@ -62,9 +62,7 @@
 
     Server.parseNewAddress = function(iq) {
       var address;
-      console.log("parse address");
       address = iq.getElementsByTagName("newAddress")[0].textContent;
-      console.log(address);
       return address.split("/")[1];
     };
 

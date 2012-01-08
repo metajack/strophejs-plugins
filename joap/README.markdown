@@ -65,8 +65,10 @@ objectServer.search "User", {age: 60} , (iq, err, arrayOfInstanceIDs) ->
 
 ## Tests & specs
 
+[jasmine-node](https://github.com/mhevery/jasmine-node) and
+[jsdom](https://github.com/tmpvar/jsdom)
+are required (`npm install -g jasmine-node jsdom`) for running the tests.
+
 ```bash
-$ npm install jasmine-node
-$ npm install jsdom
-$ jasmine-node --coffee spec/
+cake test
 ```
