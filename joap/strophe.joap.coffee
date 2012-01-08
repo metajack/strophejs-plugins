@@ -33,9 +33,7 @@ class Server
     data
 
   @parseNewAddress: (iq) ->
-    console.log "parse address"
     address = iq.getElementsByTagName("newAddress")[0].textContent
-    console.log address
     address.split("/")[1]
 
   @parseSearch: (iq) ->
