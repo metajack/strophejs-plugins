@@ -14,8 +14,14 @@ class Server
   constructor: (@service) ->
 
   @onError: (cb=->) -> (iq) ->
-    err = iq.getElementsByTagName("error")?[0]
-    cb iq, new JOAPError err?.textContent err?.getAttribute "code"
+    err = iq.getElementsByTagName("error")[0]
+    if err?
+      code = err.getAttribute("code") * 1
+      msg  = err.textContent
+      msg = "JOAP server is unavailable" if code is 503
+      cb iq, new JOAPError msg, code
+    else
+      cb iq, new JOAPError "Unknown error"
 
   @addXMLAttributes: (iq, attrs) ->
     if typeof attrs is "object"

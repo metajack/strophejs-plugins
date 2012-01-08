@@ -118,6 +118,17 @@ describe "strophe.joap loading", ->
             (expect err.message).toEqual "My error message"
             (expect err.code).toEqual 403
 
+        it "can parse an 'service-unavailable' error", ->
+          spyon @c, "send", (req) =>
+            res = $iq({type:'error', id: req.attr 'id'})
+              .c("add").c("error", code:503)
+            @c._dataRecv createRequest(res)
+          server.add "User", {name: "foo", pass: 2}, (iq, err, instanceId) ->
+            (expect err.code).toEqual 503
+            (expect err.message).toEqual "JOAP server is unavailable"
+
+        it "can parse an error message", ->
+
         it "can parse the new instance id", ->
           spyon @c, "send", (req) =>
             res = $iq({type:'result', id: req.attr 'id'})

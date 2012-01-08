@@ -30,9 +30,16 @@
     Server.onError = function(cb) {
       if (cb == null) cb = function() {};
       return function(iq) {
-        var err, _ref;
-        err = (_ref = iq.getElementsByTagName("error")) != null ? _ref[0] : void 0;
-        return cb(iq, new JOAPError(err != null ? err.textContent(err != null ? err.getAttribute("code") : void 0) : void 0));
+        var code, err, msg;
+        err = iq.getElementsByTagName("error")[0];
+        if (err != null) {
+          code = err.getAttribute("code") * 1;
+          msg = err.textContent;
+          if (code === 503) msg = "JOAP server is unavailable";
+          return cb(iq, new JOAPError(msg, code));
+        } else {
+          return cb(iq, new JOAPError("Unknown error"));
+        }
       };
     };
 
