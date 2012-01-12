@@ -135,7 +135,7 @@ describe "strophe.joap loading", ->
               .c("add").c("newAddress").t("User@example.org/markus")
             @c._dataRecv createRequest(res)
           server.add "User", {name: "foo", pass: 2}, (iq, err, instanceId) ->
-            (expect instanceId).toEqual "markus"
+            (expect instanceId).toEqual "User@example.org/markus"
 
         it "can edit an instance", ->
           spyon @c, "send", (iq) =>
@@ -211,8 +211,8 @@ describe "strophe.joap loading", ->
 
           server.search "User", (iq, err, result) ->
             (expect typeof iq).toEqual "object"
-            (expect result[0]).toEqual "id0"
-            (expect result[1]).toEqual "id2"
+            (expect result[0]).toEqual "Class@service.example.com/id0"
+            (expect result[1]).toEqual "Class@service.example.com/id2"
 
         it "can send a describe request a class", ->
           spyon @c, "send", (iq) =>
