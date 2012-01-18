@@ -89,8 +89,8 @@ Strophe.addConnectionPlugin('roster',
         }
         var iq = $iq({type: 'get',  'id' : this._connection.getUniqueId('roster')}).c('query', attrs);
         this._connection.sendIQ(iq,
-                                this._onReceiveRosterSuccess.bind(this).prependArg(userCallback),
-                                this._onReceiveRosterError.bind(this).prependArg(userCallback));
+                                this._onReceiveRosterSuccess.bind(this, userCallback),
+                                this._onReceiveRosterError.bind(this, userCallback));
     },
     /** Function: registerCallback
      * register callback on roster (presence and iq)
