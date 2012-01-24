@@ -65,6 +65,7 @@ https://github.com/metajack/strophejs-plugins .
 - [Roster Versioning](strophejs-plugins/tree/master/roster/)
   ([XEP 0237](http://xmpp.org/extensions/xep-0237.html))
 
+
 ### Other Plugins
 
 - [Serverdate](strophejs-plugins/tree/master/serverdate/) - Syncs a local clock

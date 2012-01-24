@@ -1,0 +1,74 @@
+# Jabber Object Access Protocol
+
+A strophe plugin for the Jabber Object Access Protocol
+([XEP-0075](http://xmpp.org/extensions/xep-0075.html)).
+
+## Usage
+
+Just link the rpc plugin and the joap plugin below the strophe library in your
+HTML head section:
+
+``` html
+<head>
+<!-- ... -->
+<script type="text/javascript" src="strophe.min.js"></script>
+<script type="text/javascript" src="strophe.disco.js"></script>
+<script type="text/javascript" src="strophe.rpc.js"></script>
+<script type="text/javascript" src="strophe.joap.js"></script>
+<!-- ... -->
+</head>
+```
+
+After your client is sucessfully connected you can create, read, update and
+delete objects.
+
+``` coffeescript
+objectServer = connection.joap.getObjectServer "component.example.org"
+
+# requesting the server description
+objectServer.describe (iq, err, parsedDescription) ->
+
+# requesting a class description
+objectServer.describe "User", (iq, err, parsedDescription) ->
+
+# creating a new instance
+objectServer.add "User", { name:"My Name", age: 99 }, (iq, err, instanceId) ->
+
+# reading an instance
+objectServer.read "User", "instanceId", (iq, err, parsedResult) ->
+
+# reading only a few properties of an instance
+objectServer.read "User", "instanceId", ["email", "age"], (iq, err, parsedResult) ->
+
+# modifying properties of an instance
+objectServer.edit "User", "instanceId", { age: 27 }, (iq, err) ->
+
+# deleting an instance
+objectServer.delete "User", "instanceId", (iq, err) ->
+
+# searching for instances
+objectServer.search "User", {age: 60} , (iq, err, arrayOfInstanceIDs) ->
+```
+
+## Dependencies
+
+- [rpc](https://github.com/metajack/strophejs-plugins/tree/master/rpc)
+- [service discovery](https://github.com/metajack/strophejs-plugins/tree/master/disco) (optional)
+
+## Available JOAP server implementations
+
+- [node-xmpp-joap](https://github.com/flosse/node-xmpp-joap)
+
+## ToDos
+
+- RPC support
+
+## Tests & specs
+
+[jasmine-node](https://github.com/mhevery/jasmine-node) and
+[jsdom](https://github.com/tmpvar/jsdom)
+are required (`npm install -g jasmine-node jsdom`) for running the tests.
+
+```bash
+cake test
+```
