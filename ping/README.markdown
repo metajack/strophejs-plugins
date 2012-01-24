@@ -12,7 +12,7 @@ client or server:
 
 You can also add a ping handler to receive pings:
 
-    conncection.ping.addPingHandler( handler );
+    connection.ping.addPingHandler( handler );
 
 Within your ping handler function you surely want to reply with a pong iq:
 
