@@ -26,6 +26,9 @@ https://github.com/metajack/strophejs-plugins .
 - [Private XML Storage](strophejs-plugins/tree/master/private/)
   ([XEP 0049](http://xmpp.org/extensions/xep-0049.html))
 
+- [Ad-Hoc Commands](strophejs-plugins/tree/master/cmds/)
+  ([XEP 0050](http://xmpp.org/extensions/xep-0050.html))
+
 - [vcard-temp](strophejs-plugins/tree/master/vcard/)
   ([XEP 0054](http://xmpp.org/extensions/xep-0054.html))
 
@@ -58,6 +61,7 @@ https://github.com/metajack/strophejs-plugins .
 
 - [Roster Versioning](strophejs-plugins/tree/master/roster/)
   ([XEP 0237](http://xmpp.org/extensions/xep-0237.html))
+
 
 ### Other Plugins
 
