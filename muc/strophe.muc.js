@@ -169,18 +169,33 @@ Strophe.addConnectionPlugin('muc', {
     Start a room configuration.
     Parameters:
     (String) room - The multi-user chat room name.
+    (Function) handler_cb - Optional function to handle the config form.
     Returns:
     id - the unique id used to send the configuration request
     */
-    configure: function(room) {
+    configure: function(room, handler_cb) {
         //send iq to start room configuration
         var config = $iq({to:room,
                           type: "get"}).c("query",
                                           {xmlns: Strophe.NS.MUC_OWNER});
         var stanza = config.tree();
-        return this._connection.sendIQ(stanza,
+        var id = this._connection.sendIQ(stanza,
                                function(){},
                                function(){});
+
+        if (handler_cb)
+        {
+            this._connection.addHandler(function(stanza) {
+                handler_cb(stanza);
+                return false;
+            },
+                                        Strophe.NS.MUC_OWNER,
+                                        "iq",
+                                        null,
+                                        id);
+        }
+
+        return id;
     },
     /***Function
     Cancel the room configuration
