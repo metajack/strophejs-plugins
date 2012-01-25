@@ -24,6 +24,8 @@ Strophe.addConnectionPlugin('muc', {
          */
         Strophe.addNamespace('MUC_OWNER', Strophe.NS.MUC+"#owner");
         Strophe.addNamespace('MUC_ADMIN', Strophe.NS.MUC+"#admin");
+        Strophe.addNamespace('MUC_USER', Strophe.NS.MUC+"#user");
+        Strophe.addNamespace('MUC_ROOMCONF', Strophe.NS.MUC + "#roomconfig");
     },
     /***Function
     Join a multi-user chat room
@@ -97,6 +99,7 @@ Strophe.addConnectionPlugin('muc', {
         }
         this._connection.send(msg);
     },
+    
     /***Function
     Leave a multi-user chat room
     Parameters:
@@ -123,6 +126,7 @@ Strophe.addConnectionPlugin('muc', {
         this._connection.send(presence);
         return presenceid;
     },
+    
     /***Function
     Parameters:
     (String) room - The multi-user chat room name.
@@ -247,6 +251,7 @@ Strophe.addConnectionPlugin('muc', {
             .c("subject", {xmlns: "jabber:client"}).t(topic);
         this._connection.send(msg.tree());
     },
+    
     /***Function
     Changes the role and affiliation of a member of a MUC room.
     The modification can only be done by a room moderator. An error will be
@@ -308,6 +313,7 @@ Strophe.addConnectionPlugin('muc', {
             .c("query",{xmlns: Strophe.NS.DISCO_ITEMS});        
         this._connection.sendIQ(iq, handle_cb, function(){});        
     },
+    
     test_append_nick: function(room, nick) {
         var room_nick = room;
         if (nick) 
