@@ -29,12 +29,12 @@ Strophe.addConnectionPlugin('ping', {
 	 * (Function) success	- Callback function on success
 	 * (Function) error	- Callback function on error
 	 */
-	ping: function(jid, success, error)
+	ping: function(jid, success, error, timeout)
 	{
 		var id = this._c.getUniqueId('ping');
 		var iq = $iq({type: 'get', to: jid, id: id}).c(
 				'ping', {xmlns: Strophe.NS.PING});
-		this._c.sendIQ(iq, success, error);
+		this._c.sendIQ(iq, success, error, timeout);
 	},
 
 	/**
@@ -45,12 +45,12 @@ Strophe.addConnectionPlugin('ping', {
 	 * (Function) success	-
 	 * (Function) error	-
 	 */
-	pong: function(ping, success, error)
+	pong: function(ping)
 	{
 		var from = ping.getAttribute('from');
 		var id = ping.getAttribute('id');
 		var iq = $iq({type: 'result', to: from,	id: id});
-		this._c.sendIQ(iq, success, error);
+		this._c.sendIQ(iq);
 	},
 
 	/**
