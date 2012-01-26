@@ -138,8 +138,8 @@ Strophe.addConnectionPlugin('muc', {
     msgiq - the unique id used to send the message
     */
     message: function(room, nick, message, html_message, type) {
-        var room_nick = this.test_append_nick(room, nick);        
-        type = type || "groupchat";
+        var room_nick = this.test_append_nick(room, nick);
+        type = type || (nick ? "chat" : "groupchat");
         var msgid = this._connection.getUniqueId();
         var msg = $msg({to: room_nick,
                         from: this._connection.jid,
