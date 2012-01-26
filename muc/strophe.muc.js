@@ -174,7 +174,7 @@ Strophe.addConnectionPlugin('muc', {
     Returns:
     msgiq - the unique id used to send the message
     */
-    chat: function(room, message, html_message) {
+    groupchat: function(room, message, html_message) {
         return this.message(room, null, message, html_message);
     },
     /***Function
