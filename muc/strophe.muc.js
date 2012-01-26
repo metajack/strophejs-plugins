@@ -166,6 +166,18 @@ Strophe.addConnectionPlugin('muc', {
         return msgid;
     },
     /***Function
+    Convenience Function to send a Message to all Occupants
+    Parameters:
+    (String) room - The multi-user chat room name.
+    (String) message - The plaintext message to send to the room.
+    (String) html_message - The message to send to the room with html markup.
+    Returns:
+    msgiq - the unique id used to send the message
+    */
+    chat: function(room, message, html_message) {
+        return this.message(room, null, message, html_message);
+    },
+    /***Function
     Start a room configuration.
     Parameters:
     (String) room - The multi-user chat room name.
