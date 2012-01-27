@@ -9,16 +9,22 @@ strophe.x.js is a plugin to provide Data Forms
 
 Creating a form is easy:
 
-    Strophe.x.Form({
+    new Strophe.x.Form({
       type: "submit",
       title: "myTitle",
       instructions: "Tell something",
       fields: [f1, f2]
     });
 
+You can call the constructor for Forms directly with $form:
+
+    $form({
+      ...
+    });
+
 You can also use items within the form:
 
-    Strophe.x.Form({
+    $form({
       type: "result",
       title: "Search result",
       items: [ item1, { fields: [f1,f5]}, item3 ]
@@ -29,7 +35,7 @@ automatically).
 
 Creating fields is similar
 
-    Strophe.x.Field({
+    new Strophe.x.Field({
       type: "text-single",
       "var": "myVariableName",
       desc: "a description",
@@ -38,18 +44,24 @@ Creating fields is similar
       value: 1234
     });
 
+Fields also have a shorthand:
+
+    $field({
+      ...
+    });
+
 You can also use options
 
-    Strophe.x.Field({
+    $field({
       type: "list-multi",
       "var": "myVariableName",
       desc: "a description",
       label: "My Label",
       required: true,
-      values: ["a", "c"]
+      values: ["a", "c"],
       options: [
-        {label:"One", value: "a"}
-        {label:"Two", value: "b"}
+        {label:"One", value: "a"},
+        {label:"Two", value: "b"},
         {label:"Three", value: "c"}
     ]});
 
@@ -61,7 +73,7 @@ Every object can be converted to xml by using the `toXML`, `toHML` or `toJSON` f
 
 You can easily create a form by parsing XML:
 
-    var Form = Strophe.x.Form.fromXML(xml); 
+    var Form = Strophe.x.Form.fromXML(xml);
 
 The same can be done with `fromHML` for HTML as source.
 
