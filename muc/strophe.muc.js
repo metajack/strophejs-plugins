@@ -115,8 +115,7 @@ Strophe.addConnectionPlugin('muc', {
         var presence = $pres({type: "unavailable",
                               id: presenceid,
                               from: this._connection.jid,
-                              to: room_nick})
-            .c("x",{xmlns: Strophe.NS.MUC});
+                              to: room_nick});
         this._connection.addHandler(handler_cb,
                                     null,
                                     "presence",
