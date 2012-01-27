@@ -16,9 +16,15 @@ Creating a form is easy:
       fields: [f1, f2]
     });
 
+You can call the constructor for Forms directly with $form:
+
+    $form({
+      ...
+    });
+
 You can also use items within the form:
 
-    new Strophe.x.Form({
+    $form({
       type: "result",
       title: "Search result",
       items: [ item1, { fields: [f1,f5]}, item3 ]
@@ -38,9 +44,15 @@ Creating fields is similar
       value: 1234
     });
 
+Fields also have a shorthand:
+
+    $field({
+      ...
+    });
+
 You can also use options
 
-    new Strophe.x.Field({
+    $field({
       type: "list-multi",
       "var": "myVariableName",
       desc: "a description",
