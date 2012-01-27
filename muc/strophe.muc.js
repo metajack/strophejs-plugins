@@ -117,15 +117,18 @@ Strophe.addConnectionPlugin('muc', {
                               id: presenceid,
                               from: this._connection.jid,
                               to: room_nick});
-        this._connection.addHandler(handler_cb,
-                                    null,
-                                    "presence",
-                                    null,
-                                    presenceid,
-                                    null);
         if (exit_msg)
         {
             presence.c("status", exit_msg);
+        }
+        if (handler_cb)
+        {
+            this._connection.addHandler(handler_cb,
+                                        null,
+                                        "presence",
+                                        null,
+                                        presenceid,
+                                        null);
         }
         this._connection.send(presence);
         return presenceid;
