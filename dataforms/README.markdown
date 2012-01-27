@@ -46,10 +46,10 @@ You can also use options
       desc: "a description",
       label: "My Label",
       required: true,
-      values: ["a", "c"]
+      values: ["a", "c"],
       options: [
-        {label:"One", value: "a"}
-        {label:"Two", value: "b"}
+        {label:"One", value: "a"},
+        {label:"Two", value: "b"},
         {label:"Three", value: "c"}
     ]});
 
@@ -61,7 +61,7 @@ Every object can be converted to xml by using the `toXML`, `toHML` or `toJSON` f
 
 You can easily create a form by parsing XML:
 
-    var Form = Strophe.x.Form.fromXML(xml); 
+    var Form = Strophe.x.Form.fromXML(xml);
 
 The same can be done with `fromHML` for HTML as source.
 
