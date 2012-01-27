@@ -1,11 +1,9 @@
 (function() {
-  var Field, Form, Item, Option, helper;
-  var __slice = Array.prototype.slice, __indexOf = Array.prototype.indexOf || function(item) {
-    for (var i = 0, l = this.length; i < l; i++) {
-      if (this[i] === item) return i;
-    }
-    return -1;
-  };
+  var Field, Form, Item, Option, helper,
+    __slice = Array.prototype.slice,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
   helper = {
     fill: function(src, target, klass) {
       var f, _i, _len, _results;
@@ -28,8 +26,11 @@
       return __slice.call(html.find("input")).concat(__slice.call(html.find("select")), __slice.call(html.find("textarea")));
     }
   };
+
   Form = (function() {
+
     Form._types = ["form", "submit", "cancel", "result"];
+
     function Form(opt) {
       var f, i, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4;
       this.fields = [];
@@ -51,13 +52,9 @@
           return _results;
         };
         if (opt.fields) {
-          if (opt.fields) {
-            helper.fill(opt.fields, this.fields, Field);
-          }
+          if (opt.fields) helper.fill(opt.fields, this.fields, Field);
         } else if (opt.items) {
-          if (opt.items) {
-            helper.fill(opt.items, this.items, Item);
-          }
+          if (opt.items) helper.fill(opt.items, this.items, Item);
           _ref2 = this.items;
           for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
             i = _ref2[_i];
@@ -72,18 +69,20 @@
         }
       }
     }
+
     Form.prototype.type = "form";
+
     Form.prototype.title = null;
+
     Form.prototype.instructions = null;
+
     Form.prototype.toXML = function() {
       var f, i, r, xml, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
       xml = $build("x", {
         xmlns: "jabber:x:data",
         type: this.type
       });
-      if (this.title) {
-        xml.c("title").t(this.title.toString()).up();
-      }
+      if (this.title) xml.c("title").t(this.title.toString()).up();
       if (this.instructions) {
         xml.c("instructions").t(this.instructions.toString()).up();
       }
@@ -111,17 +110,14 @@
       }
       return xml.tree();
     };
+
     Form.prototype.toJSON = function() {
       var f, i, json, _i, _j, _len, _len2, _ref, _ref2;
       json = {
         type: this.type
       };
-      if (this.title) {
-        json.title = this.title;
-      }
-      if (this.instructions) {
-        json.instructions = this.instructions;
-      }
+      if (this.title) json.title = this.title;
+      if (this.instructions) json.instructions = this.instructions;
       if (this.fields.length > 0) {
         json.fields = [];
         _ref = this.fields;
@@ -140,15 +136,12 @@
       }
       return json;
     };
+
     Form.prototype.toHTML = function() {
       var f, form, i, _i, _j, _len, _len2, _ref, _ref2;
       form = $("<form data-type='" + this.type + "'>");
-      if (this.title) {
-        form.append("<h1>" + this.title + "</h1>");
-      }
-      if (this.instructions) {
-        form.append("<p>" + this.instructions + "</p>");
-      }
+      if (this.title) form.append("<h1>" + this.title + "</h1>");
+      if (this.instructions) form.append("<p>" + this.instructions + "</p>");
       if (this.fields.length > 0) {
         _ref = this.fields;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -164,6 +157,7 @@
       }
       return form[0];
     };
+
     Form.fromXML = function(xml) {
       var f, fields, i, instr, items, j, r, reported, title;
       xml = $(xml);
@@ -171,13 +165,9 @@
         type: xml.attr("type")
       });
       title = xml.find("title");
-      if (title.length === 1) {
-        f.title = title.text();
-      }
+      if (title.length === 1) f.title = title.text();
       instr = xml.find("instructions");
-      if (instr.length === 1) {
-        f.instructions = instr.text();
-      }
+      if (instr.length === 1) f.instructions = instr.text();
       fields = xml.find("field");
       items = xml.find("item");
       if (items.length > 0) {
@@ -216,6 +206,7 @@
       }
       return f;
     };
+
     Form.fromHTML = function(html) {
       var f, field, fields, i, instructions, item, items, j, title, _i, _j, _len, _len2, _ref, _ref2, _ref3;
       html = $(html);
@@ -223,13 +214,9 @@
         type: html.attr("data-type")
       });
       title = html.find("h1").text();
-      if (title) {
-        f.title = title;
-      }
+      if (title) f.title = title;
       instructions = html.find("p").text();
-      if (instructions) {
-        f.instructions = instructions;
-      }
+      if (instructions) f.instructions = instructions;
       items = html.find("fieldset");
       fields = helper.getHtmlFields(html);
       if (items.length > 0) {
@@ -266,12 +253,22 @@
       }
       return f;
     };
+
     return Form;
+
   })();
+
   Field = (function() {
+
     Field._types = ["boolean", "fixed", "hidden", "jid-multi", "jid-single", "list-multi", "list-single", "text-multi", "text-private", "text-single"];
+
     Field._multiTypes = ["list-multi", "jid-multi", "text-multi", "hidden"];
+
     function Field(opt) {
+      this.addOptions = __bind(this.addOptions, this);
+      this.addOption = __bind(this.addOption, this);
+      this.addValues = __bind(this.addValues, this);
+      this.addValue = __bind(this.addValue, this);
       var _ref, _ref2;
       this.options = [];
       this.values = [];
@@ -279,33 +276,30 @@
         if (_ref = opt.type, __indexOf.call(Field._types, _ref) >= 0) {
           this.type = opt.type.toString();
         }
-        if (opt.desc) {
-          this.desc = opt.desc.toString();
-        }
-        if (opt.label) {
-          this.label = opt.label.toString();
-        }
+        if (opt.desc) this.desc = opt.desc.toString();
+        if (opt.label) this.label = opt.label.toString();
         this["var"] = ((_ref2 = opt["var"]) != null ? _ref2.toString() : void 0) || "_no_var_was_defined_";
         this.required = opt.required === true || opt.required === "true";
-        if (opt.options) {
-          this.addOptions(opt.options);
-        }
-        if (opt.value) {
-          opt.values = [opt.value];
-        }
-        if (opt.values) {
-          this.addValues(opt.values);
-        }
+        if (opt.options) this.addOptions(opt.options);
+        if (opt.value) opt.values = [opt.value];
+        if (opt.values) this.addValues(opt.values);
       }
     }
+
     Field.prototype.type = "text-single";
+
     Field.prototype.desc = null;
+
     Field.prototype.label = null;
+
     Field.prototype["var"] = "_no_var_was_defined_";
+
     Field.prototype.required = false;
+
     Field.prototype.addValue = function(val) {
       return this.addValues([val]);
     };
+
     Field.prototype.addValues = function(vals) {
       var multi, v, _ref;
       multi = (_ref = this.type, __indexOf.call(Field._multiTypes, _ref) >= 0);
@@ -322,9 +316,11 @@
       }
       return this;
     };
+
     Field.prototype.addOption = function(opt) {
       return this.addOptions([opt]);
     };
+
     Field.prototype.addOptions = function(opts) {
       var o;
       if (this.type === "list-single" || this.type === "list-multi") {
@@ -345,6 +341,7 @@
       }
       return this;
     };
+
     Field.prototype.toJSON = function() {
       var json, o, _i, _len, _ref;
       json = {
@@ -352,15 +349,9 @@
         "var": this["var"],
         required: this.required
       };
-      if (this.desc) {
-        json.desc = this.desc;
-      }
-      if (this.label) {
-        json.label = this.label;
-      }
-      if (this.values) {
-        json.values = this.values;
-      }
+      if (this.desc) json.desc = this.desc;
+      if (this.label) json.label = this.label;
+      if (this.values) json.values = this.values;
       if (this.options) {
         json.options = [];
         _ref = this.options;
@@ -371,22 +362,17 @@
       }
       return json;
     };
+
     Field.prototype.toXML = function() {
       var attrs, o, v, xml, _i, _j, _len, _len2, _ref, _ref2;
       attrs = {
         type: this.type,
         "var": this["var"]
       };
-      if (this.label) {
-        attrs.label = this.label;
-      }
+      if (this.label) attrs.label = this.label;
       xml = $build("field", attrs);
-      if (this.desc) {
-        xml.c("desc").t(this.desc).up();
-      }
-      if (this.required) {
-        xml.c("required").up();
-      }
+      if (this.desc) xml.c("desc").t(this.desc).up();
+      if (this.required) xml.c("required").up();
       if (this.values) {
         _ref = this.values;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -403,30 +389,28 @@
       }
       return xml.tree();
     };
+
     Field.prototype.toHTML = function() {
       var el, k, line, o, opt, txt, val, _i, _j, _len, _len2, _ref, _ref2, _ref3;
       switch (this.type.toLowerCase()) {
         case 'list-single':
         case 'list-multi':
           el = $("<select>");
-          if (this.type === 'list-multi') {
-            el.attr('multiple', 'multiple');
-          }
+          if (this.type === 'list-multi') el.attr('multiple', 'multiple');
           if (this.options.length > 0) {
             _ref = this.options;
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               opt = _ref[_i];
-              if (opt) {
-                o = $(opt.toHTML());
-                _ref2 = this.values;
-                for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
-                  k = _ref2[_j];
-                  if (k.toString() === opt.value.toString()) {
-                    o.attr('selected', 'selected');
-                  }
+              if (!(opt)) continue;
+              o = $(opt.toHTML());
+              _ref2 = this.values;
+              for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+                k = _ref2[_j];
+                if (k.toString() === opt.value.toString()) {
+                  o.attr('selected', 'selected');
                 }
-                o.appendTo(el);
               }
+              o.appendTo(el);
             }
           }
           break;
@@ -443,9 +427,7 @@
             }
             return _results;
           }).call(this)).join('\n');
-          if (txt) {
-            el.text(txt);
-          }
+          if (txt) el.text(txt);
           break;
         case 'text-single':
         case 'boolean':
@@ -454,9 +436,7 @@
         case 'fixed':
         case 'jid-single':
           el = $("<input>");
-          if (this.values) {
-            el.val(this.values[0]);
-          }
+          if (this.values) el.val(this.values[0]);
           switch (this.type.toLowerCase()) {
             case 'text-single':
               el.attr('type', 'text');
@@ -486,11 +466,10 @@
           el = $("<input type='text'>");
       }
       el.attr('name', this["var"]);
-      if (this.required) {
-        el.attr('required', this.required);
-      }
+      if (this.required) el.attr('required', this.required);
       return el[0];
     };
+
     Field.fromXML = function(xml) {
       var o, v;
       xml = $(xml);
@@ -522,6 +501,7 @@
         })()
       });
     };
+
     Field._htmlElementToFieldType = function(el) {
       var r, type;
       el = $(el);
@@ -561,6 +541,7 @@
       }
       return type;
     };
+
     Field.fromHTML = function(html) {
       var el, f, txt, type;
       html = $(html);
@@ -597,9 +578,7 @@
         case "text-multi":
         case "jid-multi":
           txt = html.text();
-          if (txt.trim() !== "") {
-            f.values = txt.split('\n');
-          }
+          if (txt.trim() !== "") f.values = txt.split('\n');
           break;
         case 'text-single':
         case 'boolean':
@@ -607,62 +586,72 @@
         case 'hidden':
         case 'fixed':
         case 'jid-single':
-          if (html.val().trim() !== "") {
-            f.values = [html.val()];
-          }
+          if (html.val().trim() !== "") f.values = [html.val()];
       }
       return f;
     };
+
     return Field;
+
   })();
+
   Option = (function() {
+
     function Option(opt) {
       if (opt) {
-        if (opt.label) {
-          this.label = opt.label.toString();
-        }
-        if (opt.value) {
-          this.value = opt.value.toString();
-        }
+        if (opt.label) this.label = opt.label.toString();
+        if (opt.value) this.value = opt.value.toString();
       }
     }
+
     Option.prototype.label = "";
+
     Option.prototype.value = "";
+
     Option.prototype.toXML = function() {
       return ($build("option", {
         label: this.label
       })).c("value").t(this.value.toString()).tree();
     };
+
     Option.prototype.toJSON = function() {
       return {
         label: this.label,
         value: this.value
       };
     };
+
     Option.prototype.toHTML = function() {
       return ($("<option>")).attr('value', this.value).text(this.label || this.value)[0];
     };
+
     Option.fromXML = function(xml) {
       return new Option({
         label: ($(xml)).attr("label"),
         value: ($(xml)).text()
       });
     };
+
     Option.fromHTML = function(html) {
       return new Option({
         value: ($(html)).attr("value"),
         label: ($(html)).text()
       });
     };
+
     return Option;
+
   })();
+
   Item = (function() {
+
     function Item(opts) {
       this.fields = [];
       if (opts != null ? opts.fields : void 0) {
         helper.fill(opts.fields, this.fields, Field);
       }
     }
+
     Item.prototype.toXML = function() {
       var f, xml, _i, _len, _ref;
       xml = $build("item");
@@ -673,6 +662,7 @@
       }
       return xml.tree();
     };
+
     Item.prototype.toJSON = function() {
       var f, json, _i, _len, _ref;
       json = {};
@@ -686,6 +676,7 @@
       }
       return json;
     };
+
     Item.prototype.toHTML = function() {
       var f, fieldset, _i, _len, _ref;
       fieldset = $("<fieldset>");
@@ -696,6 +687,7 @@
       }
       return fieldset[0];
     };
+
     Item.fromXML = function(xml) {
       var f, fields;
       xml = $(xml);
@@ -712,6 +704,7 @@
         })()
       });
     };
+
     Item.fromHTML = function(html) {
       var f;
       return new Item({
@@ -727,20 +720,22 @@
         })()
       });
     };
+
     return Item;
+
   })();
+
   Strophe.x = {
     Form: Form,
     Field: Field,
     Option: Option,
     Item: Item
   };
+
   Strophe.addConnectionPlugin('x', {
     init: function(conn) {
       Strophe.addNamespace('DATA', 'jabber:x:data');
-      if (conn.disco) {
-        return conn.disco.addFeature(Strophe.NS.DATA);
-      }
+      if (conn.disco) return conn.disco.addFeature(Strophe.NS.DATA);
     },
     parseFromResult: function(result) {
       var _ref;
@@ -751,4 +746,5 @@
       }
     }
   });
+
 }).call(this);

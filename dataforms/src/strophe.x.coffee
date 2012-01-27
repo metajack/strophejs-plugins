@@ -133,7 +133,7 @@ class Form
 
   @fromHTML: (html) ->
     html = $ html
-    
+
 
     f = new Form
       type: html.attr "data-type"
@@ -188,17 +188,17 @@ class Field
   var: "_no_var_was_defined_"
   required: false
 
-  addValue: (val) -> @addValues [val]
+  addValue: (val) => @addValues [val]
 
-  addValues: (vals) ->
+  addValues: (vals) =>
     multi = @type in Field._multiTypes
     if multi or ( not multi and vals.length is 1 )
       @values = [@values..., (v.toString() for v in vals)...]
     @
 
-  addOption: (opt) -> @addOptions [opt]
+  addOption: (opt) => @addOptions [opt]
 
-  addOptions: (opts) ->
+  addOptions: (opts) =>
     if @type is "list-single" or @type is "list-multi"
       if typeof opts[0] isnt "object"
         opts =  (new Option { value: o.toString() } for o in opts)
