@@ -106,10 +106,11 @@ Strophe.addConnectionPlugin('muc', {
     (String) room - The multi-user chat room to leave.
     (String) nick - The nick name used in the room.
     (Function) handler_cb - Optional function to handle the successful leave.
+    (String) exit_msg - optional exit message.
     Returns:
     iqid - The unique id for the room leave.
     */
-    leave: function(room, nick, handler_cb) {
+    leave: function(room, nick, handler_cb, exit_msg) {
         var room_nick = this.test_append_nick(room, nick);
         var presenceid = this._connection.getUniqueId();
         var presence = $pres({type: "unavailable",
@@ -122,6 +123,10 @@ Strophe.addConnectionPlugin('muc', {
                                     null,
                                     presenceid,
                                     null);
+        if (exit_msg)
+        {
+            presence.c("status", exit_msg);
+        }
         this._connection.send(presence);
         return presenceid;
     },
