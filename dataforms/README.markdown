@@ -9,7 +9,7 @@ strophe.x.js is a plugin to provide Data Forms
 
 Creating a form is easy:
 
-    Strophe.x.Form({
+    new Strophe.x.Form({
       type: "submit",
       title: "myTitle",
       instructions: "Tell something",
@@ -18,7 +18,7 @@ Creating a form is easy:
 
 You can also use items within the form:
 
-    Strophe.x.Form({
+    new Strophe.x.Form({
       type: "result",
       title: "Search result",
       items: [ item1, { fields: [f1,f5]}, item3 ]
@@ -29,7 +29,7 @@ automatically).
 
 Creating fields is similar
 
-    Strophe.x.Field({
+    new Strophe.x.Field({
       type: "text-single",
       "var": "myVariableName",
       desc: "a description",
@@ -40,7 +40,7 @@ Creating fields is similar
 
 You can also use options
 
-    Strophe.x.Field({
+    new Strophe.x.Field({
       type: "list-multi",
       "var": "myVariableName",
       desc: "a description",
