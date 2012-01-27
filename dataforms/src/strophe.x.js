@@ -1,4 +1,4 @@
-var Field, Form, Item, Option, helper,
+var $field, $form, $item, $opt, Field, Form, Item, Option, helper,
   __slice = Array.prototype.slice,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -739,6 +739,22 @@ Strophe.x = {
   Field: Field,
   Option: Option,
   Item: Item
+};
+
+$form = function(opt) {
+  return new Strophe.x.Form(opt);
+};
+
+$field = function(opt) {
+  return new Strophe.x.Field(opt);
+};
+
+$opt = function(opt) {
+  return new Strophe.x.Option(opt);
+};
+
+$item = function(opts) {
+  return new Strophe.x.Item(opts);
 };
 
 Strophe.addConnectionPlugin('x', {

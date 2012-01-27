@@ -425,6 +425,11 @@ Strophe.x =
   Option:Option
   Item:Item
 
+$form = (opt) -> new Strophe.x.Form opt
+$field = (opt) -> new Strophe.x.Field opt
+$opt = (opt) -> new Strophe.x.Option opt
+$item = (opts) -> new Strophe.x.Item opts
+
 Strophe.addConnectionPlugin 'x',
 
   init : (conn) ->
