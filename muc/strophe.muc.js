@@ -130,6 +130,7 @@ Strophe.addConnectionPlugin('muc', {
                                         presenceid,
                                         null);
         }
+
         this._connection.send(presence);
         return presenceid;
     },
@@ -183,6 +184,49 @@ Strophe.addConnectionPlugin('muc', {
     */
     groupchat: function(room, message, html_message) {
         return this.message(room, null, message, html_message);
+    },
+    /***Function
+    Send a mediated invitation.
+    Parameters:
+    (String) room - The multi-user chat room name.
+    (String) receiver - The invitation's receiver.
+    Returns:
+    msgiq - the unique id used to send the invitation
+    */
+    invite: function(room, receiver) {
+        var msgid = this._connection.getUniqueId();
+        var invitation = $msg({
+            from: this._connection.jid,
+            to: room,
+            id: msgid
+        }).c('x', {
+            xmlns: Strophe.NS.MUC_USER
+        }).c('invite', {
+            to: receiver
+        });
+        this._connection.send(invitation);
+        return msgid;
+    },
+    /***Function
+    Send a direct invitation.
+    Parameters:
+    (String) room - The multi-user chat room name.
+    (String) receiver - The invitation's receiver.
+    Returns:
+    msgiq - the unique id used to send the invitation
+    */
+    directInvite: function(room, receiver) {
+        var msgid = this._connection.getUniqueId();
+        var invitation = $msg({
+            from: this._connection.jid,
+            to: receiver,
+            id: msgid
+        }).c('x', {
+            xmlns: 'jabber:x:conference',
+            jid: room
+        });
+        this._connection.send(invitation);
+        return msgid;
     },
     /***Function
     Start a room configuration.
