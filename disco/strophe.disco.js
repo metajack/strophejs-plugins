@@ -74,6 +74,25 @@ Strophe.addConnectionPlugin('disco',
         this._features.push(var_name);
         return true;
     },
+    /** Function: removeFeature
+     *
+     * Parameters:
+     *   (String) var_name - feature name (like jabber:iq:version)
+     *
+     * Returns:
+     *   boolean
+     */
+    removeFeature: function(var_name)
+    {
+        for (var i=0; i<this._features.length; i++)
+        {
+             if (this._features[i] === var_name){
+                 this._features.splice(i,1)
+                 return true;
+             }
+        }
+        return false;
+    },
     /** Function: addItem
      *
      * Parameters:
@@ -128,20 +147,34 @@ Strophe.addConnectionPlugin('disco',
                          to:jid, type:'get'}).c('query', attrs);
         this._connection.sendIQ(items, success, error, timeout);
     },
+
+    /** PrivateFunction: _buildIQResult
+     */
+    _buildIQResult: function(stanza, query_attrs)
+    {
+        var id   =  stanza.getAttribute('id');
+        var from = stanza.getAttribute('from');
+        var iqresult = $iq({type: 'result', id: id});
+
+        if (from !== null) {
+            iqresult.attrs({to: from});
+        }
+
+        return iqresult.c('query', query_attrs);
+    },
+
     /** PrivateFunction: _onDiscoInfo
      * Called when receive info request
      */
     _onDiscoInfo: function(stanza)
     {
-        var id   =  stanza.getAttribute('id');
-        var from = stanza.getAttribute('from');
         var node = stanza.getElementsByTagName('query')[0].getAttribute('node');
         var attrs = {xmlns: Strophe.NS.DISCO_INFO};
         if (node)
         {
             attrs.node = node;
         }
-        var iqresult = $iq({type: 'result', id: id, to: from}).c('query', attrs);
+        var iqresult = this._buildIQResult(stanza, attrs);
         for (var i=0; i<this._identities.length; i++)
         {
             var attrs = {category: this._identities[i].category,
@@ -164,14 +197,12 @@ Strophe.addConnectionPlugin('disco',
      */
     _onDiscoItems: function(stanza)
     {
-        var id   = stanza.getAttribute('id');
-        var from = stanza.getAttribute('from');
         var query_attrs = {xmlns: Strophe.NS.DISCO_ITEMS};
         var node = stanza.getElementsByTagName('query')[0].getAttribute('node');
         if (node)
         {
             query_attrs.node = node;
-            var items = null;
+            var items = [];
             for (var i = 0; i < this._items.length; i++)
             {
                 if (this._items[i].node == node)
@@ -185,7 +216,7 @@ Strophe.addConnectionPlugin('disco',
         {
             var items = this._items;
         }
-        var iqresult = $iq({type: 'result', id: id, to: from}).c('query', query_attrs);
+        var iqresult = this._buildIQResult(stanza, query_attrs);
         for (var i = 0; i < items.length; i++)
         {
             var attrs = {jid:  items[i].jid};

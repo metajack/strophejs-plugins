@@ -141,4 +141,8 @@ describe("Strophe.disco#items", function() {
 		receive(c,req);
 	});
 });
-
+//var c1 = new Strophe.Connection('http://localhost/xmpp-httpbind');
+//c1.connect('asdf@psi/c1', 'asdf');
+//
+//var c2 = new Strophe.Connection('http://localhost/xmpp-httpbind');
+//c2.connect('asdf@psi/c2', 'asdf');
