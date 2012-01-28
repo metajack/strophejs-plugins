@@ -44,6 +44,9 @@ https://github.com/metajack/strophejs-plugins .
 - [In-Band Registration](strophejs-plugins/tree/master/register/)
   ([XEP 0077](http://xmpp.org/extensions/xep-0077.html))
 
+- [Chat State Notifications](strophejs-plugins/tree/master/chatstates/)
+  ([XEP 0085](http://xmpp.org/extensions/xep-0085.html))
+
 - [Entity Capabilities](strophejs-plugins/tree/master/caps/)
   ([XEP 0115](http://xmpp.org/extensions/xep-0115.html))
 
