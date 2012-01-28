@@ -328,6 +328,28 @@ Strophe.addConnectionPlugin('muc', {
         this._connection.send(presence.tree());
     },
     /***Function
+    Change the current users status.
+    Parameters:
+    (String) room - The multi-user chat room name.
+    (String) user - The current nick.
+    (String) show - The new show-text.
+    (String) status - The new status-text.
+    */
+    setStatus: function(room, user, show, status) {
+        var room_nick = this.test_append_nick(room, user);
+        var presence = $pres({from: this._connection.jid,
+                              to: room_nick});
+        if (show)
+        {
+            presence.c('show', show).up();
+        }
+        if (status)
+        {
+            presence.c('status', status);
+        }
+        this._connection.send(presence.tree());
+    },
+    /***Function
     List all chat room available on a server.
     Parameters:
     (String) server - name of chat server.
