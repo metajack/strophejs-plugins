@@ -71,6 +71,8 @@ https://github.com/metajack/strophejs-plugins .
 - [Serverdate](strophejs-plugins/tree/master/serverdate/) - Syncs a local clock
   to the servers
 
+- [epic](strophejs-plugins/tree/master/epic/)
+
 - [iexdomain](strophejs-plugins/tree/master/iexdomain/) - Support for IE
   XDomainRequest
 
