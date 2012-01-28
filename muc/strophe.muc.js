@@ -190,10 +190,11 @@ Strophe.addConnectionPlugin('muc', {
     Parameters:
     (String) room - The multi-user chat room name.
     (String) receiver - The invitation's receiver.
+    (String) reason - Optional reason for joining the room.
     Returns:
     msgiq - the unique id used to send the invitation
     */
-    invite: function(room, receiver) {
+    invite: function(room, receiver, reason) {
         var msgid = this._connection.getUniqueId();
         var invitation = $msg({
             from: this._connection.jid,
@@ -204,6 +205,10 @@ Strophe.addConnectionPlugin('muc', {
         }).c('invite', {
             to: receiver
         });
+        if (reason)
+        {
+            invitation.c('reason', reason);
+        }
         this._connection.send(invitation);
         return msgid;
     },
@@ -212,19 +217,30 @@ Strophe.addConnectionPlugin('muc', {
     Parameters:
     (String) room - The multi-user chat room name.
     (String) receiver - The invitation's receiver.
+    (String) reason - Optional reason for joining the room.
+    (String) password - Optional password for the room.
     Returns:
     msgiq - the unique id used to send the invitation
     */
-    directInvite: function(room, receiver) {
+    directInvite: function(room, receiver, reason, password) {
         var msgid = this._connection.getUniqueId();
+        var options =  {
+            xmlns: 'jabber:x:conference',
+            jid: room
+        };
+        if (reason)
+        {
+            options.reason = reason;
+        }
+        if (password)
+        {
+            options.password = password;
+        }
         var invitation = $msg({
             from: this._connection.jid,
             to: receiver,
             id: msgid
-        }).c('x', {
-            xmlns: 'jabber:x:conference',
-            jid: room
-        });
+        }).c('x', options);
         this._connection.send(invitation);
         return msgid;
     },
