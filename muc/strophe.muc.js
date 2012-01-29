@@ -10,6 +10,8 @@ Plugin to implement the MUC extension. http://xmpp.org/extensions/xep-0045.html
 
 Strophe.addConnectionPlugin('muc', {
     _connection: null,
+    _roomMessageHandlers: [],
+    _roomPresenceHandlers: [],
     // The plugin must have the init function
     /***Function
     Initialize the MUC plugin. Sets the correct connection object and
@@ -53,7 +55,7 @@ Strophe.addConnectionPlugin('muc', {
         }
         if (msg_handler_cb)
         {
-            this._connection.addHandler(function(stanza) {
+            this._roomMessageHandlers[room] = this._connection.addHandler(function(stanza) {
                 var from = stanza.getAttribute('from');
                 var roomname = from.split("/");
                 // filter on room name
@@ -74,7 +76,7 @@ Strophe.addConnectionPlugin('muc', {
         }
         if (pres_handler_cb)
         {
-            this._connection.addHandler(function(stanza) {
+            this._roomPresenceHandlers[room] = this._connection.addHandler(function(stanza) {
                 var xquery = stanza.getElementsByTagName("x");
                 if (xquery.length > 0)
                 {
@@ -111,6 +113,8 @@ Strophe.addConnectionPlugin('muc', {
     iqid - The unique id for the room leave.
     */
     leave: function(room, nick, handler_cb, exit_msg) {
+        this._connection.deleteHandler(this._roomMessageHandlers[room]);
+        this._connection.deleteHandler(this._roomPresenceHandlers[room]);
         var room_nick = this.test_append_nick(room, nick);
         var presenceid = this._connection.getUniqueId();
         var presence = $pres({type: "unavailable",
