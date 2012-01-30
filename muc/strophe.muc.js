@@ -7,10 +7,13 @@
    Base64, MD5,
    Strophe, $build, $msg, $iq, $pres
 */
+var XmppRoom;
+
 Strophe.addConnectionPlugin('muc', {
   _connection: null,
   _roomMessageHandlers: [],
   _roomPresenceHandlers: [],
+  rooms: [],
   /*Function
   Initialize the MUC plugin. Sets the correct connection object and
   extends the namesace.
@@ -35,7 +38,7 @@ Strophe.addConnectionPlugin('muc', {
   rooms only)
   */
   join: function(room, nick, msg_handler_cb, pres_handler_cb, password) {
-    var msg, room_nick;
+    var msg, room_nick, _base;
     room_nick = this.test_append_nick(room, nick);
     msg = $pres({
       from: this._connection.jid,
@@ -71,6 +74,9 @@ Strophe.addConnectionPlugin('muc', {
         }
         return true;
       }, null, "presence");
+    }
+    if ((_base = this.rooms)[room] == null) {
+      _base[room] = new XmppRoom(this, room, nick, this._roomMessageHandlers[room], this._roomPresenceHandlers[room], password);
     }
     return this._connection.send(msg);
   },
@@ -498,3 +504,77 @@ Strophe.addConnectionPlugin('muc', {
     return room + (nick != null ? "/" + (Strophe.escapeNode(nick)) : "");
   }
 });
+
+XmppRoom = (function() {
+
+  function XmppRoom(client, name, nick, msg_handler_id, pres_handler_id, password) {
+    this.client = client;
+    this.name = name;
+    this.nick = nick;
+    this.msg_handler_id = msg_handler_id;
+    this.pres_handler_id = pres_handler_id;
+    this.password = password;
+    this.name = Strophe.getBareJidFromJid(name);
+    this.client.rooms[this.name] = this;
+    this.roster = new Array();
+  }
+
+  XmppRoom.prototype.join = function(msg_handler_cb, pres_handler_cb) {
+    if (this.client.rooms[this.name] != null) {
+      return this.client.join(this.name, this.nick, null, null, password);
+    }
+  };
+
+  XmppRoom.prototype.leave = function(handler_cb, message) {
+    this.client.leave(this.name, this.nick, handler_cb, message);
+    return this.client.rooms[this.name] = null;
+  };
+
+  XmppRoom.prototype.message = function(nick, message, html_message, type) {
+    return this.client.message(this.name, nick, message, html_message, type);
+  };
+
+  XmppRoom.prototype.groupchat = function(message, html_message) {
+    return this.client.groupchat(this.name, message, html_message);
+  };
+
+  XmppRoom.prototype.invite = function(receiver, reason) {
+    return this.client.invite(this.name, receiver, reason);
+  };
+
+  XmppRoom.prototype.directInvite = function(receiver, reason) {
+    return this.client.directInvite(this.name, receiver, reason, this.password);
+  };
+
+  XmppRoom.prototype.configure = function(handler_cb) {
+    return this.client.configure(this.name, handler_cb);
+  };
+
+  XmppRoom.prototype.cancelConfigure = function() {
+    return this.client.cancelConfigure(this.name);
+  };
+
+  XmppRoom.prototype.saveConfiguration = function(configarray) {
+    return this.client.saveConfiguration(this.name, configarray);
+  };
+
+  XmppRoom.prototype.setTopic = function(topic) {
+    return this.client.setTopic(this.name, topic);
+  };
+
+  XmppRoom.prototype.modifyUser = function(nick, role, affiliation, reason) {
+    return this.client.modifyUser(this.name, nick, affiliation, reason);
+  };
+
+  XmppRoom.prototype.changeNick = function(nick) {
+    this.nick = nick;
+    return this.client.changeNick(this.name, nick);
+  };
+
+  XmppRoom.prototype.setStatus = function(show, status) {
+    return this.client.setStatus(this.name, this.nick, show, status);
+  };
+
+  return XmppRoom;
+
+})();
