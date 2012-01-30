@@ -35,9 +35,9 @@ Strophe.addConnectionPlugin('muc', {
   rooms only)
   */
   join: function(room, nick, msg_handler_cb, pres_handler_cb, password) {
-    var room_nick, rsg;
+    var msg, room_nick;
     room_nick = this.test_append_nick(room, nick);
-    rsg = $pres({
+    msg = $pres({
       from: this._connection.jid,
       to: room_nick
     }).c("x", {
