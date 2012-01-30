@@ -42,8 +42,8 @@ Strophe.addConnectionPlugin 'muc'
     room_nick = @test_append_nick(room, nick)
     rsg = $pres(
       from: @_connection.jid
-      to: room_nick)
-      .c("x", xmlns: Strophe.NS.MUC)
+      to: room_nick )
+    .c("x", xmlns: Strophe.NS.MUC)
 
     if password?
       msg.cnode Strophe.xmlElement("password", [], password)
@@ -98,11 +98,11 @@ Strophe.addConnectionPlugin 'muc'
       from: @_connection.jid
       to: room_nick )
 
-    presence.c "status", exit_msg if exit_msg
+    presence.c "status", exit_msg if exit_msg?
 
     if handler_cb?
       @_connection.addHandler(
-        handler_cb,
+        handler_cb
         null
         "presence"
         null
@@ -137,17 +137,17 @@ Strophe.addConnectionPlugin 'muc'
     if html_message?
       msg.c("html", xmlns: Strophe.NS.XHTML_IM)
       .c("body", xmlns: Strophe.NS.XHTML)
-      .h html_message
+      .h(html_message)
       if msg.node.childNodes.length is 0
         # html creation or import failed somewhere; fallback to plaintext
         parent = msg.node.parentNode
         msg.up().up()
         # get rid of the empty html element if we got invalid html
         #so we don't send an empty message
-        msg.node.removeChild(parent)
+        msg.node.removeChild parent
       else
         msg.up().up()
-    msg.c("x", xmlns: "jabber:x:event").c "composing"
+    msg.c("x", xmlns: "jabber:x:event").c("composing")
     @_connection.send msg
     return msgid
 
@@ -179,7 +179,7 @@ Strophe.addConnectionPlugin 'muc'
       to: room
       id: msgid )
     .c('x', xmlns: Strophe.NS.MUC_USER)
-    .c 'invite', to: receiver
+    .c('invite', to: receiver)
     invitation.c 'reason', reason if reason?
     @_connection.send invitation
     return msgid
@@ -205,7 +205,7 @@ Strophe.addConnectionPlugin 'muc'
       from: @_connection.jid
       to: receiver
       id: msgid )
-    .c 'x', attrs
+    .c('x', attrs)
     @_connection.send invitation
     return msgid
 
@@ -222,7 +222,7 @@ Strophe.addConnectionPlugin 'muc'
     config = $iq(
       to:room
       type: "get" )
-    .c "query", xmlns: Strophe.NS.MUC_OWNER
+    .c("query", xmlns: Strophe.NS.MUC_OWNER)
     stanza = config.tree()
     id = @_connection.sendIQ stanza
 
@@ -251,7 +251,7 @@ Strophe.addConnectionPlugin 'muc'
       to: room
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_OWNER)
-    .c "x", xmlns: "jabber:x:data", type: "cancel"
+    .c("x", xmlns: "jabber:x:data", type: "cancel")
     stanza = config.tree()
     @_connection.sendIQ stanza
 
@@ -268,7 +268,7 @@ Strophe.addConnectionPlugin 'muc'
       to: room
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_OWNER)
-    .c "x", xmlns: "jabber:x:data", type: "submit"
+    .c("x", xmlns: "jabber:x:data", type: "submit")
     config.cnode(conf).up() for conf in configarray
     stanza = config.tree()
     @_connection.sendIQ stanza
@@ -284,8 +284,9 @@ Strophe.addConnectionPlugin 'muc'
       to: room
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_OWNER)
-    .c "x", xmlns: "jabber:x:data", type: "submit"
+    .c("x", xmlns: "jabber:x:data", type: "submit")
     @_connection.sendIQ roomiq.tree()
+
   ###Function
   Set the topic of the chat room.
   Parameters:
@@ -298,7 +299,7 @@ Strophe.addConnectionPlugin 'muc'
       from: @_connection.jid
       type: "groupchat" )
     .c("subject", xmlns: "jabber:client")
-    .t topic
+    .t(topic)
     @_connection.send msg.tree()
 
   ###Function
@@ -320,13 +321,13 @@ Strophe.addConnectionPlugin 'muc'
     item_attrs.affiliation = affiliation if affiliation?
 
     item = $build "item", item_attrs
-    item.cnode Strophe.xmlElement("reason", reason) if reason?
+    item.cnode(Strophe.xmlElement("reason", reason)) if reason?
 
     roomiq = $iq(
       to: room,
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_OWNER)
-    .cnode item.tree()
+    .cnode(item.tree())
     @_connection.sendIQ roomiq.tree()
 
   ###Function
@@ -340,7 +341,7 @@ Strophe.addConnectionPlugin 'muc'
     presence = $pres(
       from: @_connection.jid
       to: room_nick )
-    .c "x", xmlns: Strophe.NS.MUC
+    .c("x", xmlns: Strophe.NS.MUC)
     @_connection.send presence.tree()
 
   ###Function
@@ -371,7 +372,7 @@ Strophe.addConnectionPlugin 'muc'
       to: server
       from: @_connection.jid
       type: "get" )
-    .c "query", xmlns: Strophe.NS.DISCO_ITEMS
+    .c("query", xmlns: Strophe.NS.DISCO_ITEMS)
     @_connection.sendIQ iq, handle_cb
 
   test_append_nick: (room, nick) ->

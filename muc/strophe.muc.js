@@ -96,7 +96,7 @@ Strophe.addConnectionPlugin('muc', {
       from: this._connection.jid,
       to: room_nick
     });
-    if (exit_msg) presence.c("status", exit_msg);
+    if (exit_msg != null) presence.c("status", exit_msg);
     if (handler_cb != null) {
       this._connection.addHandler(handler_cb, null, "presence", null, presenceid);
     }
