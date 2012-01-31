@@ -347,7 +347,7 @@ Strophe.addConnectionPlugin('muc', {
       to: room,
       type: "set"
     }).c("query", {
-      xmlns: Strophe.NS.MUC_OWNER
+      xmlns: Strophe.NS.MUC_ADMIN
     }).cnode(item.tree());
     return this._connection.sendIQ(roomiq.tree());
   },
