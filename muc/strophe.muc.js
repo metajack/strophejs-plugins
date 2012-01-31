@@ -419,7 +419,6 @@ XmppRoom = (function() {
 
   function XmppRoom(client, name, nick, msg_handler_id, pres_handler_id, password) {
     this.client = client;
-    this.name = name;
     this.nick = nick;
     this.msg_handler_id = msg_handler_id;
     this.pres_handler_id = pres_handler_id;
@@ -428,6 +427,13 @@ XmppRoom = (function() {
     this.client.rooms[this.name] = this;
     this.roster = new Array();
   }
+
+  /*
+    All functions in this class are convenience functions
+    that call the corresponding function on the client with
+    room-specific values filled in.
+    (The client is the Strophe connection in this case)
+  */
 
   XmppRoom.prototype.join = function(msg_handler_cb, pres_handler_cb) {
     if (this.client.rooms[this.name] != null) {
@@ -466,6 +472,10 @@ XmppRoom = (function() {
 
   XmppRoom.prototype.saveConfiguration = function(configarray) {
     return this.client.saveConfiguration(this.name, configarray);
+  };
+
+  XmppRoom.prototype.info = function(success_cb, error_cb) {
+    return this.client.info(this.name, success_cb, error_cb);
   };
 
   XmppRoom.prototype.setTopic = function(topic) {

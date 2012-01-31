@@ -388,10 +388,17 @@ Strophe.addConnectionPlugin 'muc'
     room + if nick? then "/#{Strophe.escapeNode nick}" else ""
 
 class XmppRoom
-  constructor: (@client, @name, @nick, @msg_handler_id, @pres_handler_id, @password) ->
+  constructor: (@client, name, @nick, @msg_handler_id, @pres_handler_id, @password) ->
     @name = Strophe.getBareJidFromJid name
     @client.rooms[@name] = @
     @roster = new Array()
+
+  ###
+  All functions in this class are convenience functions
+  that call the corresponding function on the client with
+  room-specific values filled in.
+  (The client is the Strophe connection in this case)
+  ###
 
   join: (msg_handler_cb, pres_handler_cb) ->
     @client.join(@name, @nick, null, null, password) if @client.rooms[@name]?
@@ -420,6 +427,9 @@ class XmppRoom
 
   saveConfiguration: (configarray) ->
     @client.saveConfiguration @name, configarray
+
+  info: (success_cb, error_cb) ->
+    @client.info @name, success_cb, error_cb
 
   setTopic: (topic) ->
     @client.setTopic @name, topic
