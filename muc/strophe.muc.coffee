@@ -520,3 +520,34 @@ class XmppRoom
 
   setStatus: (show, status) ->
     @client.setStatus @name, @nick, show, status
+
+class RoomConfig
+
+  constructor: (info) ->
+    @parse info if info?
+
+  parse: (result) =>
+    query = result.getElementsByTagName("query")[0].children
+    @identities =  []
+    @features =  []
+    @x = []
+    for child in query
+      attrs = child.attributes
+      switch child.nodeName
+        when "identity"
+          identity = {}
+          identity[attr.name] = attr.textContent for attr in attrs
+          @identities.push identity
+        when "feature"
+          @features.push attrs.var.textContent
+        when "x"
+          for field in child.children when not field.attributes.type
+            attrs = field.attributes
+            # @x[attrs.var.textContent.split("#")[1]] =
+            @x.push (
+              var: attrs.var.textContent
+              label: attrs.label.textContent or ""
+              value: field.firstChild.textContent or "" )
+
+    "identities": @identities, "features": @features, "x": @x
+

@@ -7,7 +7,8 @@
    Base64, MD5,
    Strophe, $build, $msg, $iq, $pres
 */
-var XmppRoom;
+var RoomConfig, XmppRoom,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 Strophe.addConnectionPlugin('muc', {
   _connection: null,
@@ -576,5 +577,57 @@ XmppRoom = (function() {
   };
 
   return XmppRoom;
+
+})();
+
+RoomConfig = (function() {
+
+  function RoomConfig(info) {
+    this.parse = __bind(this.parse, this);    if (info != null) this.parse(info);
+  }
+
+  RoomConfig.prototype.parse = function(result) {
+    var attr, attrs, child, field, identity, query, _i, _j, _k, _len, _len2, _len3, _ref;
+    query = result.getElementsByTagName("query")[0].children;
+    this.identities = [];
+    this.features = [];
+    this.x = [];
+    for (_i = 0, _len = query.length; _i < _len; _i++) {
+      child = query[_i];
+      attrs = child.attributes;
+      switch (child.nodeName) {
+        case "identity":
+          identity = {};
+          for (_j = 0, _len2 = attrs.length; _j < _len2; _j++) {
+            attr = attrs[_j];
+            identity[attr.name] = attr.textContent;
+          }
+          this.identities.push(identity);
+          break;
+        case "feature":
+          this.features.push(attrs["var"].textContent);
+          break;
+        case "x":
+          _ref = child.children;
+          for (_k = 0, _len3 = _ref.length; _k < _len3; _k++) {
+            field = _ref[_k];
+            if (!(!field.attributes.type)) continue;
+            attrs = field.attributes;
+            this.x.push({
+              "var": attrs["var"].textContent,
+              label: attrs.label.textContent || "",
+              value: field.firstChild.textContent || ""
+            });
+          }
+      }
+    }
+    return {
+      "identities": this.identities,
+      "features": this.features,
+      "x": this.x
+    };
+  };
+
+  return RoomConfig;
 
 })();
