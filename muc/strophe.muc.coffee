@@ -326,7 +326,7 @@ Strophe.addConnectionPlugin 'muc'
     roomiq = $iq(
       to: room,
       type: "set" )
-    .c("query", xmlns: Strophe.NS.MUC_OWNER)
+    .c("query", xmlns: Strophe.NS.MUC_ADMIN)
     .cnode(item.tree())
     @_connection.sendIQ roomiq.tree()
 
