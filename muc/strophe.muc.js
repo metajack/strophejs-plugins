@@ -559,6 +559,10 @@ XmppRoom = (function() {
     return this.client.saveConfiguration(this.name, configarray);
   };
 
+  XmppRoom.prototype.queryOccupants = function(success_cb, error_cb) {
+    return this.client.queryOccupants(this.name, success_cb, error_cb);
+  };
+
   XmppRoom.prototype.setTopic = function(topic) {
     return this.client.setTopic(this.name, topic);
   };

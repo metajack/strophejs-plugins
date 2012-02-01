@@ -508,6 +508,9 @@ class XmppRoom
   saveConfiguration: (configarray) ->
     @client.saveConfiguration @name, configarray
 
+  queryOccupants: (success_cb, error_cb) ->
+    @client.queryOccupants @name, success_cb, error_cb
+
   setTopic: (topic) ->
     @client.setTopic @name, topic
 
