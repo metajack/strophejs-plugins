@@ -12,6 +12,7 @@ Strophe.addConnectionPlugin 'muc'
   _connection: null
   _roomMessageHandlers: []
   _roomPresenceHandlers: []
+  rooms: []
   # The plugin must have the init function
   ###Function
   Initialize the MUC plugin. Sets the correct connection object and
@@ -74,6 +75,14 @@ Strophe.addConnectionPlugin 'muc'
           return true
         null
         "presence" )
+
+    @rooms[room] ?= new XmppRoom(
+      @
+      room
+      nick
+      @_roomMessageHandlers[room]
+      @_roomPresenceHandlers[room]
+      password )
 
     @_connection.send msg
 
@@ -377,3 +386,60 @@ Strophe.addConnectionPlugin 'muc'
 
   test_append_nick: (room, nick) ->
     room + if nick? then "/#{Strophe.escapeNode nick}" else ""
+
+class XmppRoom
+  constructor: (@client, name, @nick, @msg_handler_id, @pres_handler_id, @password) ->
+    @name = Strophe.getBareJidFromJid name
+    @client.rooms[@name] = @
+    @roster = new Array()
+
+  ###
+  All functions in this class are convenience functions
+  that call the corresponding function on the client with
+  room-specific values filled in.
+  (The client is the Strophe connection in this case)
+  ###
+
+  join: (msg_handler_cb, pres_handler_cb) ->
+    @client.join(@name, @nick, null, null, password) if @client.rooms[@name]?
+
+  leave: (handler_cb, message) ->
+    @client.leave @name, @nick, handler_cb, message
+    @client.rooms[@name] = null
+
+  message: (nick, message, html_message, type) ->
+    @client.message @name, nick, message, html_message, type
+
+  groupchat: (message, html_message) ->
+    @client.groupchat @name, message, html_message
+
+  invite: (receiver, reason) ->
+    @client.invite @name, receiver, reason
+
+  directInvite: (receiver, reason) ->
+    @client.directInvite @name, receiver, reason, @password
+
+  configure: (handler_cb) ->
+    @client.configure @name, handler_cb
+
+  cancelConfigure: ->
+    @client.cancelConfigure @name
+
+  saveConfiguration: (configarray) ->
+    @client.saveConfiguration @name, configarray
+
+  info: (success_cb, error_cb) ->
+    @client.info @name, success_cb, error_cb
+
+  setTopic: (topic) ->
+    @client.setTopic @name, topic
+
+  modifyUser: (nick, role, affiliation, reason) ->
+    @client.modifyUser @name, nick, affiliation, reason
+
+  changeNick: (nick) ->
+    @nick = nick
+    @client.changeNick @name, nick
+
+  setStatus: (show, status) ->
+    @client.setStatus @name, @nick, show, status
