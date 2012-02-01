@@ -389,6 +389,21 @@ Strophe.addConnectionPlugin('muc', {
     });
     return this._modifyPrivilege(room, item, reason, handler_cb, error_cb);
   },
+  kick: function(room, nick, reason, handler_cb, error_cb) {
+    return this.modifyRole(room, nick, 'none', reason, handler_cb, error_cb);
+  },
+  voice: function(room, nick, reason, handler_cb, error_cb) {
+    return this.modifyRole(room, nick, 'participant', reason, handler_cb, error_cb);
+  },
+  mute: function(room, nick, reason, handler_cb, error_cb) {
+    return this.modifyRole(room, nick, 'visitor', reason, handler_cb, error_cb);
+  },
+  op: function(room, nick, reason, handler_cb, error_cb) {
+    return this.modifyRole(room, nick, 'moderator', reason, handler_cb, error_cb);
+  },
+  deop: function(room, nick, reason, handler_cb, error_cb) {
+    return this.modifyRole(room, nick, 'participant', reason, handler_cb, error_cb);
+  },
   /*Function
   Changes the affiliation of a member of a MUC room.
   The modification can only be done by a room moderator. An error will be
@@ -410,6 +425,21 @@ Strophe.addConnectionPlugin('muc', {
       affiliation: affiliation
     });
     return this._modifyPrivilege(room, item, reason, handler_cb, error_cb);
+  },
+  ban: function(room, jid, reason, handler_cb, error_cb) {
+    return this.modifyAffiliation(room, jid, 'outcast', reason, handler_cb, error_cb);
+  },
+  member: function(room, jid, reason, handler_cb, error_cb) {
+    return this.modifyAffiliation(room, jid, 'member', reason, handler_cb, error_cb);
+  },
+  revoke: function(room, jid, reason, handler_cb, error_cb) {
+    return this.modifyAffiliation(room, jid, 'none', reason, handler_cb, error_cb);
+  },
+  owner: function(room, jid, reason, handler_cb, error_cb) {
+    return this.modifyAffiliation(room, jid, 'owner', reason, handler_cb, error_cb);
+  },
+  admin: function(room, jid, reason, handler_cb, error_cb) {
+    return this.modifyAffiliation(room, jid, 'admin', reason, handler_cb, error_cb);
   },
   /*Function
   Change the current users nick name.

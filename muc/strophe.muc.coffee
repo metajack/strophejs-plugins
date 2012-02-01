@@ -366,6 +366,20 @@ Strophe.addConnectionPlugin 'muc'
 
     @_modifyPrivilege room, item, reason, handler_cb, error_cb
 
+  kick: (room, nick, reason, handler_cb, error_cb) ->
+    @modifyRole room, nick, 'none', reason, handler_cb, error_cb
+
+  voice: (room, nick, reason, handler_cb, error_cb) ->
+    @modifyRole room, nick, 'participant', reason, handler_cb, error_cb
+
+  mute: (room, nick, reason, handler_cb, error_cb) ->
+    @modifyRole room, nick, 'visitor', reason, handler_cb, error_cb
+
+  op: (room, nick, reason, handler_cb, error_cb) ->
+    @modifyRole room, nick, 'moderator', reason, handler_cb, error_cb
+
+  deop: (room, nick, reason, handler_cb, error_cb) ->
+    @modifyRole room, nick, 'participant', reason, handler_cb, error_cb
 
   ###Function
   Changes the affiliation of a member of a MUC room.
@@ -387,6 +401,21 @@ Strophe.addConnectionPlugin 'muc'
       affiliation: affiliation )
 
     @_modifyPrivilege room, item, reason, handler_cb, error_cb
+
+  ban: (room, jid, reason, handler_cb, error_cb) ->
+    @modifyAffiliation room, jid, 'outcast', reason, handler_cb, error_cb
+
+  member: (room, jid, reason, handler_cb, error_cb) ->
+    @modifyAffiliation room, jid, 'member', reason, handler_cb, error_cb
+
+  revoke: (room, jid, reason, handler_cb, error_cb) ->
+    @modifyAffiliation room, jid, 'none', reason, handler_cb, error_cb
+
+  owner: (room, jid, reason, handler_cb, error_cb) ->
+    @modifyAffiliation room, jid, 'owner', reason, handler_cb, error_cb
+
+  admin: (room, jid, reason, handler_cb, error_cb) ->
+    @modifyAffiliation room, jid, 'admin', reason, handler_cb, error_cb
 
   ###Function
   Change the current users nick name.
