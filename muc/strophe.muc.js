@@ -568,7 +568,7 @@ XmppRoom = (function() {
   };
 
   XmppRoom.prototype.modifyRole = function(nick, role, reason, success_cb, error_cb) {
-    return this.client.modifyRole(this.room, nick, role, reason, success_cb, error_cb);
+    return this.client.modifyRole(this.name, nick, role, reason, success_cb, error_cb);
   };
 
   XmppRoom.prototype.kick = function(nick, reason, handler_cb, error_cb) {
@@ -592,7 +592,7 @@ XmppRoom = (function() {
   };
 
   XmppRoom.prototype.modifyAffiliation = function(jid, affiliation, reason, success_cb, error_cb) {
-    return this.client.modifyAffiliation(this.room, jid, affiliation, reason, success_cb, error_cb);
+    return this.client.modifyAffiliation(this.name, jid, affiliation, reason, success_cb, error_cb);
   };
 
   XmppRoom.prototype.ban = function(jid, reason, handler_cb, error_cb) {

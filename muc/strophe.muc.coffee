@@ -515,7 +515,7 @@ class XmppRoom
     @client.setTopic @name, topic
 
   modifyRole: (nick, role, reason, success_cb, error_cb) ->
-    @client.modifyRole @room, nick, role, reason, success_cb, error_cb
+    @client.modifyRole @name, nick, role, reason, success_cb, error_cb
 
   kick: (nick, reason, handler_cb, error_cb) ->
     @client.kick @name, nick, 'none', reason, handler_cb, error_cb
@@ -533,7 +533,7 @@ class XmppRoom
     @client.deop @name, nick, 'participant', reason, handler_cb, error_cb
 
   modifyAffiliation: (jid, affiliation, reason, success_cb, error_cb) ->
-    @client.modifyAffiliation @room, jid, affiliation, reason, success_cb, error_cb
+    @client.modifyAffiliation @name, jid, affiliation, reason, success_cb, error_cb
 
   ban: (jid, reason, handler_cb, error_cb) ->
     @client.ban @name, jid, 'outcast', reason, handler_cb, error_cb
