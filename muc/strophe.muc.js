@@ -7,7 +7,7 @@
    Base64, MD5,
    Strophe, $build, $msg, $iq, $pres
 */
-var RoomConfig, XmppRoom,
+var Occupant, RoomConfig, XmppRoom,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 Strophe.addConnectionPlugin('muc', {
@@ -681,5 +681,73 @@ RoomConfig = (function() {
   };
 
   return RoomConfig;
+
+})();
+
+Occupant = (function() {
+
+  function Occupant(nick, room) {
+    this.nick = nick;
+    this.room = room;
+  }
+
+  Occupant.prototype.modifyRole = function(role, reason, success_cb, error_cb) {
+    return this.room.modifyRole(this.nick, role, reason, success_cb, error_cb);
+  };
+
+  Occupant.prototype.kick = function(reason, handler_cb, error_cb) {
+    return this.room.kick(this.nick, 'none', reason, handler_cb, error_cb);
+  };
+
+  Occupant.prototype.voice = function(reason, handler_cb, error_cb) {
+    return this.room.voice(this.nick, 'participant', reason, handler_cb, error_cb);
+  };
+
+  Occupant.prototype.mute = function(reason, handler_cb, error_cb) {
+    return this.room.mute(this.nick, 'visitor', reason, handler_cb, error_cb);
+  };
+
+  Occupant.prototype.op = function(reason, handler_cb, error_cb) {
+    return this.room.op(this.nick, 'moderator', reason, handler_cb, error_cb);
+  };
+
+  Occupant.prototype.deop = function(reason, handler_cb, error_cb) {
+    return this.room.deop(this.nick, 'participant', reason, handler_cb, error_cb);
+  };
+
+  Occupant.prototype.modifyAffiliation = function(affiliation, reason, success_cb, error_cb) {
+    return this.room.modifyAffiliation(this.jid, affiliation, reason, success_cb, error_cb);
+  };
+
+  Occupant.prototype.ban = function(reason, handler_cb, error_cb) {
+    return this.room.ban(this.jid, 'outcast', reason, handler_cb, error_cb);
+  };
+
+  Occupant.prototype.member = function(reason, handler_cb, error_cb) {
+    return this.room.member(this.jid, 'member', reason, handler_cb, error_cb);
+  };
+
+  Occupant.prototype.revoke = function(reason, handler_cb, error_cb) {
+    return this.room.revoke(this.jid, 'none', reason, handler_cb, error_cb);
+  };
+
+  Occupant.prototype.owner = function(reason, handler_cb, error_cb) {
+    return this.room.owner(this.jid, 'owner', reason, handler_cb, error_cb);
+  };
+
+  Occupant.prototype.admin = function(reason, handler_cb, error_cb) {
+    return this.room.admin(this.jid, 'admin', reason, handler_cb, error_cb);
+  };
+
+  Occupant.prototype.update = function(data) {
+    this.nick = data.nick;
+    this.affiliation = data.affiliation || null;
+    this.role = data.role || null;
+    this.jid = data.jid || null;
+    this.status = data.status || null;
+    return this.show = data.show || null;
+  };
+
+  return Occupant;
 
 })();

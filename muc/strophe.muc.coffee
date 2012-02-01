@@ -588,3 +588,50 @@ class RoomConfig
 
     "identities": @identities, "features": @features, "x": @x
 
+class Occupant
+  constructor: (@nick, @room) ->
+
+  modifyRole: (role, reason, success_cb, error_cb) ->
+    @room.modifyRole @nick, role, reason, success_cb, error_cb
+
+  kick: (reason, handler_cb, error_cb) ->
+    @room.kick @nick, 'none', reason, handler_cb, error_cb
+
+  voice: (reason, handler_cb, error_cb) ->
+    @room.voice @nick, 'participant', reason, handler_cb, error_cb
+
+  mute: (reason, handler_cb, error_cb) ->
+    @room.mute @nick, 'visitor', reason, handler_cb, error_cb
+
+  op: (reason, handler_cb, error_cb) ->
+    @room.op @nick, 'moderator', reason, handler_cb, error_cb
+
+  deop: (reason, handler_cb, error_cb) ->
+    @room.deop @nick, 'participant', reason, handler_cb, error_cb
+
+  modifyAffiliation: (affiliation, reason, success_cb, error_cb) ->
+    @room.modifyAffiliation @jid, affiliation, reason, success_cb, error_cb
+
+  ban: (reason, handler_cb, error_cb) ->
+    @room.ban @jid, 'outcast', reason, handler_cb, error_cb
+
+  member: (reason, handler_cb, error_cb) ->
+    @room.member @jid, 'member', reason, handler_cb, error_cb
+
+  revoke: (reason, handler_cb, error_cb) ->
+    @room.revoke @jid, 'none', reason, handler_cb, error_cb
+
+  owner: (reason, handler_cb, error_cb) ->
+    @room.owner @jid, 'owner', reason, handler_cb, error_cb
+
+  admin: (reason, handler_cb, error_cb) ->
+    @room.admin @jid, 'admin', reason, handler_cb, error_cb
+
+  update: (data) ->
+    @nick = data.nick
+    @affiliation  = data.affiliation  or null
+    @role         = data.role         or null
+    @jid          = data.jid          or null
+    @status       = data.status       or null
+    @show         = data.show         or null
+
