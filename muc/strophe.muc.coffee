@@ -210,6 +210,23 @@ Strophe.addConnectionPlugin 'muc'
     return msgid
 
   ###Function
+  Queries a room for a list of occupants
+  (String) room - The multi-user chat room name.
+  (Function) success_cb - Optional function to handle the info.
+  (Function) error_cb - Optional function to handle an error.
+  Returns:
+  id - the unique id used to send the info request
+  ###
+  queryOccupants: (room, success_cb, error_cb) ->
+    attrs = {xmlns: Strophe.NS.DISCO_ITEMS};
+    info = $iq(
+      from:this._connection.jid
+      to:room
+      type:'get' )
+    .c('query', attrs)
+    @_connection.sendIQ info, success_cb, error_cb
+
+  ###Function
   Start a room configuration.
   Parameters:
   (String) room - The multi-user chat room name.
