@@ -342,7 +342,32 @@ Strophe.addConnectionPlugin('muc', {
     return this._connection.send(msg.tree());
   },
   /*Function
-  Changes the role and affiliation of a member of a MUC room.
+  Internal Function that Changes the role or affiliation of a member
+  of a MUC room. This function is used by modifyRole and modifyAffiliation.
+  The modification can only be done by a room moderator. An error will be
+  returned if the user doesn't have permission.
+  Parameters:
+  (String) room - The multi-user chat room name.
+  (Object) item - Object with nick and role or jid and affiliation attribute
+  (String) reason - Optional reason for the change.
+  (Function) handler_cb - Optional callback for success
+  (Function) errer_cb - Optional callback for error
+  Returns:
+  iq - the id of the mode change request.
+  */
+  _modifyPrivilege: function(room, item, reason, handler_cb, error_cb) {
+    var iq;
+    iq = $iq({
+      to: room,
+      type: "set"
+    }).c("query", {
+      xmlns: Strophe.NS.MUC_ADMIN
+    }).cnode(item);
+    if (reason != null) iq.c("reason", reason);
+    return this._connection.sendIQ(iq.tree(), handler_cb, error_cb);
+  },
+  /*Function
+  Changes the role of a member of a MUC room.
   The modification can only be done by a room moderator. An error will be
   returned if the user doesn't have permission.
   Parameters:
@@ -350,26 +375,41 @@ Strophe.addConnectionPlugin('muc', {
   (String) nick - The nick name of the user to modify.
   (String) role - The new role of the user.
   (String) affiliation - The new affiliation of the user.
-  (String) reason - The reason for the change.
+  (String) reason - Optional reason for the change.
+  (Function) handler_cb - Optional callback for success
+  (Function) errer_cb - Optional callback for error
   Returns:
   iq - the id of the mode change request.
   */
-  modifyUser: function(room, nick, role, affiliation, reason) {
-    var item, item_attrs, roomiq;
-    item_attrs = {
-      nick: Strophe.escapeNode(nick)
-    };
-    if (role != null) item_attrs.role = role;
-    if (affiliation != null) item_attrs.affiliation = affiliation;
-    item = $build("item", item_attrs);
-    if (reason != null) item.cnode(Strophe.xmlElement("reason", reason));
-    roomiq = $iq({
-      to: room,
-      type: "set"
-    }).c("query", {
-      xmlns: Strophe.NS.MUC_ADMIN
-    }).cnode(item.tree());
-    return this._connection.sendIQ(roomiq.tree());
+  modifyRole: function(room, nick, role, reason, handler_cb, error_cb) {
+    var item;
+    item = $build("item", {
+      nick: nick,
+      role: role
+    });
+    return this._modifyPrivilege(room, item, reason, handler_cb, error_cb);
+  },
+  /*Function
+  Changes the affiliation of a member of a MUC room.
+  The modification can only be done by a room moderator. An error will be
+  returned if the user doesn't have permission.
+  Parameters:
+  (String) room - The multi-user chat room name.
+  (String) jid  - The jid of the user to modify.
+  (String) affiliation - The new affiliation of the user.
+  (String) reason - Optional reason for the change.
+  (Function) handler_cb - Optional callback for success
+  (Function) errer_cb - Optional callback for error
+  Returns:
+  iq - the id of the mode change request.
+  */
+  modifyAffiliation: function(room, jid, affiliation, reason, handler_cb, error_cb) {
+    var item;
+    item = $build("item", {
+      jid: jid,
+      affiliation: affiliation
+    });
+    return this._modifyPrivilege(room, item, reason, handler_cb, error_cb);
   },
   /*Function
   Change the current users nick name.
