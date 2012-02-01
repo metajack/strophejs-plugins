@@ -514,8 +514,41 @@ class XmppRoom
   setTopic: (topic) ->
     @client.setTopic @name, topic
 
-  modifyUser: (nick, role, affiliation, reason) ->
-    @client.modifyUser @name, nick, affiliation, reason
+  modifyRole: (nick, role, reason, success_cb, error_cb) ->
+    @client.modifyRole @room, nick, role, reason, success_cb, error_cb
+
+  kick: (nick, reason, handler_cb, error_cb) ->
+    @client.kick @name, nick, 'none', reason, handler_cb, error_cb
+
+  voice: (nick, reason, handler_cb, error_cb) ->
+    @client.voice @name, nick, 'participant', reason, handler_cb, error_cb
+
+  mute: (nick, reason, handler_cb, error_cb) ->
+    @client.mute @name, nick, 'visitor', reason, handler_cb, error_cb
+
+  op: (nick, reason, handler_cb, error_cb) ->
+    @client.op @name, nick, 'moderator', reason, handler_cb, error_cb
+
+  deop: (nick, reason, handler_cb, error_cb) ->
+    @client.deop @name, nick, 'participant', reason, handler_cb, error_cb
+
+  modifyAffiliation: (jid, affiliation, reason, success_cb, error_cb) ->
+    @client.modifyAffiliation @room, jid, affiliation, reason, success_cb, error_cb
+
+  ban: (jid, reason, handler_cb, error_cb) ->
+    @client.ban @name, jid, 'outcast', reason, handler_cb, error_cb
+
+  member: (jid, reason, handler_cb, error_cb) ->
+    @client.member @name, jid, 'member', reason, handler_cb, error_cb
+
+  revoke: (jid, reason, handler_cb, error_cb) ->
+    @client.revoke @name, jid, 'none', reason, handler_cb, error_cb
+
+  owner: (jid, reason, handler_cb, error_cb) ->
+    @client.owner @name, jid, 'owner', reason, handler_cb, error_cb
+
+  admin: (jid, reason, handler_cb, error_cb) ->
+    @client.admin @name, jid, 'admin', reason, handler_cb, error_cb
 
   changeNick: (@nick) ->
     @client.changeNick @name, nick

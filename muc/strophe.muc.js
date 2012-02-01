@@ -567,8 +567,52 @@ XmppRoom = (function() {
     return this.client.setTopic(this.name, topic);
   };
 
-  XmppRoom.prototype.modifyUser = function(nick, role, affiliation, reason) {
-    return this.client.modifyUser(this.name, nick, affiliation, reason);
+  XmppRoom.prototype.modifyRole = function(nick, role, reason, success_cb, error_cb) {
+    return this.client.modifyRole(this.room, nick, role, reason, success_cb, error_cb);
+  };
+
+  XmppRoom.prototype.kick = function(nick, reason, handler_cb, error_cb) {
+    return this.client.kick(this.name, nick, 'none', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.voice = function(nick, reason, handler_cb, error_cb) {
+    return this.client.voice(this.name, nick, 'participant', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.mute = function(nick, reason, handler_cb, error_cb) {
+    return this.client.mute(this.name, nick, 'visitor', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.op = function(nick, reason, handler_cb, error_cb) {
+    return this.client.op(this.name, nick, 'moderator', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.deop = function(nick, reason, handler_cb, error_cb) {
+    return this.client.deop(this.name, nick, 'participant', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.modifyAffiliation = function(jid, affiliation, reason, success_cb, error_cb) {
+    return this.client.modifyAffiliation(this.room, jid, affiliation, reason, success_cb, error_cb);
+  };
+
+  XmppRoom.prototype.ban = function(jid, reason, handler_cb, error_cb) {
+    return this.client.ban(this.name, jid, 'outcast', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.member = function(jid, reason, handler_cb, error_cb) {
+    return this.client.member(this.name, jid, 'member', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.revoke = function(jid, reason, handler_cb, error_cb) {
+    return this.client.revoke(this.name, jid, 'none', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.owner = function(jid, reason, handler_cb, error_cb) {
+    return this.client.owner(this.name, jid, 'owner', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.admin = function(jid, reason, handler_cb, error_cb) {
+    return this.client.admin(this.name, jid, 'admin', reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.changeNick = function(nick) {
