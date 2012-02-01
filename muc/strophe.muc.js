@@ -624,6 +624,45 @@ XmppRoom = (function() {
     return this.client.setStatus(this.name, this.nick, show, status);
   };
 
+  XmppRoom.prototype._parsePresence = function(pres) {
+    var a, c, c2, data, _i, _j, _len, _len2, _ref, _ref2;
+    data = {};
+    a = pres.attributes;
+    date.nick = Strophe.getResourceFromJid(a.from.textContent);
+    data.states = [];
+    _ref = pres.children;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      c = _ref[_i];
+      switch (c.nodeName) {
+        case "status":
+          data.status = c.textContent || null;
+          break;
+        case "show":
+          data.show = c.textContent || null;
+          break;
+        case "x":
+          a = c.attributes;
+          if (a.xmlns === Strophe.NS.MUC_USER) {
+            _ref2 = c.children;
+            for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+              c2 = _ref2[_j];
+              switch (c2.nodeName) {
+                case "item":
+                  a = c2.attributes;
+                  data.affiliation = a.affiliation || null;
+                  data.role = a.role || null;
+                  data.jid = a.jid || null;
+                  break;
+                case "status":
+                  if (c2.code) data.states.push(c2.code);
+              }
+            }
+          }
+      }
+    }
+    return data;
+  };
+
   return XmppRoom;
 
 })();

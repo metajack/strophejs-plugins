@@ -556,6 +556,31 @@ class XmppRoom
   setStatus: (show, status) ->
     @client.setStatus @name, @nick, show, status
 
+  _parsePresence: (pres) ->
+    data = {}
+    a = pres.attributes
+    date.nick = Strophe.getResourceFromJid a.from.textContent
+    data.states = []
+    for c in pres.children
+      switch c.nodeName
+        when "status"
+          data.status = c.textContent or null
+        when "show"
+          data.show = c.textContent or null
+        when "x"
+          a = c.attributes
+          if a.xmlns is Strophe.NS.MUC_USER
+            for c2 in c.children
+              switch c2.nodeName
+                when "item"
+                  a = c2.attributes
+                  data.affiliation = a.affiliation or null
+                  data.role = a.role or null
+                  data.jid = a.jid or null
+                when "status"
+                  data.states.push c2.code if c2.code
+    data
+
 class RoomConfig
 
   constructor: (info) ->
