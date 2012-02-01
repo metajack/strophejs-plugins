@@ -608,6 +608,10 @@ RoomConfig = (function() {
           this.features.push(attrs["var"].textContent);
           break;
         case "x":
+          attrs = child.children[0].attributes;
+          if ((!attrs["var"].textContent === 'FORM_TYPE') || (!attrs.type.textContent === 'hidden')) {
+            break;
+          }
           _ref = child.children;
           for (_k = 0, _len3 = _ref.length; _k < _len3; _k++) {
             field = _ref[_k];

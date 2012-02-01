@@ -514,8 +514,7 @@ class XmppRoom
   modifyUser: (nick, role, affiliation, reason) ->
     @client.modifyUser @name, nick, affiliation, reason
 
-  changeNick: (nick) ->
-    @nick = nick
+  changeNick: (@nick) ->
     @client.changeNick @name, nick
 
   setStatus: (show, status) ->
@@ -541,6 +540,8 @@ class RoomConfig
         when "feature"
           @features.push attrs.var.textContent
         when "x"
+          attrs = child.children[0].attributes
+          break if ((not attrs.var.textContent is 'FORM_TYPE') or (not attrs.type.textContent is 'hidden'))
           for field in child.children when not field.attributes.type
             attrs = field.attributes
             # @x[attrs.var.textContent.split("#")[1]] =
