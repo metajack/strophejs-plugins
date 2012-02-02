@@ -12,6 +12,7 @@ Strophe.addConnectionPlugin 'muc'
   _connection: null
   _roomMessageHandlers: []
   _roomPresenceHandlers: []
+  rooms: []
   # The plugin must have the init function
   ###Function
   Initialize the MUC plugin. Sets the correct connection object and
@@ -74,6 +75,14 @@ Strophe.addConnectionPlugin 'muc'
           return true
         null
         "presence" )
+
+    @rooms[room] ?= new XmppRoom(
+      @
+      room
+      nick
+      @_roomMessageHandlers[room]
+      @_roomPresenceHandlers[room]
+      password )
 
     @_connection.send msg
 
@@ -210,6 +219,23 @@ Strophe.addConnectionPlugin 'muc'
     return msgid
 
   ###Function
+  Queries a room for a list of occupants
+  (String) room - The multi-user chat room name.
+  (Function) success_cb - Optional function to handle the info.
+  (Function) error_cb - Optional function to handle an error.
+  Returns:
+  id - the unique id used to send the info request
+  ###
+  queryOccupants: (room, success_cb, error_cb) ->
+    attrs = {xmlns: Strophe.NS.DISCO_ITEMS};
+    info = $iq(
+      from:this._connection.jid
+      to:room
+      type:'get' )
+    .c('query', attrs)
+    @_connection.sendIQ info, success_cb, error_cb
+
+  ###Function
   Start a room configuration.
   Parameters:
   (String) room - The multi-user chat room name.
@@ -303,7 +329,32 @@ Strophe.addConnectionPlugin 'muc'
     @_connection.send msg.tree()
 
   ###Function
-  Changes the role and affiliation of a member of a MUC room.
+  Internal Function that Changes the role or affiliation of a member
+  of a MUC room. This function is used by modifyRole and modifyAffiliation.
+  The modification can only be done by a room moderator. An error will be
+  returned if the user doesn't have permission.
+  Parameters:
+  (String) room - The multi-user chat room name.
+  (Object) item - Object with nick and role or jid and affiliation attribute
+  (String) reason - Optional reason for the change.
+  (Function) handler_cb - Optional callback for success
+  (Function) errer_cb - Optional callback for error
+  Returns:
+  iq - the id of the mode change request.
+  ###
+  _modifyPrivilege: (room, item, reason, handler_cb, error_cb) ->
+    iq = $iq(
+      to: room
+      type: "set" )
+    .c("query", xmlns: Strophe.NS.MUC_ADMIN)
+    .cnode(item)
+
+    iq.c("reason", reason) if reason?
+
+    @_connection.sendIQ iq.tree(), handler_cb, error_cb
+
+  ###Function
+  Changes the role of a member of a MUC room.
   The modification can only be done by a room moderator. An error will be
   returned if the user doesn't have permission.
   Parameters:
@@ -311,24 +362,69 @@ Strophe.addConnectionPlugin 'muc'
   (String) nick - The nick name of the user to modify.
   (String) role - The new role of the user.
   (String) affiliation - The new affiliation of the user.
-  (String) reason - The reason for the change.
+  (String) reason - Optional reason for the change.
+  (Function) handler_cb - Optional callback for success
+  (Function) errer_cb - Optional callback for error
   Returns:
   iq - the id of the mode change request.
   ###
-  modifyUser: (room, nick, role, affiliation, reason) ->
-    item_attrs = nick: Strophe.escapeNode nick
-    item_attrs.role = role if role?
-    item_attrs.affiliation = affiliation if affiliation?
+  modifyRole: (room, nick, role, reason, handler_cb, error_cb) ->
+    item = $build("item"
+      nick: nick
+      role: role )
 
-    item = $build "item", item_attrs
-    item.cnode(Strophe.xmlElement("reason", reason)) if reason?
+    @_modifyPrivilege room, item, reason, handler_cb, error_cb
 
-    roomiq = $iq(
-      to: room,
-      type: "set" )
-    .c("query", xmlns: Strophe.NS.MUC_ADMIN)
-    .cnode(item.tree())
-    @_connection.sendIQ roomiq.tree()
+  kick: (room, nick, reason, handler_cb, error_cb) ->
+    @modifyRole room, nick, 'none', reason, handler_cb, error_cb
+
+  voice: (room, nick, reason, handler_cb, error_cb) ->
+    @modifyRole room, nick, 'participant', reason, handler_cb, error_cb
+
+  mute: (room, nick, reason, handler_cb, error_cb) ->
+    @modifyRole room, nick, 'visitor', reason, handler_cb, error_cb
+
+  op: (room, nick, reason, handler_cb, error_cb) ->
+    @modifyRole room, nick, 'moderator', reason, handler_cb, error_cb
+
+  deop: (room, nick, reason, handler_cb, error_cb) ->
+    @modifyRole room, nick, 'participant', reason, handler_cb, error_cb
+
+  ###Function
+  Changes the affiliation of a member of a MUC room.
+  The modification can only be done by a room moderator. An error will be
+  returned if the user doesn't have permission.
+  Parameters:
+  (String) room - The multi-user chat room name.
+  (String) jid  - The jid of the user to modify.
+  (String) affiliation - The new affiliation of the user.
+  (String) reason - Optional reason for the change.
+  (Function) handler_cb - Optional callback for success
+  (Function) errer_cb - Optional callback for error
+  Returns:
+  iq - the id of the mode change request.
+  ###
+  modifyAffiliation: (room, jid, affiliation, reason, handler_cb, error_cb) ->
+    item = $build("item"
+      jid: jid
+      affiliation: affiliation )
+
+    @_modifyPrivilege room, item, reason, handler_cb, error_cb
+
+  ban: (room, jid, reason, handler_cb, error_cb) ->
+    @modifyAffiliation room, jid, 'outcast', reason, handler_cb, error_cb
+
+  member: (room, jid, reason, handler_cb, error_cb) ->
+    @modifyAffiliation room, jid, 'member', reason, handler_cb, error_cb
+
+  revoke: (room, jid, reason, handler_cb, error_cb) ->
+    @modifyAffiliation room, jid, 'none', reason, handler_cb, error_cb
+
+  owner: (room, jid, reason, handler_cb, error_cb) ->
+    @modifyAffiliation room, jid, 'owner', reason, handler_cb, error_cb
+
+  admin: (room, jid, reason, handler_cb, error_cb) ->
+    @modifyAffiliation room, jid, 'admin', reason, handler_cb, error_cb
 
   ###Function
   Change the current users nick name.
@@ -377,3 +473,118 @@ Strophe.addConnectionPlugin 'muc'
 
   test_append_nick: (room, nick) ->
     room + if nick? then "/#{Strophe.escapeNode nick}" else ""
+
+class XmppRoom
+  constructor: (@client, @name, @nick, @msg_handler_id, @pres_handler_id, @password) ->
+    @name = Strophe.getBareJidFromJid name
+    @client.rooms[@name] = @
+    @roster = new Array()
+
+  join: (msg_handler_cb, pres_handler_cb) ->
+    @client.join(@name, @nick, null, null, password) if @client.rooms[@name]?
+
+  leave: (handler_cb, message) ->
+    @client.leave @name, @nick, handler_cb, message
+    @client.rooms[@name] = null
+
+  message: (nick, message, html_message, type) ->
+    @client.message @name, nick, message, html_message, type
+
+  groupchat: (message, html_message) ->
+    @client.groupchat @name, message, html_message
+
+  invite: (receiver, reason) ->
+    @client.invite @name, receiver, reason
+
+  directInvite: (receiver, reason) ->
+    @client.directInvite @name, receiver, reason, @password
+
+  configure: (handler_cb) ->
+    @client.configure @name, handler_cb
+
+  cancelConfigure: ->
+    @client.cancelConfigure @name
+
+  saveConfiguration: (configarray) ->
+    @client.saveConfiguration @name, configarray
+
+  queryOccupants: (success_cb, error_cb) ->
+    @client.queryOccupants @name, success_cb, error_cb
+
+  setTopic: (topic) ->
+    @client.setTopic @name, topic
+
+  modifyRole: (nick, role, reason, success_cb, error_cb) ->
+    @client.modifyRole @name, nick, role, reason, success_cb, error_cb
+
+  kick: (nick, reason, handler_cb, error_cb) ->
+    @client.kick @name, nick, 'none', reason, handler_cb, error_cb
+
+  voice: (nick, reason, handler_cb, error_cb) ->
+    @client.voice @name, nick, 'participant', reason, handler_cb, error_cb
+
+  mute: (nick, reason, handler_cb, error_cb) ->
+    @client.mute @name, nick, 'visitor', reason, handler_cb, error_cb
+
+  op: (nick, reason, handler_cb, error_cb) ->
+    @client.op @name, nick, 'moderator', reason, handler_cb, error_cb
+
+  deop: (nick, reason, handler_cb, error_cb) ->
+    @client.deop @name, nick, 'participant', reason, handler_cb, error_cb
+
+  modifyAffiliation: (jid, affiliation, reason, success_cb, error_cb) ->
+    @client.modifyAffiliation @name, jid, affiliation, reason, success_cb, error_cb
+
+  ban: (jid, reason, handler_cb, error_cb) ->
+    @client.ban @name, jid, 'outcast', reason, handler_cb, error_cb
+
+  member: (jid, reason, handler_cb, error_cb) ->
+    @client.member @name, jid, 'member', reason, handler_cb, error_cb
+
+  revoke: (jid, reason, handler_cb, error_cb) ->
+    @client.revoke @name, jid, 'none', reason, handler_cb, error_cb
+
+  owner: (jid, reason, handler_cb, error_cb) ->
+    @client.owner @name, jid, 'owner', reason, handler_cb, error_cb
+
+  admin: (jid, reason, handler_cb, error_cb) ->
+    @client.admin @name, jid, 'admin', reason, handler_cb, error_cb
+
+  changeNick: (@nick) ->
+    @client.changeNick @name, nick
+
+  setStatus: (show, status) ->
+    @client.setStatus @name, @nick, show, status
+
+class RoomConfig
+
+  constructor: (info) ->
+    @parse info if info?
+
+  parse: (result) =>
+    query = result.getElementsByTagName("query")[0].children
+    @identities =  []
+    @features =  []
+    @x = []
+    for child in query
+      attrs = child.attributes
+      switch child.nodeName
+        when "identity"
+          identity = {}
+          identity[attr.name] = attr.textContent for attr in attrs
+          @identities.push identity
+        when "feature"
+          @features.push attrs.var.textContent
+        when "x"
+          attrs = child.children[0].attributes
+          break if ((not attrs.var.textContent is 'FORM_TYPE') or (not attrs.type.textContent is 'hidden'))
+          for field in child.children when not field.attributes.type
+            attrs = field.attributes
+            # @x[attrs.var.textContent.split("#")[1]] =
+            @x.push (
+              var: attrs.var.textContent
+              label: attrs.label.textContent or ""
+              value: field.firstChild.textContent or "" )
+
+    "identities": @identities, "features": @features, "x": @x
+

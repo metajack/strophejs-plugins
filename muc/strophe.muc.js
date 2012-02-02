@@ -7,10 +7,14 @@
    Base64, MD5,
    Strophe, $build, $msg, $iq, $pres
 */
+var RoomConfig, XmppRoom,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
 Strophe.addConnectionPlugin('muc', {
   _connection: null,
   _roomMessageHandlers: [],
   _roomPresenceHandlers: [],
+  rooms: [],
   /*Function
   Initialize the MUC plugin. Sets the correct connection object and
   extends the namesace.
@@ -35,7 +39,7 @@ Strophe.addConnectionPlugin('muc', {
   rooms only)
   */
   join: function(room, nick, msg_handler_cb, pres_handler_cb, password) {
-    var msg, room_nick;
+    var msg, room_nick, _base;
     room_nick = this.test_append_nick(room, nick);
     msg = $pres({
       from: this._connection.jid,
@@ -71,6 +75,9 @@ Strophe.addConnectionPlugin('muc', {
         }
         return true;
       }, null, "presence");
+    }
+    if ((_base = this.rooms)[room] == null) {
+      _base[room] = new XmppRoom(this, room, nick, this._roomMessageHandlers[room], this._roomPresenceHandlers[room], password);
     }
     return this._connection.send(msg);
   },
@@ -213,6 +220,26 @@ Strophe.addConnectionPlugin('muc', {
     return msgid;
   },
   /*Function
+  Queries a room for a list of occupants
+  (String) room - The multi-user chat room name.
+  (Function) success_cb - Optional function to handle the info.
+  (Function) error_cb - Optional function to handle an error.
+  Returns:
+  id - the unique id used to send the info request
+  */
+  queryOccupants: function(room, success_cb, error_cb) {
+    var attrs, info;
+    attrs = {
+      xmlns: Strophe.NS.DISCO_ITEMS
+    };
+    info = $iq({
+      from: this._connection.jid,
+      to: room,
+      type: 'get'
+    }).c('query', attrs);
+    return this._connection.sendIQ(info, success_cb, error_cb);
+  },
+  /*Function
   Start a room configuration.
   Parameters:
   (String) room - The multi-user chat room name.
@@ -322,7 +349,32 @@ Strophe.addConnectionPlugin('muc', {
     return this._connection.send(msg.tree());
   },
   /*Function
-  Changes the role and affiliation of a member of a MUC room.
+  Internal Function that Changes the role or affiliation of a member
+  of a MUC room. This function is used by modifyRole and modifyAffiliation.
+  The modification can only be done by a room moderator. An error will be
+  returned if the user doesn't have permission.
+  Parameters:
+  (String) room - The multi-user chat room name.
+  (Object) item - Object with nick and role or jid and affiliation attribute
+  (String) reason - Optional reason for the change.
+  (Function) handler_cb - Optional callback for success
+  (Function) errer_cb - Optional callback for error
+  Returns:
+  iq - the id of the mode change request.
+  */
+  _modifyPrivilege: function(room, item, reason, handler_cb, error_cb) {
+    var iq;
+    iq = $iq({
+      to: room,
+      type: "set"
+    }).c("query", {
+      xmlns: Strophe.NS.MUC_ADMIN
+    }).cnode(item);
+    if (reason != null) iq.c("reason", reason);
+    return this._connection.sendIQ(iq.tree(), handler_cb, error_cb);
+  },
+  /*Function
+  Changes the role of a member of a MUC room.
   The modification can only be done by a room moderator. An error will be
   returned if the user doesn't have permission.
   Parameters:
@@ -330,26 +382,71 @@ Strophe.addConnectionPlugin('muc', {
   (String) nick - The nick name of the user to modify.
   (String) role - The new role of the user.
   (String) affiliation - The new affiliation of the user.
-  (String) reason - The reason for the change.
+  (String) reason - Optional reason for the change.
+  (Function) handler_cb - Optional callback for success
+  (Function) errer_cb - Optional callback for error
   Returns:
   iq - the id of the mode change request.
   */
-  modifyUser: function(room, nick, role, affiliation, reason) {
-    var item, item_attrs, roomiq;
-    item_attrs = {
-      nick: Strophe.escapeNode(nick)
-    };
-    if (role != null) item_attrs.role = role;
-    if (affiliation != null) item_attrs.affiliation = affiliation;
-    item = $build("item", item_attrs);
-    if (reason != null) item.cnode(Strophe.xmlElement("reason", reason));
-    roomiq = $iq({
-      to: room,
-      type: "set"
-    }).c("query", {
-      xmlns: Strophe.NS.MUC_ADMIN
-    }).cnode(item.tree());
-    return this._connection.sendIQ(roomiq.tree());
+  modifyRole: function(room, nick, role, reason, handler_cb, error_cb) {
+    var item;
+    item = $build("item", {
+      nick: nick,
+      role: role
+    });
+    return this._modifyPrivilege(room, item, reason, handler_cb, error_cb);
+  },
+  kick: function(room, nick, reason, handler_cb, error_cb) {
+    return this.modifyRole(room, nick, 'none', reason, handler_cb, error_cb);
+  },
+  voice: function(room, nick, reason, handler_cb, error_cb) {
+    return this.modifyRole(room, nick, 'participant', reason, handler_cb, error_cb);
+  },
+  mute: function(room, nick, reason, handler_cb, error_cb) {
+    return this.modifyRole(room, nick, 'visitor', reason, handler_cb, error_cb);
+  },
+  op: function(room, nick, reason, handler_cb, error_cb) {
+    return this.modifyRole(room, nick, 'moderator', reason, handler_cb, error_cb);
+  },
+  deop: function(room, nick, reason, handler_cb, error_cb) {
+    return this.modifyRole(room, nick, 'participant', reason, handler_cb, error_cb);
+  },
+  /*Function
+  Changes the affiliation of a member of a MUC room.
+  The modification can only be done by a room moderator. An error will be
+  returned if the user doesn't have permission.
+  Parameters:
+  (String) room - The multi-user chat room name.
+  (String) jid  - The jid of the user to modify.
+  (String) affiliation - The new affiliation of the user.
+  (String) reason - Optional reason for the change.
+  (Function) handler_cb - Optional callback for success
+  (Function) errer_cb - Optional callback for error
+  Returns:
+  iq - the id of the mode change request.
+  */
+  modifyAffiliation: function(room, jid, affiliation, reason, handler_cb, error_cb) {
+    var item;
+    item = $build("item", {
+      jid: jid,
+      affiliation: affiliation
+    });
+    return this._modifyPrivilege(room, item, reason, handler_cb, error_cb);
+  },
+  ban: function(room, jid, reason, handler_cb, error_cb) {
+    return this.modifyAffiliation(room, jid, 'outcast', reason, handler_cb, error_cb);
+  },
+  member: function(room, jid, reason, handler_cb, error_cb) {
+    return this.modifyAffiliation(room, jid, 'member', reason, handler_cb, error_cb);
+  },
+  revoke: function(room, jid, reason, handler_cb, error_cb) {
+    return this.modifyAffiliation(room, jid, 'none', reason, handler_cb, error_cb);
+  },
+  owner: function(room, jid, reason, handler_cb, error_cb) {
+    return this.modifyAffiliation(room, jid, 'owner', reason, handler_cb, error_cb);
+  },
+  admin: function(room, jid, reason, handler_cb, error_cb) {
+    return this.modifyAffiliation(room, jid, 'admin', reason, handler_cb, error_cb);
   },
   /*Function
   Change the current users nick name.
@@ -408,3 +505,181 @@ Strophe.addConnectionPlugin('muc', {
     return room + (nick != null ? "/" + (Strophe.escapeNode(nick)) : "");
   }
 });
+
+XmppRoom = (function() {
+
+  function XmppRoom(client, name, nick, msg_handler_id, pres_handler_id, password) {
+    this.client = client;
+    this.name = name;
+    this.nick = nick;
+    this.msg_handler_id = msg_handler_id;
+    this.pres_handler_id = pres_handler_id;
+    this.password = password;
+    this.name = Strophe.getBareJidFromJid(name);
+    this.client.rooms[this.name] = this;
+    this.roster = new Array();
+  }
+
+  XmppRoom.prototype.join = function(msg_handler_cb, pres_handler_cb) {
+    if (this.client.rooms[this.name] != null) {
+      return this.client.join(this.name, this.nick, null, null, password);
+    }
+  };
+
+  XmppRoom.prototype.leave = function(handler_cb, message) {
+    this.client.leave(this.name, this.nick, handler_cb, message);
+    return this.client.rooms[this.name] = null;
+  };
+
+  XmppRoom.prototype.message = function(nick, message, html_message, type) {
+    return this.client.message(this.name, nick, message, html_message, type);
+  };
+
+  XmppRoom.prototype.groupchat = function(message, html_message) {
+    return this.client.groupchat(this.name, message, html_message);
+  };
+
+  XmppRoom.prototype.invite = function(receiver, reason) {
+    return this.client.invite(this.name, receiver, reason);
+  };
+
+  XmppRoom.prototype.directInvite = function(receiver, reason) {
+    return this.client.directInvite(this.name, receiver, reason, this.password);
+  };
+
+  XmppRoom.prototype.configure = function(handler_cb) {
+    return this.client.configure(this.name, handler_cb);
+  };
+
+  XmppRoom.prototype.cancelConfigure = function() {
+    return this.client.cancelConfigure(this.name);
+  };
+
+  XmppRoom.prototype.saveConfiguration = function(configarray) {
+    return this.client.saveConfiguration(this.name, configarray);
+  };
+
+  XmppRoom.prototype.queryOccupants = function(success_cb, error_cb) {
+    return this.client.queryOccupants(this.name, success_cb, error_cb);
+  };
+
+  XmppRoom.prototype.setTopic = function(topic) {
+    return this.client.setTopic(this.name, topic);
+  };
+
+  XmppRoom.prototype.modifyRole = function(nick, role, reason, success_cb, error_cb) {
+    return this.client.modifyRole(this.name, nick, role, reason, success_cb, error_cb);
+  };
+
+  XmppRoom.prototype.kick = function(nick, reason, handler_cb, error_cb) {
+    return this.client.kick(this.name, nick, 'none', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.voice = function(nick, reason, handler_cb, error_cb) {
+    return this.client.voice(this.name, nick, 'participant', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.mute = function(nick, reason, handler_cb, error_cb) {
+    return this.client.mute(this.name, nick, 'visitor', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.op = function(nick, reason, handler_cb, error_cb) {
+    return this.client.op(this.name, nick, 'moderator', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.deop = function(nick, reason, handler_cb, error_cb) {
+    return this.client.deop(this.name, nick, 'participant', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.modifyAffiliation = function(jid, affiliation, reason, success_cb, error_cb) {
+    return this.client.modifyAffiliation(this.name, jid, affiliation, reason, success_cb, error_cb);
+  };
+
+  XmppRoom.prototype.ban = function(jid, reason, handler_cb, error_cb) {
+    return this.client.ban(this.name, jid, 'outcast', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.member = function(jid, reason, handler_cb, error_cb) {
+    return this.client.member(this.name, jid, 'member', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.revoke = function(jid, reason, handler_cb, error_cb) {
+    return this.client.revoke(this.name, jid, 'none', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.owner = function(jid, reason, handler_cb, error_cb) {
+    return this.client.owner(this.name, jid, 'owner', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.admin = function(jid, reason, handler_cb, error_cb) {
+    return this.client.admin(this.name, jid, 'admin', reason, handler_cb, error_cb);
+  };
+
+  XmppRoom.prototype.changeNick = function(nick) {
+    this.nick = nick;
+    return this.client.changeNick(this.name, nick);
+  };
+
+  XmppRoom.prototype.setStatus = function(show, status) {
+    return this.client.setStatus(this.name, this.nick, show, status);
+  };
+
+  return XmppRoom;
+
+})();
+
+RoomConfig = (function() {
+
+  function RoomConfig(info) {
+    this.parse = __bind(this.parse, this);    if (info != null) this.parse(info);
+  }
+
+  RoomConfig.prototype.parse = function(result) {
+    var attr, attrs, child, field, identity, query, _i, _j, _k, _len, _len2, _len3, _ref;
+    query = result.getElementsByTagName("query")[0].children;
+    this.identities = [];
+    this.features = [];
+    this.x = [];
+    for (_i = 0, _len = query.length; _i < _len; _i++) {
+      child = query[_i];
+      attrs = child.attributes;
+      switch (child.nodeName) {
+        case "identity":
+          identity = {};
+          for (_j = 0, _len2 = attrs.length; _j < _len2; _j++) {
+            attr = attrs[_j];
+            identity[attr.name] = attr.textContent;
+          }
+          this.identities.push(identity);
+          break;
+        case "feature":
+          this.features.push(attrs["var"].textContent);
+          break;
+        case "x":
+          attrs = child.children[0].attributes;
+          if ((!attrs["var"].textContent === 'FORM_TYPE') || (!attrs.type.textContent === 'hidden')) {
+            break;
+          }
+          _ref = child.children;
+          for (_k = 0, _len3 = _ref.length; _k < _len3; _k++) {
+            field = _ref[_k];
+            if (!(!field.attributes.type)) continue;
+            attrs = field.attributes;
+            this.x.push({
+              "var": attrs["var"].textContent,
+              label: attrs.label.textContent || "",
+              value: field.firstChild.textContent || ""
+            });
+          }
+      }
+    }
+    return {
+      "identities": this.identities,
+      "features": this.features,
+      "x": this.x
+    };
+  };
+
+  return RoomConfig;
+
+})();
