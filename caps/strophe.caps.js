@@ -187,7 +187,8 @@
 	_handleDiscoInfoReply: function(stanza) {
 		var query = stanza.querySelector('query'),
 			node = query.getAttribute('node').split('#'),
-			ver = node[1];
+			ver = node[1],
+			from = stanza.getAttribute('from');
 		if (!this._knownCapabilities[ver]) {
 			var childNodes = query.childNodes,
 				childNodesLen = childNodes.length;
@@ -196,7 +197,7 @@
 				var node = childNodes[i];
 				this._knownCapabilities[ver].push({name: node.nodeName, attributes: node.attributes});
 			}
-			this._jidVerIndex[stanza.getAttribute('from')] = ver;
+			this._jidVerIndex[from] = ver;
 		} else if (!this._jidVerIndex[from] || !this._jidVerIndex[from] !== ver) {
 			this._jidVerIndex[from] = ver;
 		}
