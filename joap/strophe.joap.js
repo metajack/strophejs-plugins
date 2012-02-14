@@ -1,5 +1,5 @@
 (function() {
-  var JOAPError, JOAP_NS, Server, addXMLAttributes, conn, onError, parseAttributeDescription, parseAttributes, parseDesc, parseDescription, parseMethodDescription, parseNewAddress, parseSearch,
+  var JOAPError, JOAP_NS, Server, add, addXMLAttributes, conn, createIq, del, describe, edit, getAddress, onError, parseAttributeDescription, parseAttributes, parseDesc, parseDescription, parseMethodDescription, parseNewAddress, parseSearch, read, search, sendRequest,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -132,6 +132,99 @@
     return result;
   };
 
+  getAddress = function(clazz, service, instance) {
+    var addr, _ref;
+    addr = "";
+    if (typeof clazz === "string" ? clazz : void 0) addr += "" + clazz + "@";
+    addr += service;
+    if (((_ref = typeof instance) === "string" || _ref === "number")) {
+      addr += "/" + instance;
+    }
+    return addr;
+  };
+
+  createIq = function(type, to) {
+    var iqType;
+    iqType = "set";
+    if ((type === "read" || type === "search" || type === "describe")) {
+      iqType = "get";
+    }
+    return $iq({
+      to: to,
+      type: iqType
+    }).c(type, {
+      xmlns: JOAP_NS
+    });
+  };
+
+  sendRequest = function(type, to, cb, opt) {
+    var iq, success;
+    if (opt == null) opt = {};
+    iq = createIq(type, to);
+    if (typeof opt.beforeSend === "function") opt.beforeSend(iq);
+    success = function(res) {
+      return typeof cb === "function" ? cb(res, null, typeof opt.onResult === "function" ? opt.onResult(res) : void 0) : void 0;
+    };
+    return conn.sendIQ(iq, success, onError(cb));
+  };
+
+  describe = function(id, cb) {
+    return sendRequest("describe", id, cb, {
+      onResult: parseDescription
+    });
+  };
+
+  read = function(instance, limits, cb) {
+    if (typeof limits === "function") cb = limits;
+    return sendRequest("read", instance, cb, {
+      beforeSend: function(iq) {
+        var l, _i, _len, _results;
+        if (limits instanceof Array) {
+          _results = [];
+          for (_i = 0, _len = limits.length; _i < _len; _i++) {
+            l = limits[_i];
+            _results.push(iq.c("name").t(l).up());
+          }
+          return _results;
+        }
+      },
+      onResult: parseAttributes
+    });
+  };
+
+  add = function(clazz, attrs, cb) {
+    if (typeof attrs === "function") cb = attrs;
+    return sendRequest("add", clazz, cb, {
+      beforeSend: function(iq) {
+        return addXMLAttributes(iq, attrs);
+      },
+      onResult: parseNewAddress
+    });
+  };
+
+  edit = function(instance, attrs, cb) {
+    return sendRequest("edit", instance, cb, {
+      beforeSend: function(iq) {
+        return addXMLAttributes(iq, attrs);
+      },
+      onResult: parseAttributes
+    });
+  };
+
+  search = function(clazz, attrs, cb) {
+    if (typeof attrs === "function") cb = attrs;
+    return sendRequest("search", clazz, cb, {
+      beforeSend: function(iq) {
+        return addXMLAttributes(iq, attrs);
+      },
+      onResult: parseSearch
+    });
+  };
+
+  del = function(instance, cb) {
+    return sendRequest("delete", instance, cb);
+  };
+
   JOAPError = (function(_super) {
 
     __extends(JOAPError, _super);
@@ -152,42 +245,6 @@
       this.service = service;
     }
 
-    Server.prototype.sendRequest = function(type, clazz, cb, opt) {
-      var iq, success;
-      if (opt == null) opt = {};
-      iq = this.createIq(type, clazz, opt.instance);
-      if (typeof opt.beforeSend === "function") opt.beforeSend(iq);
-      success = function(res) {
-        return typeof cb === "function" ? cb(res, null, typeof opt.onResult === "function" ? opt.onResult(res) : void 0) : void 0;
-      };
-      return conn.sendIQ(iq, success, onError(cb));
-    };
-
-    Server.prototype.createIq = function(type, clazz, instance) {
-      var iqType;
-      iqType = "set";
-      if ((type === "read" || type === "search" || type === "describe")) {
-        iqType = "get";
-      }
-      return $iq({
-        to: this.getAddress(clazz, instance),
-        type: iqType
-      }).c(type, {
-        xmlns: JOAP_NS
-      });
-    };
-
-    Server.prototype.getAddress = function(clazz, instance) {
-      var addr, _ref;
-      addr = "";
-      if (typeof clazz === "string" ? clazz : void 0) addr += "" + clazz + "@";
-      addr += this.service;
-      if (((_ref = typeof instance) === "string" || _ref === "number")) {
-        addr += "/" + instance;
-      }
-      return addr;
-    };
-
     Server.prototype.describe = function(clazz, instance, cb) {
       if (typeof clazz === "function") {
         cb = clazz;
@@ -196,65 +253,27 @@
         cb = instance;
         instance = null;
       }
-      return this.sendRequest("describe", clazz, cb, {
-        instance: instance,
-        onResult: parseDescription
-      });
+      return describe(getAddress(clazz, this.service, instance), cb);
     };
 
     Server.prototype.add = function(clazz, attrs, cb) {
-      if (typeof attrs === "function") cb = attrs;
-      return this.sendRequest("add", clazz, cb, {
-        beforeSend: function(iq) {
-          return addXMLAttributes(iq, attrs);
-        },
-        onResult: parseNewAddress
-      });
+      return add(getAddress(clazz, this.service), attrs, cb);
     };
 
     Server.prototype.read = function(clazz, instance, limits, cb) {
-      if (typeof limits === "function") cb = limits;
-      return this.sendRequest("read", clazz, cb, {
-        instance: instance,
-        beforeSend: function(iq) {
-          var l, _i, _len, _results;
-          if (limits instanceof Array) {
-            _results = [];
-            for (_i = 0, _len = limits.length; _i < _len; _i++) {
-              l = limits[_i];
-              _results.push(iq.c("name").t(l).up());
-            }
-            return _results;
-          }
-        },
-        onResult: parseAttributes
-      });
+      return read(getAddress(clazz, this.service, instance), limits, cb);
     };
 
     Server.prototype.edit = function(clazz, instance, attrs, cb) {
-      return this.sendRequest("edit", clazz, cb, {
-        instance: instance,
-        beforeSend: function(iq) {
-          return addXMLAttributes(iq, attrs);
-        },
-        onResult: parseAttributes
-      });
+      return edit(getAddress(clazz, this.service, instance), attrs, cb);
     };
 
     Server.prototype["delete"] = function(clazz, instance, cb) {
-      return this.sendRequest("delete", clazz, cb, {
-        instance: instance
-      });
+      return del(getAddress(clazz, this.service, instance), cb);
     };
 
     Server.prototype.search = function(clazz, attrs, cb) {
-      if (typeof attrs === "function") cb = attrs;
-      return this.sendRequest("search", clazz, cb, {
-        beforeSend: function(iq) {
-          return addXMLAttributes(iq, attrs);
-        },
-        onResult: parseSearch
-      });
+      return search(getAddress(clazz, this.service), attrs, cb);
     };
 
     return Server;
@@ -279,6 +298,12 @@
     return {
       init: init,
       getObjectServer: getObjectServer,
+      describe: describe,
+      add: add,
+      read: read,
+      edit: edit,
+      "delete": del,
+      search: search,
       JOAPError: JOAPError
     };
   })());

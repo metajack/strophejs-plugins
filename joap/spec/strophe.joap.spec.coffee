@@ -137,6 +137,14 @@ describe "strophe.joap loading", ->
           server.add "User", {name: "foo", pass: 2}, (iq, err, instanceId) ->
             (expect instanceId).toEqual "User@example.org/markus"
 
+        it "can add a new instance addressed by a full JID", ->
+          spyon @c, "send", (req) =>
+            res = $iq({type:'result', id: req.attr 'id'})
+              .c("add").c("newAddress").t("User@service.example.org/markus")
+            @c._dataRecv createRequest(res)
+          @c.joap.add "User@service.example.org", {name: "foo", pass: 2}, (iq, err, instanceId) ->
+            (expect instanceId).toEqual "User@service.example.org/markus"
+
         it "can edit an instance", ->
           spyon @c, "send", (iq) =>
             (expect iq.attr "to").toEqual "User@service.example.com/myId"
@@ -152,12 +160,27 @@ describe "strophe.joap loading", ->
             (expect typeof iq).toEqual "object"
             (expect err).toBeFalsy()
 
+        it "can edit an instance addressed by a full JID", ->
+          spyon @c, "send", (iq) =>
+            (expect iq.attr "to").toEqual "User@service.example.com/myId"
+            res = $iq({type:'result', id: iq.attr 'id'}).c("edit")
+            @c._dataRecv createRequest(res)
+
+          @c.joap.edit "User@service.example.com/myId",{ name:"y", age: 66 },(iq, err) ->
+            (expect typeof iq).toEqual "object"
+            (expect err).toBeFalsy()
+
         it "can read an instance", ->
           spyon @c, "sendIQ", (iq) ->
             (expect iq.attr "to").toEqual "User@service.example.com/myId"
             (expect iq.attr "type").toEqual "get"
             (expect ($ "read",iq).attr "xmlns").toEqual "jabber:iq:joap"
           server.read "User", "myId", (iq, err, obj) ->
+
+        it "can read from a full JID", ->
+          spyon @c, "sendIQ", (iq) ->
+            (expect iq.attr "to").toEqual "User@service.example.com/myId"
+          @c.joap.read "User@service.example.com/myId", (iq, err, obj) ->
 
         it "can parse the read attributes", ->
           spyon @c, "send", (req) =>
@@ -199,6 +222,16 @@ describe "strophe.joap loading", ->
             (expect typeof iq).toEqual "object"
             (expect err).toBeFalsy()
 
+        it "can delete an instance addressed by a full JID", ->
+          spyon @c, "send", (iq) =>
+            (expect iq.attr "to").toEqual "User@service.example.com/myId"
+            res = $iq({type:'result', id: iq.attr 'id'}).c("delete")
+            @c._dataRecv createRequest(res)
+
+          @c.joap.delete "User@service.example.com/myId", (iq, err) ->
+            (expect typeof iq).toEqual "object"
+            (expect err).toBeFalsy()
+
         it "can search instances", ->
           spyon @c, "send", (iq) =>
             (expect iq.attr "to").toEqual "User@service.example.com"
@@ -214,7 +247,18 @@ describe "strophe.joap loading", ->
             (expect result[0]).toEqual "Class@service.example.com/id0"
             (expect result[1]).toEqual "Class@service.example.com/id2"
 
-        it "can send a describe request a class", ->
+        it "can search instances addressed by a full JID", ->
+          spyon @c, "send", (iq) =>
+            (expect iq.attr "to").toEqual "User@service.example.com"
+            res = $iq({type:'result', id: iq.attr 'id'}).c("search")
+              .c("item").t("Class@service.example.com/id0").up()
+            @c._dataRecv createRequest(res)
+
+          @c.joap.search "User@service.example.com", (iq, err, result) ->
+            (expect typeof iq).toEqual "object"
+            (expect result[0]).toEqual "Class@service.example.com/id0"
+
+        it "can send a describe request to a class", ->
           spyon @c, "send", (iq) =>
             (expect iq.attr "to").toEqual "Class@service.example.com"
             (expect iq.attr "type").toEqual "get"
@@ -246,6 +290,11 @@ describe "strophe.joap loading", ->
           spyon @c, "send", (iq) =>
             (expect iq.attr "to").toEqual "service.example.com"
           server.describe (iq, err, result) ->
+
+        it "can send a describe request to the server", ->
+          spyon @c, "send", (iq) =>
+            (expect iq.attr "to").toEqual "service.example.com"
+          @c.joap.describe "service.example.com" ,(iq, err, result) ->
 
         it "can send a describe requests to an instance", ->
           spyon @c, "send", (iq) =>
