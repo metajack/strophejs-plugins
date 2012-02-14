@@ -45,7 +45,7 @@ describe "strophe.joap loading", ->
       req
 
     jsdom.env
-      html: 'http://news.ycombinator.com/'
+      html: '<html><body></body></html>'
       src: [ jquery, strophe, rpc, joap ]
       done: (errors, w) ->
         Strophe = w.Strophe
@@ -165,7 +165,7 @@ describe "strophe.joap loading", ->
               .c("read")
                 .c("attribute")
                   .c("name").t("prop").up()
-                  .c("value").c("int").t(5).up().up()
+                  .c("value").c("int").t('5').up().up()
                 .c("attribute")
                   .c("name").t("obj").up()
                   .c("value").c("struct")
@@ -177,7 +177,7 @@ describe "strophe.joap loading", ->
                   .c("value")
                     .c("array")
                       .c("data")
-                        .c("value").c("boolean").t(1).up().up()
+                        .c("value").c("boolean").t('1').up().up()
                         .c("value").c("double").t("-0.5")
 
             @c._dataRecv createRequest(res)
