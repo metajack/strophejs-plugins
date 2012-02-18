@@ -536,7 +536,7 @@ Field = (function() {
             type = "text-private";
             break;
           case "text":
-            r = el.attr("readonly" === "readonly");
+            r = el.attr("readonly") === "readonly";
             if (r) {
               type = "fixed";
             } else {
