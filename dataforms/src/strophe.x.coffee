@@ -330,7 +330,7 @@ class Field
           when "password"
             type = "text-private"
           when "text"
-            r = (el.attr "readonly" is "readonly")
+            r = el.attr("readonly") is "readonly"
             if r
               type = "fixed"
             else
