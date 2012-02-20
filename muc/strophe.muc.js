@@ -369,7 +369,7 @@ Strophe.addConnectionPlugin('muc', {
       type: "set"
     }).c("query", {
       xmlns: Strophe.NS.MUC_ADMIN
-    }).cnode(item);
+    }).cnode(item.node);
     if (reason != null) iq.c("reason", reason);
     return this._connection.sendIQ(iq.tree(), handler_cb, error_cb);
   },

@@ -347,7 +347,7 @@ Strophe.addConnectionPlugin 'muc'
       to: room
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_ADMIN)
-    .cnode(item)
+    .cnode(item.node)
 
     iq.c("reason", reason) if reason?
 
