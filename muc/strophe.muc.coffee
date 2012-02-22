@@ -560,7 +560,8 @@ class XmppRoom
   _parsePresence: (pres) ->
     data = {}
     a = pres.attributes
-    date.nick = Strophe.getResourceFromJid a.from.textContent
+    data.nick = Strophe.getResourceFromJid a.from.textContent
+    data.type = a.type?.textContent or null
     data.states = []
     for c in pres.children
       switch c.nodeName
@@ -570,16 +571,18 @@ class XmppRoom
           data.show = c.textContent or null
         when "x"
           a = c.attributes
-          if a.xmlns is Strophe.NS.MUC_USER
+          if a.xmlns?.textContent is Strophe.NS.MUC_USER
             for c2 in c.children
               switch c2.nodeName
                 when "item"
                   a = c2.attributes
-                  data.affiliation = a.affiliation or null
-                  data.role = a.role or null
-                  data.jid = a.jid or null
+                  data.affiliation = a.affiliation?.textContent or null
+                  data.role = a.role?.textContent or null
+                  data.jid = a.jid?.textContent or null
+                  data.newnick = a.nick?.textContent or null
                 when "status"
-                  data.states.push c2.code if c2.code
+                  if c2.attributes.code
+                    data.states.push c2.attributes.code.textContent
     data
 
 class RoomConfig

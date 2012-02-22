@@ -621,14 +621,15 @@ XmppRoom = (function() {
   };
 
   XmppRoom.prototype._parsePresence = function(pres) {
-    var a, c, c2, data, _i, _j, _len, _len2, _ref, _ref2;
+    var a, c, c2, data, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
     data = {};
     a = pres.attributes;
-    date.nick = Strophe.getResourceFromJid(a.from.textContent);
+    data.nick = Strophe.getResourceFromJid(a.from.textContent);
+    data.type = ((_ref = a.type) != null ? _ref.textContent : void 0) || null;
     data.states = [];
-    _ref = pres.children;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      c = _ref[_i];
+    _ref2 = pres.children;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      c = _ref2[_i];
       switch (c.nodeName) {
         case "status":
           data.status = c.textContent || null;
@@ -638,19 +639,22 @@ XmppRoom = (function() {
           break;
         case "x":
           a = c.attributes;
-          if (a.xmlns === Strophe.NS.MUC_USER) {
-            _ref2 = c.children;
-            for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
-              c2 = _ref2[_j];
+          if (((_ref3 = a.xmlns) != null ? _ref3.textContent : void 0) === Strophe.NS.MUC_USER) {
+            _ref4 = c.children;
+            for (_j = 0, _len2 = _ref4.length; _j < _len2; _j++) {
+              c2 = _ref4[_j];
               switch (c2.nodeName) {
                 case "item":
                   a = c2.attributes;
-                  data.affiliation = a.affiliation || null;
-                  data.role = a.role || null;
-                  data.jid = a.jid || null;
+                  data.affiliation = ((_ref5 = a.affiliation) != null ? _ref5.textContent : void 0) || null;
+                  data.role = ((_ref6 = a.role) != null ? _ref6.textContent : void 0) || null;
+                  data.jid = ((_ref7 = a.jid) != null ? _ref7.textContent : void 0) || null;
+                  data.newnick = ((_ref8 = a.nick) != null ? _ref8.textContent : void 0) || null;
                   break;
                 case "status":
-                  if (c2.code) data.states.push(c2.code);
+                  if (c2.attributes.code) {
+                    data.states.push(c2.attributes.code.textContent);
+                  }
               }
             }
           }
