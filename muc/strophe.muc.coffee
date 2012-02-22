@@ -57,8 +57,7 @@ Strophe.addConnectionPlugin 'muc'
           # filter on room name
           if roomname is room
             return msg_handler_cb stanza
-          else
-            return true
+          return true
         null
         "message" )
 
@@ -227,7 +226,7 @@ Strophe.addConnectionPlugin 'muc'
   id - the unique id used to send the info request
   ###
   queryOccupants: (room, success_cb, error_cb) ->
-    attrs = {xmlns: Strophe.NS.DISCO_ITEMS};
+    attrs = xmlns: Strophe.NS.DISCO_ITEMS
     info = $iq(
       from:this._connection.jid
       to:room
@@ -436,8 +435,8 @@ Strophe.addConnectionPlugin 'muc'
     room_nick = @test_append_nick room, user
     presence = $pres(
       from: @_connection.jid
-      to: room_nick )
-    .c("x", xmlns: Strophe.NS.MUC)
+      to: room_nick
+      id: @_connection.getUniqueId() )
     @_connection.send presence.tree()
 
   ###Function
@@ -481,7 +480,7 @@ class XmppRoom
     @roster = new Array()
 
   join: (msg_handler_cb, pres_handler_cb) ->
-    @client.join(@name, @nick, null, null, password) if @client.rooms[@name]?
+    @client.join(@name, @nick, null, null, @password) if @client.rooms[@name]?
 
   leave: (handler_cb, message) ->
     @client.leave @name, @nick, handler_cb, message
@@ -533,7 +532,9 @@ class XmppRoom
     @client.deop @name, nick, 'participant', reason, handler_cb, error_cb
 
   modifyAffiliation: (jid, affiliation, reason, success_cb, error_cb) ->
-    @client.modifyAffiliation @name, jid, affiliation, reason, success_cb, error_cb
+    @client.modifyAffiliation @name,
+      jid, affiliation, reason
+      success_cb, error_cb
 
   ban: (jid, reason, handler_cb, error_cb) ->
     @client.ban @name, jid, 'outcast', reason, handler_cb, error_cb
@@ -602,7 +603,9 @@ class RoomConfig
           @features.push attrs.var.textContent
         when "x"
           attrs = child.children[0].attributes
-          break if ((not attrs.var.textContent is 'FORM_TYPE') or (not attrs.type.textContent is 'hidden'))
+          break if (
+            (not attrs.var.textContent is 'FORM_TYPE') or
+            (not attrs.type.textContent is 'hidden') )
           for field in child.children when not field.attributes.type
             attrs = field.attributes
             # @x[attrs.var.textContent.split("#")[1]] =

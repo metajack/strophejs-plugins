@@ -53,11 +53,8 @@ Strophe.addConnectionPlugin('muc', {
         var from, roomname;
         from = stanza.getAttribute('from');
         roomname = from.split("/")[0];
-        if (roomname === room) {
-          return msg_handler_cb(stanza);
-        } else {
-          return true;
-        }
+        if (roomname === room) return msg_handler_cb(stanza);
+        return true;
       }, null, "message");
     }
     if (pres_handler_cb != null) {
@@ -459,9 +456,8 @@ Strophe.addConnectionPlugin('muc', {
     room_nick = this.test_append_nick(room, user);
     presence = $pres({
       from: this._connection.jid,
-      to: room_nick
-    }).c("x", {
-      xmlns: Strophe.NS.MUC
+      to: room_nick,
+      id: this._connection.getUniqueId()
     });
     return this._connection.send(presence.tree());
   },
@@ -522,7 +518,7 @@ XmppRoom = (function() {
 
   XmppRoom.prototype.join = function(msg_handler_cb, pres_handler_cb) {
     if (this.client.rooms[this.name] != null) {
-      return this.client.join(this.name, this.nick, null, null, password);
+      return this.client.join(this.name, this.nick, null, null, this.password);
     }
   };
 
