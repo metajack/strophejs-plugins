@@ -12,8 +12,6 @@ var Occupant, RoomConfig, XmppRoom,
 
 Strophe.addConnectionPlugin('muc', {
   _connection: null,
-  _roomMessageHandlers: [],
-  _roomPresenceHandlers: [],
   rooms: [],
   /*Function
   Initialize the MUC plugin. Sets the correct connection object and
@@ -21,6 +19,7 @@ Strophe.addConnectionPlugin('muc', {
   */
   init: function(conn) {
     this._connection = conn;
+    this._muc_handler = null;
     Strophe.addNamespace('MUC_OWNER', Strophe.NS.MUC + "#owner");
     Strophe.addNamespace('MUC_ADMIN', Strophe.NS.MUC + "#admin");
     Strophe.addNamespace('MUC_USER', Strophe.NS.MUC + "#user");
@@ -39,7 +38,8 @@ Strophe.addConnectionPlugin('muc', {
   rooms only)
   */
   join: function(room, nick, msg_handler_cb, pres_handler_cb, password) {
-    var msg, room_nick, _base;
+    var msg, room_nick, _base,
+      _this = this;
     room_nick = this.test_append_nick(room, nick);
     msg = $pres({
       from: this._connection.jid,
@@ -48,34 +48,41 @@ Strophe.addConnectionPlugin('muc', {
       xmlns: Strophe.NS.MUC
     });
     if (password != null) msg.cnode(Strophe.xmlElement("password", [], password));
-    if (msg_handler_cb != null) {
-      this._roomMessageHandlers[room] = this._connection.addHandler(function(stanza) {
-        var from, roomname;
+    if (this._muc_handler == null) {
+      this._muc_handler = conn.addHandler(function(stanza) {
+        var from, handler, handlers, id, roomname, x, xmlns, xquery, _i, _len;
         from = stanza.getAttribute('from');
         roomname = from.split("/")[0];
-        if (roomname === room) return msg_handler_cb(stanza);
-        return true;
-      }, null, "message");
-    }
-    if (pres_handler_cb != null) {
-      this._roomPresenceHandlers[room] = this._connection.addHandler(function(stanza) {
-        var x, xmlns, xquery, _i, _len;
-        xquery = stanza.getElementsByTagName("x");
-        if (xquery.length > 0) {
-          for (_i = 0, _len = xquery.length; _i < _len; _i++) {
-            x = xquery[_i];
-            xmlns = x.getAttribute("xmlns");
-            if (xmlns && xmlns.match(Strophe.NS.MUC)) {
-              return pres_handler_cb(stanza);
+        if (!_this.rooms[roomname]) return true;
+        room = _this.rooms[roomname];
+        handlers = {};
+        if (stanza.nodeName === "message") {
+          handlers = room._message_handlers;
+        } else if (stanza.nodeName === "presence") {
+          xquery = stanza.getElementsByTagName("x");
+          if (xquery.length > 0) {
+            for (_i = 0, _len = xquery.length; _i < _len; _i++) {
+              x = xquery[_i];
+              xmlns = x.getAttribute("xmlns");
+              if (xmlns && xmlns.match(Strophe.NS.MUC)) {
+                handlers = room._presence_handlers;
+                break;
+              }
             }
           }
         }
+        for (id in handlers) {
+          handler = handlers[id];
+          if (!handler(stanza, room)) delete handlers[id];
+        }
         return true;
-      }, null, "presence");
+      });
     }
     if ((_base = this.rooms)[room] == null) {
-      _base[room] = new XmppRoom(this, room, nick, this._roomMessageHandlers[room], this._roomPresenceHandlers[room], password);
+      _base[room] = new XmppRoom(this, room, nick, password);
     }
+    if (pres_handler_cb) this.rooms[room].addHandler('presence', pres_handler_cb);
+    if (msg_handler_cb) this.rooms[room].addHandler('message', msg_handler_cb);
     return this._connection.send(msg);
   },
   /*Function
@@ -90,8 +97,11 @@ Strophe.addConnectionPlugin('muc', {
   */
   leave: function(room, nick, handler_cb, exit_msg) {
     var presence, presenceid, room_nick;
-    this._connection.deleteHandler(this._roomMessageHandlers[room]);
-    this._connection.deleteHandler(this._roomPresenceHandlers[room]);
+    delete this.rooms[room];
+    if (this.rooms.length === 0) {
+      this._connection.deleteHandler(this._muc_handler);
+      this._muc_handler = null;
+    }
     room_nick = this.test_append_nick(room, nick);
     presenceid = this._connection.getUniqueId();
     presence = $pres({
@@ -504,16 +514,26 @@ Strophe.addConnectionPlugin('muc', {
 
 XmppRoom = (function() {
 
-  function XmppRoom(client, name, nick, msg_handler_id, pres_handler_id, password) {
+  XmppRoom.prototype.roster = {};
+
+  XmppRoom.prototype._message_handlers = {};
+
+  XmppRoom.prototype._presence_handlers = {};
+
+  XmppRoom.prototype._roster_handlers = {};
+
+  XmppRoom.prototype._handler_ids = 0;
+
+  function XmppRoom(client, name, nick, password) {
     this.client = client;
     this.name = name;
     this.nick = nick;
-    this.msg_handler_id = msg_handler_id;
-    this.pres_handler_id = pres_handler_id;
     this.password = password;
+    this._roomRosterHandler = __bind(this._roomRosterHandler, this);
+    this._addOccupant = __bind(this._addOccupant, this);
     this.name = Strophe.getBareJidFromJid(name);
     this.client.rooms[this.name] = this;
-    this.roster = new Array();
+    this.addHandler('presence', this._roomRosterHandler);
   }
 
   XmppRoom.prototype.join = function(msg_handler_cb, pres_handler_cb) {
@@ -618,6 +638,74 @@ XmppRoom = (function() {
 
   XmppRoom.prototype.setStatus = function(show, status) {
     return this.client.setStatus(this.name, this.nick, show, status);
+  };
+
+  XmppRoom.prototype.addHandler = function(handler_type, handler) {
+    var id;
+    id = this._handler_ids++;
+    switch (handler_type) {
+      case 'presence':
+        this._presence_handlers[id] = handler;
+        break;
+      case 'message':
+        this._message_handlers[id] = handler;
+        break;
+      case 'roster':
+        this._roster_handlers[id] = handler;
+        break;
+      default:
+        this._handler_ids--;
+        return null;
+    }
+    return id;
+  };
+
+  XmppRoom.prototype.removeHandler = function(id) {
+    delete this._presence_handlers[id];
+    delete this._message_handlers[id];
+    return delete this._roster_handlers[id];
+  };
+
+  XmppRoom.prototype._addOccupant = function(data) {
+    var occ;
+    occ = new Occupant(data, this);
+    return this.roster[occ.nick] = occ;
+  };
+
+  XmppRoom.prototype._roomRosterHandler = function(pres) {
+    var data, handler, id, newnick, nick, _ref;
+    data = XmppRoom._parsePresence(pres);
+    nick = data.nick;
+    newnick = data.newnick || null;
+    switch (data.type) {
+      case 'error':
+        return;
+      case 'unavailable':
+        if (newnick) {
+          data.nick = newnick;
+          if (this.roster[nick] && this.roster[newnick]) {
+            this.roster[nick].update(this.roster[newnick]);
+            this.roster[newnick] = this.roster[nick];
+          }
+          if (this.roster[nick] && !this.roster[newnick]) {
+            this.roster[newnick] = this.roster[nick].update(data);
+          }
+        }
+        delete this.roster[nick];
+        break;
+      default:
+        if (this.roster[nick]) {
+          this.roster[nick].update(data);
+        } else {
+          this._addOccupant(data);
+        }
+    }
+    _ref = this._roster_handlers;
+    for (id in _ref) {
+      handler = _ref[id];
+      if (!handler(this.roster, this)) delete this._roster_handlers[id];
+    }
+    return true;
   };
 
   XmppRoom._parsePresence = function(pres) {

@@ -10,8 +10,6 @@
 
 Strophe.addConnectionPlugin 'muc'
   _connection: null
-  _roomMessageHandlers: []
-  _roomPresenceHandlers: []
   rooms: []
 
   ###Function
@@ -20,6 +18,7 @@ Strophe.addConnectionPlugin 'muc'
   ###
   init: (conn) ->
     @_connection = conn
+    @_muc_handler = null
     # extend name space
     #   NS.MUC - XMPP Multi-user chat namespace from XEP 45.
     Strophe.addNamespace 'MUC_OWNER',     Strophe.NS.MUC+"#owner"
@@ -49,39 +48,45 @@ Strophe.addConnectionPlugin 'muc'
     if password?
       msg.cnode Strophe.xmlElement("password", [], password)
 
-    if msg_handler_cb?
-      @_roomMessageHandlers[room] = @_connection.addHandler(
-        (stanza) ->
-          from = stanza.getAttribute 'from'
-          roomname = from.split("/")[0]
-          # filter on room name
-          if roomname is room
-            return msg_handler_cb stanza
-          return true
-        null
-        "message" )
+    # One handler for all rooms that dispatches to room callbacks
+    @_muc_handler ?=  conn.addHandler (stanza) =>
+      from = stanza.getAttribute 'from'
+      roomname = from.split("/")[0]
 
-    if pres_handler_cb?
-      @_roomPresenceHandlers[room] = @_connection.addHandler(
-        (stanza) ->
-          xquery = stanza.getElementsByTagName "x"
-          if xquery.length > 0
-            # Handle only MUC user protocol
-            for x in xquery
-              xmlns = x.getAttribute "xmlns"
-              if xmlns and xmlns.match Strophe.NS.MUC
-                return pres_handler_cb stanza
-          return true
-        null
-        "presence" )
+      # Abort if the stanza is not for a known MUC
+      return true unless @rooms[roomname]
+      room = @rooms[roomname]
+
+      handlers = {}
+
+      #select the right handlers
+      if stanza.nodeName is "message"
+        handlers = room._message_handlers
+      else if stanza.nodeName is "presence"
+        xquery = stanza.getElementsByTagName "x"
+        if xquery.length > 0
+          # Handle only MUC user protocol
+          for x in xquery
+            xmlns = x.getAttribute "xmlns"
+            if xmlns and xmlns.match Strophe.NS.MUC
+              handlers = room._presence_handlers
+              break
+
+      # loop over selected handlers (if any) and remove on false
+      for id, handler of handlers
+        delete handlers[id] unless handler stanza, room
+
+      return true
 
     @rooms[room] ?= new XmppRoom(
       @
       room
       nick
-      @_roomMessageHandlers[room]
-      @_roomPresenceHandlers[room]
       password )
+
+    @rooms[room].addHandler 'presence', pres_handler_cb if pres_handler_cb
+    @rooms[room].addHandler 'message', msg_handler_cb if msg_handler_cb
+
 
     @_connection.send msg
 
@@ -96,8 +101,10 @@ Strophe.addConnectionPlugin 'muc'
   iqid - The unique id for the room leave.
   ###
   leave: (room, nick, handler_cb, exit_msg) ->
-    @_connection.deleteHandler @_roomMessageHandlers[room]
-    @_connection.deleteHandler @_roomPresenceHandlers[room]
+    delete @rooms[room]
+    if @rooms.length is 0
+      @_connection.deleteHandler @_muc_handler
+      @_muc_handler = null
     room_nick = @test_append_nick room, nick
     presenceid = @_connection.getUniqueId()
     presence = $pres (
@@ -474,10 +481,17 @@ Strophe.addConnectionPlugin 'muc'
     room + if nick? then "/#{Strophe.escapeNode nick}" else ""
 
 class XmppRoom
-  constructor: (@client, @name, @nick, @msg_handler_id, @pres_handler_id, @password) ->
+
+  roster: {}
+  _message_handlers: {}
+  _presence_handlers: {}
+  _roster_handlers: {}
+  _handler_ids: 0
+
+  constructor: (@client, @name, @nick, @password) ->
     @name = Strophe.getBareJidFromJid name
     @client.rooms[@name] = @
-    @roster = new Array()
+    @addHandler 'presence', @_roomRosterHandler
 
   join: (msg_handler_cb, pres_handler_cb) ->
     unless @client.rooms[@name]
@@ -557,6 +571,61 @@ class XmppRoom
 
   setStatus: (show, status) ->
     @client.setStatus @name, @nick, show, status
+
+  addHandler: (handler_type, handler) ->
+    id = @_handler_ids++
+    switch handler_type
+      when 'presence'
+        @_presence_handlers[id] = handler
+      when 'message'
+        @_message_handlers[id] = handler
+      when 'roster'
+        @_roster_handlers[id] = handler
+      else
+        @_handler_ids--
+        return null
+    id
+
+  removeHandler: (id) ->
+    delete @_presence_handlers[id]
+    delete @_message_handlers[id]
+    delete @_roster_handlers[id]
+
+  _addOccupant: (data) =>
+    occ = new Occupant data, @
+    @roster[occ.nick] = occ
+
+  _roomRosterHandler: (pres) =>
+    data = XmppRoom._parsePresence pres
+    nick = data.nick
+    newnick = data.newnick or null
+    switch data.type
+      when 'error' then return
+      when 'unavailable'
+        if newnick
+          data.nick = newnick
+          # If both Occupant Instances exist, switch the new one
+          # with the old renamed one
+          if @roster[nick] and @roster[newnick]
+            @roster[nick].update @roster[newnick]
+            @roster[newnick] = @roster[nick]
+          # If the renamed Occupant doesn't exist yet but the old one does,
+          # let the new one be the Same instance
+          if @roster[nick] and not @roster[newnick]
+            @roster[newnick] = @roster[nick].update data
+          # If the old Occupant is already deleted, do nothing
+          # unless @roster[newnick]
+          #   tmp_occ = @roster[newnick]
+          #   @roster[newnick].update(data).update(tmp_occ)
+        delete @roster[nick]
+      else
+        if @roster[nick]
+          @roster[nick].update data
+        else
+          @_addOccupant data
+    for id, handler of @_roster_handlers
+      delete @_roster_handlers[id] unless handler @roster, @
+    true
 
   @_parsePresence: (pres) ->
     data = {}
