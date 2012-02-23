@@ -13,7 +13,7 @@ Strophe.addConnectionPlugin 'muc'
   _roomMessageHandlers: []
   _roomPresenceHandlers: []
   rooms: []
-  # The plugin must have the init function
+
   ###Function
   Initialize the MUC plugin. Sets the correct connection object and
   extends the namesace.
@@ -480,7 +480,8 @@ class XmppRoom
     @roster = new Array()
 
   join: (msg_handler_cb, pres_handler_cb) ->
-    @client.join(@name, @nick, null, null, @password) if @client.rooms[@name]?
+    unless @client.rooms[@name]
+      @client.join(@name, @nick, msg_handler_cb, pres_handler_cb, @password)
 
   leave: (handler_cb, message) ->
     @client.leave @name, @nick, handler_cb, message
@@ -557,7 +558,7 @@ class XmppRoom
   setStatus: (show, status) ->
     @client.setStatus @name, @nick, show, status
 
-  _parsePresence: (pres) ->
+  @_parsePresence: (pres) ->
     data = {}
     a = pres.attributes
     data.nick = Strophe.getResourceFromJid a.from.textContent
@@ -611,7 +612,6 @@ class RoomConfig
             (not attrs.type.textContent is 'hidden') )
           for field in child.children when not field.attributes.type
             attrs = field.attributes
-            # @x[attrs.var.textContent.split("#")[1]] =
             @x.push (
               var: attrs.var.textContent
               label: attrs.label.textContent or ""

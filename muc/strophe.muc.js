@@ -517,8 +517,8 @@ XmppRoom = (function() {
   }
 
   XmppRoom.prototype.join = function(msg_handler_cb, pres_handler_cb) {
-    if (this.client.rooms[this.name] != null) {
-      return this.client.join(this.name, this.nick, null, null, this.password);
+    if (!this.client.rooms[this.name]) {
+      return this.client.join(this.name, this.nick, msg_handler_cb, pres_handler_cb, this.password);
     }
   };
 
@@ -620,7 +620,7 @@ XmppRoom = (function() {
     return this.client.setStatus(this.name, this.nick, show, status);
   };
 
-  XmppRoom.prototype._parsePresence = function(pres) {
+  XmppRoom._parsePresence = function(pres) {
     var a, c, c2, data, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
     data = {};
     a = pres.attributes;
