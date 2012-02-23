@@ -568,23 +568,23 @@ XmppRoom = (function() {
   };
 
   XmppRoom.prototype.kick = function(nick, reason, handler_cb, error_cb) {
-    return this.client.kick(this.name, nick, 'none', reason, handler_cb, error_cb);
+    return this.client.kick(this.name, nick, reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.voice = function(nick, reason, handler_cb, error_cb) {
-    return this.client.voice(this.name, nick, 'participant', reason, handler_cb, error_cb);
+    return this.client.voice(this.name, nick, reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.mute = function(nick, reason, handler_cb, error_cb) {
-    return this.client.mute(this.name, nick, 'visitor', reason, handler_cb, error_cb);
+    return this.client.mute(this.name, nick, reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.op = function(nick, reason, handler_cb, error_cb) {
-    return this.client.op(this.name, nick, 'moderator', reason, handler_cb, error_cb);
+    return this.client.op(this.name, nick, reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.deop = function(nick, reason, handler_cb, error_cb) {
-    return this.client.deop(this.name, nick, 'participant', reason, handler_cb, error_cb);
+    return this.client.deop(this.name, nick, reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.modifyAffiliation = function(jid, affiliation, reason, success_cb, error_cb) {
@@ -592,23 +592,23 @@ XmppRoom = (function() {
   };
 
   XmppRoom.prototype.ban = function(jid, reason, handler_cb, error_cb) {
-    return this.client.ban(this.name, jid, 'outcast', reason, handler_cb, error_cb);
+    return this.client.ban(this.name, jid, reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.member = function(jid, reason, handler_cb, error_cb) {
-    return this.client.member(this.name, jid, 'member', reason, handler_cb, error_cb);
+    return this.client.member(this.name, jid, reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.revoke = function(jid, reason, handler_cb, error_cb) {
-    return this.client.revoke(this.name, jid, 'none', reason, handler_cb, error_cb);
+    return this.client.revoke(this.name, jid, reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.owner = function(jid, reason, handler_cb, error_cb) {
-    return this.client.owner(this.name, jid, 'owner', reason, handler_cb, error_cb);
+    return this.client.owner(this.name, jid, reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.admin = function(jid, reason, handler_cb, error_cb) {
-    return this.client.admin(this.name, jid, 'admin', reason, handler_cb, error_cb);
+    return this.client.admin(this.name, jid, reason, handler_cb, error_cb);
   };
 
   XmppRoom.prototype.changeNick = function(nick) {
@@ -728,6 +728,18 @@ Occupant = (function() {
   function Occupant(nick, room) {
     this.nick = nick;
     this.room = room;
+    this.admin = __bind(this.admin, this);
+    this.owner = __bind(this.owner, this);
+    this.revoke = __bind(this.revoke, this);
+    this.member = __bind(this.member, this);
+    this.ban = __bind(this.ban, this);
+    this.modifyAffiliation = __bind(this.modifyAffiliation, this);
+    this.deop = __bind(this.deop, this);
+    this.op = __bind(this.op, this);
+    this.mute = __bind(this.mute, this);
+    this.voice = __bind(this.voice, this);
+    this.kick = __bind(this.kick, this);
+    this.modifyRole = __bind(this.modifyRole, this);
   }
 
   Occupant.prototype.modifyRole = function(role, reason, success_cb, error_cb) {
@@ -735,23 +747,23 @@ Occupant = (function() {
   };
 
   Occupant.prototype.kick = function(reason, handler_cb, error_cb) {
-    return this.room.kick(this.nick, 'none', reason, handler_cb, error_cb);
+    return this.room.kick(this.nick, reason, handler_cb, error_cb);
   };
 
   Occupant.prototype.voice = function(reason, handler_cb, error_cb) {
-    return this.room.voice(this.nick, 'participant', reason, handler_cb, error_cb);
+    return this.room.voice(this.nick, reason, handler_cb, error_cb);
   };
 
   Occupant.prototype.mute = function(reason, handler_cb, error_cb) {
-    return this.room.mute(this.nick, 'visitor', reason, handler_cb, error_cb);
+    return this.room.mute(this.nick, reason, handler_cb, error_cb);
   };
 
   Occupant.prototype.op = function(reason, handler_cb, error_cb) {
-    return this.room.op(this.nick, 'moderator', reason, handler_cb, error_cb);
+    return this.room.op(this.nick, reason, handler_cb, error_cb);
   };
 
   Occupant.prototype.deop = function(reason, handler_cb, error_cb) {
-    return this.room.deop(this.nick, 'participant', reason, handler_cb, error_cb);
+    return this.room.deop(this.nick, reason, handler_cb, error_cb);
   };
 
   Occupant.prototype.modifyAffiliation = function(affiliation, reason, success_cb, error_cb) {
@@ -759,23 +771,23 @@ Occupant = (function() {
   };
 
   Occupant.prototype.ban = function(reason, handler_cb, error_cb) {
-    return this.room.ban(this.jid, 'outcast', reason, handler_cb, error_cb);
+    return this.room.ban(this.jid, reason, handler_cb, error_cb);
   };
 
   Occupant.prototype.member = function(reason, handler_cb, error_cb) {
-    return this.room.member(this.jid, 'member', reason, handler_cb, error_cb);
+    return this.room.member(this.jid, reason, handler_cb, error_cb);
   };
 
   Occupant.prototype.revoke = function(reason, handler_cb, error_cb) {
-    return this.room.revoke(this.jid, 'none', reason, handler_cb, error_cb);
+    return this.room.revoke(this.jid, reason, handler_cb, error_cb);
   };
 
   Occupant.prototype.owner = function(reason, handler_cb, error_cb) {
-    return this.room.owner(this.jid, 'owner', reason, handler_cb, error_cb);
+    return this.room.owner(this.jid, reason, handler_cb, error_cb);
   };
 
   Occupant.prototype.admin = function(reason, handler_cb, error_cb) {
-    return this.room.admin(this.jid, 'admin', reason, handler_cb, error_cb);
+    return this.room.admin(this.jid, reason, handler_cb, error_cb);
   };
 
   Occupant.prototype.update = function(data) {

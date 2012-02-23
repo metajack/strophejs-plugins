@@ -517,19 +517,19 @@ class XmppRoom
     @client.modifyRole @name, nick, role, reason, success_cb, error_cb
 
   kick: (nick, reason, handler_cb, error_cb) ->
-    @client.kick @name, nick, 'none', reason, handler_cb, error_cb
+    @client.kick @name, nick, reason, handler_cb, error_cb
 
   voice: (nick, reason, handler_cb, error_cb) ->
-    @client.voice @name, nick, 'participant', reason, handler_cb, error_cb
+    @client.voice @name, nick, reason, handler_cb, error_cb
 
   mute: (nick, reason, handler_cb, error_cb) ->
-    @client.mute @name, nick, 'visitor', reason, handler_cb, error_cb
+    @client.mute @name, nick, reason, handler_cb, error_cb
 
   op: (nick, reason, handler_cb, error_cb) ->
-    @client.op @name, nick, 'moderator', reason, handler_cb, error_cb
+    @client.op @name, nick, reason, handler_cb, error_cb
 
   deop: (nick, reason, handler_cb, error_cb) ->
-    @client.deop @name, nick, 'participant', reason, handler_cb, error_cb
+    @client.deop @name, nick, reason, handler_cb, error_cb
 
   modifyAffiliation: (jid, affiliation, reason, success_cb, error_cb) ->
     @client.modifyAffiliation @name,
@@ -537,19 +537,19 @@ class XmppRoom
       success_cb, error_cb
 
   ban: (jid, reason, handler_cb, error_cb) ->
-    @client.ban @name, jid, 'outcast', reason, handler_cb, error_cb
+    @client.ban @name, jid, reason, handler_cb, error_cb
 
   member: (jid, reason, handler_cb, error_cb) ->
-    @client.member @name, jid, 'member', reason, handler_cb, error_cb
+    @client.member @name, jid, reason, handler_cb, error_cb
 
   revoke: (jid, reason, handler_cb, error_cb) ->
-    @client.revoke @name, jid, 'none', reason, handler_cb, error_cb
+    @client.revoke @name, jid, reason, handler_cb, error_cb
 
   owner: (jid, reason, handler_cb, error_cb) ->
-    @client.owner @name, jid, 'owner', reason, handler_cb, error_cb
+    @client.owner @name, jid, reason, handler_cb, error_cb
 
   admin: (jid, reason, handler_cb, error_cb) ->
-    @client.admin @name, jid, 'admin', reason, handler_cb, error_cb
+    @client.admin @name, jid, reason, handler_cb, error_cb
 
   changeNick: (@nick) ->
     @client.changeNick @name, nick
@@ -622,41 +622,41 @@ class RoomConfig
 class Occupant
   constructor: (@nick, @room) ->
 
-  modifyRole: (role, reason, success_cb, error_cb) ->
+  modifyRole: (role, reason, success_cb, error_cb) =>
     @room.modifyRole @nick, role, reason, success_cb, error_cb
 
-  kick: (reason, handler_cb, error_cb) ->
-    @room.kick @nick, 'none', reason, handler_cb, error_cb
+  kick: (reason, handler_cb, error_cb) =>
+    @room.kick @nick, reason, handler_cb, error_cb
 
-  voice: (reason, handler_cb, error_cb) ->
-    @room.voice @nick, 'participant', reason, handler_cb, error_cb
+  voice: (reason, handler_cb, error_cb) =>
+    @room.voice @nick, reason, handler_cb, error_cb
 
-  mute: (reason, handler_cb, error_cb) ->
-    @room.mute @nick, 'visitor', reason, handler_cb, error_cb
+  mute: (reason, handler_cb, error_cb) =>
+    @room.mute @nick, reason, handler_cb, error_cb
 
-  op: (reason, handler_cb, error_cb) ->
-    @room.op @nick, 'moderator', reason, handler_cb, error_cb
+  op: (reason, handler_cb, error_cb) =>
+    @room.op @nick, reason, handler_cb, error_cb
 
-  deop: (reason, handler_cb, error_cb) ->
-    @room.deop @nick, 'participant', reason, handler_cb, error_cb
+  deop: (reason, handler_cb, error_cb) =>
+    @room.deop @nick, reason, handler_cb, error_cb
 
-  modifyAffiliation: (affiliation, reason, success_cb, error_cb) ->
+  modifyAffiliation: (affiliation, reason, success_cb, error_cb) =>
     @room.modifyAffiliation @jid, affiliation, reason, success_cb, error_cb
 
-  ban: (reason, handler_cb, error_cb) ->
-    @room.ban @jid, 'outcast', reason, handler_cb, error_cb
+  ban: (reason, handler_cb, error_cb) =>
+    @room.ban @jid, reason, handler_cb, error_cb
 
-  member: (reason, handler_cb, error_cb) ->
-    @room.member @jid, 'member', reason, handler_cb, error_cb
+  member: (reason, handler_cb, error_cb) =>
+    @room.member @jid, reason, handler_cb, error_cb
 
-  revoke: (reason, handler_cb, error_cb) ->
-    @room.revoke @jid, 'none', reason, handler_cb, error_cb
+  revoke: (reason, handler_cb, error_cb) =>
+    @room.revoke @jid, reason, handler_cb, error_cb
 
-  owner: (reason, handler_cb, error_cb) ->
-    @room.owner @jid, 'owner', reason, handler_cb, error_cb
+  owner: (reason, handler_cb, error_cb) =>
+    @room.owner @jid, reason, handler_cb, error_cb
 
-  admin: (reason, handler_cb, error_cb) ->
-    @room.admin @jid, 'admin', reason, handler_cb, error_cb
+  admin: (reason, handler_cb, error_cb) =>
+    @room.admin @jid, reason, handler_cb, error_cb
 
   update: (data) ->
     @nick = data.nick
