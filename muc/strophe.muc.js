@@ -725,9 +725,9 @@ RoomConfig = (function() {
 
 Occupant = (function() {
 
-  function Occupant(nick, room) {
-    this.nick = nick;
+  function Occupant(data, room) {
     this.room = room;
+    this.update = __bind(this.update, this);
     this.admin = __bind(this.admin, this);
     this.owner = __bind(this.owner, this);
     this.revoke = __bind(this.revoke, this);
@@ -740,6 +740,7 @@ Occupant = (function() {
     this.voice = __bind(this.voice, this);
     this.kick = __bind(this.kick, this);
     this.modifyRole = __bind(this.modifyRole, this);
+    this.update(data);
   }
 
   Occupant.prototype.modifyRole = function(role, reason, success_cb, error_cb) {
@@ -791,12 +792,13 @@ Occupant = (function() {
   };
 
   Occupant.prototype.update = function(data) {
-    this.nick = data.nick;
+    this.nick = data.nick || null;
     this.affiliation = data.affiliation || null;
     this.role = data.role || null;
     this.jid = data.jid || null;
     this.status = data.status || null;
-    return this.show = data.show || null;
+    this.show = data.show || null;
+    return this;
   };
 
   return Occupant;

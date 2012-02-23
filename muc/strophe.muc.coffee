@@ -620,7 +620,8 @@ class RoomConfig
     "identities": @identities, "features": @features, "x": @x
 
 class Occupant
-  constructor: (@nick, @room) ->
+  constructor: (data, @room) ->
+    @update data
 
   modifyRole: (role, reason, success_cb, error_cb) =>
     @room.modifyRole @nick, role, reason, success_cb, error_cb
@@ -658,11 +659,12 @@ class Occupant
   admin: (reason, handler_cb, error_cb) =>
     @room.admin @jid, reason, handler_cb, error_cb
 
-  update: (data) ->
-    @nick = data.nick
+  update: (data) =>
+    @nick         = data.nick         or null
     @affiliation  = data.affiliation  or null
     @role         = data.role         or null
     @jid          = data.jid          or null
     @status       = data.status       or null
     @show         = data.show         or null
+    @
 
