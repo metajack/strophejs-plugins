@@ -1,11 +1,8 @@
 /*
  *Plugin to implement the MUC extension.
    http://xmpp.org/extensions/xep-0045.html
- *jslint configuration:
- *global document, window, setTimeout, clearTimeout, console,
-   XMLHttpRequest, ActiveXObject,
-   Base64, MD5,
-   Strophe, $build, $msg, $iq, $pres
+ *Authors:
+    Andreas Guth <guth@dbis.rwth-aachen.de>
 */
 var Occupant, RoomConfig, XmppRoom,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
