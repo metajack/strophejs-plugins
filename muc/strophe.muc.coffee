@@ -572,6 +572,14 @@ class XmppRoom
   setStatus: (show, status) ->
     @client.setStatus @name, @nick, show, status
 
+  ###Function
+  Adds a handler to the MUC room.
+    Parameters:
+  (String) handler_type - 'message', 'presence' or 'roster'.
+  (Function) handler - The handler function.
+  Returns:
+  id - the id of handler.
+  ###
   addHandler: (handler_type, handler) ->
     id = @_handler_ids++
     switch handler_type
@@ -586,15 +594,36 @@ class XmppRoom
         return null
     id
 
+  ###Function
+  Removes a handler from the MUC room.
+  This function takes ONLY ids returned by the addHandler function
+  of this room. passing handler ids returned by connection.addHandler
+  may brake things!
+    Parameters:
+  (number) id - the id of the handler
+  ###
   removeHandler: (id) ->
     delete @_presence_handlers[id]
     delete @_message_handlers[id]
     delete @_roster_handlers[id]
 
+  ###Function
+  Creates and adds an Occupant to the Room Roster.
+    Parameters:
+  (Object) data - the data the Occupant is filled with
+  Returns:
+  occ - the created Occupant.
+  ###
   _addOccupant: (data) =>
     occ = new Occupant data, @
     @roster[occ.nick] = occ
+    occ
 
+  ###Function
+  The standard handler that managed the Room Roster.
+    Parameters:
+  (Object) pres - the presence stanza containing user information
+  ###
   _roomRosterHandler: (pres) =>
     data = XmppRoom._parsePresence pres
     nick = data.nick
@@ -627,6 +656,11 @@ class XmppRoom
       delete @_roster_handlers[id] unless handler @roster, @
     true
 
+  ###Function
+  Parses a presence stanza
+    Parameters:
+  (Object) data - the data extracted from the presence stanza
+  ###
   @_parsePresence: (pres) ->
     data = {}
     a = pres.attributes

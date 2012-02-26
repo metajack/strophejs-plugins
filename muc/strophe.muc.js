@@ -640,6 +640,15 @@ XmppRoom = (function() {
     return this.client.setStatus(this.name, this.nick, show, status);
   };
 
+  /*Function
+  Adds a handler to the MUC room.
+    Parameters:
+  (String) handler_type - 'message', 'presence' or 'roster'.
+  (Function) handler - The handler function.
+  Returns:
+  id - the id of handler.
+  */
+
   XmppRoom.prototype.addHandler = function(handler_type, handler) {
     var id;
     id = this._handler_ids++;
@@ -660,17 +669,41 @@ XmppRoom = (function() {
     return id;
   };
 
+  /*Function
+  Removes a handler from the MUC room.
+  This function takes ONLY ids returned by the addHandler function
+  of this room. passing handler ids returned by connection.addHandler
+  may brake things!
+    Parameters:
+  (number) id - the id of the handler
+  */
+
   XmppRoom.prototype.removeHandler = function(id) {
     delete this._presence_handlers[id];
     delete this._message_handlers[id];
     return delete this._roster_handlers[id];
   };
 
+  /*Function
+  Creates and adds an Occupant to the Room Roster.
+    Parameters:
+  (Object) data - the data the Occupant is filled with
+  Returns:
+  occ - the created Occupant.
+  */
+
   XmppRoom.prototype._addOccupant = function(data) {
     var occ;
     occ = new Occupant(data, this);
-    return this.roster[occ.nick] = occ;
+    this.roster[occ.nick] = occ;
+    return occ;
   };
+
+  /*Function
+  The standard handler that managed the Room Roster.
+    Parameters:
+  (Object) pres - the presence stanza containing user information
+  */
 
   XmppRoom.prototype._roomRosterHandler = function(pres) {
     var data, handler, id, newnick, nick, _ref;
@@ -707,6 +740,12 @@ XmppRoom = (function() {
     }
     return true;
   };
+
+  /*Function
+  Parses a presence stanza
+    Parameters:
+  (Object) data - the data extracted from the presence stanza
+  */
 
   XmppRoom._parsePresence = function(pres) {
     var a, c, c2, data, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
