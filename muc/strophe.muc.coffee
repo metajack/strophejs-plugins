@@ -38,7 +38,7 @@ Strophe.addConnectionPlugin 'muc'
   (String) password - The optional password to use. (password protected
   rooms only)
   ###
-  join: (room, nick, msg_handler_cb, pres_handler_cb, password) ->
+  join: (room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password) ->
     room_nick = @test_append_nick(room, nick)
     msg = $pres(
       from: @_connection.jid
@@ -86,6 +86,7 @@ Strophe.addConnectionPlugin 'muc'
 
     @rooms[room].addHandler 'presence', pres_handler_cb if pres_handler_cb
     @rooms[room].addHandler 'message', msg_handler_cb if msg_handler_cb
+    @rooms[room].addHandler 'roster', roster_cb if roster_cb
 
 
     @_connection.send msg

@@ -37,7 +37,7 @@ Strophe.addConnectionPlugin('muc', {
   (String) password - The optional password to use. (password protected
   rooms only)
   */
-  join: function(room, nick, msg_handler_cb, pres_handler_cb, password) {
+  join: function(room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password) {
     var msg, room_nick, _base,
       _this = this;
     room_nick = this.test_append_nick(room, nick);
@@ -83,6 +83,7 @@ Strophe.addConnectionPlugin('muc', {
     }
     if (pres_handler_cb) this.rooms[room].addHandler('presence', pres_handler_cb);
     if (msg_handler_cb) this.rooms[room].addHandler('message', msg_handler_cb);
+    if (roster_cb) this.rooms[room].addHandler('roster', roster_cb);
     return this._connection.send(msg);
   },
   /*Function
