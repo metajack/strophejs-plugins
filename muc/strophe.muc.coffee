@@ -1,7 +1,9 @@
 ###
  *Plugin to implement the MUC extension.
    http://xmpp.org/extensions/xep-0045.html
- *Authors:
+ *Previous Author:
+    Nathan Zorn <nathan.zorn@gmail.com>
+ *Complete CoffeeScript rewrite:
     Andreas Guth <guth@dbis.rwth-aachen.de>
 ###
 
