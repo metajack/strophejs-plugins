@@ -489,6 +489,7 @@ class XmppRoom
   _handler_ids: 0
 
   constructor: (@client, @name, @nick, @password) ->
+    @client = client.muc if client.muc
     @name = Strophe.getBareJidFromJid name
     @client.rooms[@name] = @
     @addHandler 'presence', @_roomRosterHandler

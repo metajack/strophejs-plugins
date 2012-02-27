@@ -531,6 +531,7 @@ XmppRoom = (function() {
     this.password = password;
     this._roomRosterHandler = __bind(this._roomRosterHandler, this);
     this._addOccupant = __bind(this._addOccupant, this);
+    if (client.muc) this.client = client.muc;
     this.name = Strophe.getBareJidFromJid(name);
     this.client.rooms[this.name] = this;
     this.addHandler('presence', this._roomRosterHandler);
