@@ -545,7 +545,7 @@ XmppRoom = (function() {
 
   XmppRoom.prototype.leave = function(handler_cb, message) {
     this.client.leave(this.name, this.nick, handler_cb, message);
-    return this.client.rooms[this.name] = null;
+    return delete this.client.rooms[this.name];
   };
 
   XmppRoom.prototype.message = function(nick, message, html_message, type) {

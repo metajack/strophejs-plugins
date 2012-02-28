@@ -500,7 +500,7 @@ class XmppRoom
 
   leave: (handler_cb, message) ->
     @client.leave @name, @nick, handler_cb, message
-    @client.rooms[@name] = null
+    delete @client.rooms[@name]
 
   message: (nick, message, html_message, type) ->
     @client.message @name, nick, message, html_message, type
