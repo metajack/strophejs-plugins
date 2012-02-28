@@ -1,25 +1,23 @@
 ###
  *Plugin to implement the MUC extension.
    http://xmpp.org/extensions/xep-0045.html
- *jslint configuration:
- *global document, window, setTimeout, clearTimeout, console,
-   XMLHttpRequest, ActiveXObject,
-   Base64, MD5,
-   Strophe, $build, $msg, $iq, $pres
+ *Previous Author:
+    Nathan Zorn <nathan.zorn@gmail.com>
+ *Complete CoffeeScript rewrite:
+    Andreas Guth <guth@dbis.rwth-aachen.de>
 ###
 
 Strophe.addConnectionPlugin 'muc'
   _connection: null
-  _roomMessageHandlers: []
-  _roomPresenceHandlers: []
   rooms: []
-  # The plugin must have the init function
+
   ###Function
   Initialize the MUC plugin. Sets the correct connection object and
   extends the namesace.
   ###
   init: (conn) ->
     @_connection = conn
+    @_muc_handler = null
     # extend name space
     #   NS.MUC - XMPP Multi-user chat namespace from XEP 45.
     Strophe.addNamespace 'MUC_OWNER',     Strophe.NS.MUC+"#owner"
@@ -39,7 +37,7 @@ Strophe.addConnectionPlugin 'muc'
   (String) password - The optional password to use. (password protected
   rooms only)
   ###
-  join: (room, nick, msg_handler_cb, pres_handler_cb, password) ->
+  join: (room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password) ->
     room_nick = @test_append_nick(room, nick)
     msg = $pres(
       from: @_connection.jid
@@ -49,40 +47,46 @@ Strophe.addConnectionPlugin 'muc'
     if password?
       msg.cnode Strophe.xmlElement("password", [], password)
 
-    if msg_handler_cb?
-      @_roomMessageHandlers[room] = @_connection.addHandler(
-        (stanza) ->
-          from = stanza.getAttribute 'from'
-          roomname = from.split("/")[0]
-          # filter on room name
-          if roomname is room
-            return msg_handler_cb stanza
-          else
-            return true
-        null
-        "message" )
+    # One handler for all rooms that dispatches to room callbacks
+    @_muc_handler ?=  conn.addHandler (stanza) =>
+      from = stanza.getAttribute 'from'
+      roomname = from.split("/")[0]
 
-    if pres_handler_cb?
-      @_roomPresenceHandlers[room] = @_connection.addHandler(
-        (stanza) ->
-          xquery = stanza.getElementsByTagName "x"
-          if xquery.length > 0
-            # Handle only MUC user protocol
-            for x in xquery
-              xmlns = x.getAttribute "xmlns"
-              if xmlns and xmlns.match Strophe.NS.MUC
-                return pres_handler_cb stanza
-          return true
-        null
-        "presence" )
+      # Abort if the stanza is not for a known MUC
+      return true unless @rooms[roomname]
+      room = @rooms[roomname]
+
+      handlers = {}
+
+      #select the right handlers
+      if stanza.nodeName is "message"
+        handlers = room._message_handlers
+      else if stanza.nodeName is "presence"
+        xquery = stanza.getElementsByTagName "x"
+        if xquery.length > 0
+          # Handle only MUC user protocol
+          for x in xquery
+            xmlns = x.getAttribute "xmlns"
+            if xmlns and xmlns.match Strophe.NS.MUC
+              handlers = room._presence_handlers
+              break
+
+      # loop over selected handlers (if any) and remove on false
+      for id, handler of handlers
+        delete handlers[id] unless handler stanza, room
+
+      return true
 
     @rooms[room] ?= new XmppRoom(
       @
       room
       nick
-      @_roomMessageHandlers[room]
-      @_roomPresenceHandlers[room]
       password )
+
+    @rooms[room].addHandler 'presence', pres_handler_cb if pres_handler_cb
+    @rooms[room].addHandler 'message', msg_handler_cb if msg_handler_cb
+    @rooms[room].addHandler 'roster', roster_cb if roster_cb
+
 
     @_connection.send msg
 
@@ -97,8 +101,10 @@ Strophe.addConnectionPlugin 'muc'
   iqid - The unique id for the room leave.
   ###
   leave: (room, nick, handler_cb, exit_msg) ->
-    @_connection.deleteHandler @_roomMessageHandlers[room]
-    @_connection.deleteHandler @_roomPresenceHandlers[room]
+    delete @rooms[room]
+    if @rooms.length is 0
+      @_connection.deleteHandler @_muc_handler
+      @_muc_handler = null
     room_nick = @test_append_nick room, nick
     presenceid = @_connection.getUniqueId()
     presence = $pres (
@@ -227,7 +233,7 @@ Strophe.addConnectionPlugin 'muc'
   id - the unique id used to send the info request
   ###
   queryOccupants: (room, success_cb, error_cb) ->
-    attrs = {xmlns: Strophe.NS.DISCO_ITEMS};
+    attrs = xmlns: Strophe.NS.DISCO_ITEMS
     info = $iq(
       from:this._connection.jid
       to:room
@@ -347,7 +353,7 @@ Strophe.addConnectionPlugin 'muc'
       to: room
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_ADMIN)
-    .cnode(item)
+    .cnode(item.node)
 
     iq.c("reason", reason) if reason?
 
@@ -436,8 +442,8 @@ Strophe.addConnectionPlugin 'muc'
     room_nick = @test_append_nick room, user
     presence = $pres(
       from: @_connection.jid
-      to: room_nick )
-    .c("x", xmlns: Strophe.NS.MUC)
+      to: room_nick
+      id: @_connection.getUniqueId() )
     @_connection.send presence.tree()
 
   ###Function
@@ -475,17 +481,26 @@ Strophe.addConnectionPlugin 'muc'
     room + if nick? then "/#{Strophe.escapeNode nick}" else ""
 
 class XmppRoom
-  constructor: (@client, @name, @nick, @msg_handler_id, @pres_handler_id, @password) ->
+
+  roster: {}
+  _message_handlers: {}
+  _presence_handlers: {}
+  _roster_handlers: {}
+  _handler_ids: 0
+
+  constructor: (@client, @name, @nick, @password) ->
+    @client = client.muc if client.muc
     @name = Strophe.getBareJidFromJid name
     @client.rooms[@name] = @
-    @roster = new Array()
+    @addHandler 'presence', @_roomRosterHandler
 
   join: (msg_handler_cb, pres_handler_cb) ->
-    @client.join(@name, @nick, null, null, password) if @client.rooms[@name]?
+    unless @client.rooms[@name]
+      @client.join(@name, @nick, msg_handler_cb, pres_handler_cb, @password)
 
   leave: (handler_cb, message) ->
     @client.leave @name, @nick, handler_cb, message
-    @client.rooms[@name] = null
+    delete @client.rooms[@name]
 
   message: (nick, message, html_message, type) ->
     @client.message @name, nick, message, html_message, type
@@ -518,43 +533,162 @@ class XmppRoom
     @client.modifyRole @name, nick, role, reason, success_cb, error_cb
 
   kick: (nick, reason, handler_cb, error_cb) ->
-    @client.kick @name, nick, 'none', reason, handler_cb, error_cb
+    @client.kick @name, nick, reason, handler_cb, error_cb
 
   voice: (nick, reason, handler_cb, error_cb) ->
-    @client.voice @name, nick, 'participant', reason, handler_cb, error_cb
+    @client.voice @name, nick, reason, handler_cb, error_cb
 
   mute: (nick, reason, handler_cb, error_cb) ->
-    @client.mute @name, nick, 'visitor', reason, handler_cb, error_cb
+    @client.mute @name, nick, reason, handler_cb, error_cb
 
   op: (nick, reason, handler_cb, error_cb) ->
-    @client.op @name, nick, 'moderator', reason, handler_cb, error_cb
+    @client.op @name, nick, reason, handler_cb, error_cb
 
   deop: (nick, reason, handler_cb, error_cb) ->
-    @client.deop @name, nick, 'participant', reason, handler_cb, error_cb
+    @client.deop @name, nick, reason, handler_cb, error_cb
 
   modifyAffiliation: (jid, affiliation, reason, success_cb, error_cb) ->
-    @client.modifyAffiliation @name, jid, affiliation, reason, success_cb, error_cb
+    @client.modifyAffiliation @name,
+      jid, affiliation, reason
+      success_cb, error_cb
 
   ban: (jid, reason, handler_cb, error_cb) ->
-    @client.ban @name, jid, 'outcast', reason, handler_cb, error_cb
+    @client.ban @name, jid, reason, handler_cb, error_cb
 
   member: (jid, reason, handler_cb, error_cb) ->
-    @client.member @name, jid, 'member', reason, handler_cb, error_cb
+    @client.member @name, jid, reason, handler_cb, error_cb
 
   revoke: (jid, reason, handler_cb, error_cb) ->
-    @client.revoke @name, jid, 'none', reason, handler_cb, error_cb
+    @client.revoke @name, jid, reason, handler_cb, error_cb
 
   owner: (jid, reason, handler_cb, error_cb) ->
-    @client.owner @name, jid, 'owner', reason, handler_cb, error_cb
+    @client.owner @name, jid, reason, handler_cb, error_cb
 
   admin: (jid, reason, handler_cb, error_cb) ->
-    @client.admin @name, jid, 'admin', reason, handler_cb, error_cb
+    @client.admin @name, jid, reason, handler_cb, error_cb
 
   changeNick: (@nick) ->
     @client.changeNick @name, nick
 
   setStatus: (show, status) ->
     @client.setStatus @name, @nick, show, status
+
+  ###Function
+  Adds a handler to the MUC room.
+    Parameters:
+  (String) handler_type - 'message', 'presence' or 'roster'.
+  (Function) handler - The handler function.
+  Returns:
+  id - the id of handler.
+  ###
+  addHandler: (handler_type, handler) ->
+    id = @_handler_ids++
+    switch handler_type
+      when 'presence'
+        @_presence_handlers[id] = handler
+      when 'message'
+        @_message_handlers[id] = handler
+      when 'roster'
+        @_roster_handlers[id] = handler
+      else
+        @_handler_ids--
+        return null
+    id
+
+  ###Function
+  Removes a handler from the MUC room.
+  This function takes ONLY ids returned by the addHandler function
+  of this room. passing handler ids returned by connection.addHandler
+  may brake things!
+    Parameters:
+  (number) id - the id of the handler
+  ###
+  removeHandler: (id) ->
+    delete @_presence_handlers[id]
+    delete @_message_handlers[id]
+    delete @_roster_handlers[id]
+
+  ###Function
+  Creates and adds an Occupant to the Room Roster.
+    Parameters:
+  (Object) data - the data the Occupant is filled with
+  Returns:
+  occ - the created Occupant.
+  ###
+  _addOccupant: (data) =>
+    occ = new Occupant data, @
+    @roster[occ.nick] = occ
+    occ
+
+  ###Function
+  The standard handler that managed the Room Roster.
+    Parameters:
+  (Object) pres - the presence stanza containing user information
+  ###
+  _roomRosterHandler: (pres) =>
+    data = XmppRoom._parsePresence pres
+    nick = data.nick
+    newnick = data.newnick or null
+    switch data.type
+      when 'error' then return
+      when 'unavailable'
+        if newnick
+          data.nick = newnick
+          # If both Occupant Instances exist, switch the new one
+          # with the old renamed one
+          if @roster[nick] and @roster[newnick]
+            @roster[nick].update @roster[newnick]
+            @roster[newnick] = @roster[nick]
+          # If the renamed Occupant doesn't exist yet but the old one does,
+          # let the new one be the Same instance
+          if @roster[nick] and not @roster[newnick]
+            @roster[newnick] = @roster[nick].update data
+          # If the old Occupant is already deleted, do nothing
+          # unless @roster[newnick]
+          #   tmp_occ = @roster[newnick]
+          #   @roster[newnick].update(data).update(tmp_occ)
+        delete @roster[nick]
+      else
+        if @roster[nick]
+          @roster[nick].update data
+        else
+          @_addOccupant data
+    for id, handler of @_roster_handlers
+      delete @_roster_handlers[id] unless handler @roster, @
+    true
+
+  ###Function
+  Parses a presence stanza
+    Parameters:
+  (Object) data - the data extracted from the presence stanza
+  ###
+  @_parsePresence: (pres) ->
+    data = {}
+    a = pres.attributes
+    data.nick = Strophe.getResourceFromJid a.from.textContent
+    data.type = a.type?.textContent or null
+    data.states = []
+    for c in pres.children
+      switch c.nodeName
+        when "status"
+          data.status = c.textContent or null
+        when "show"
+          data.show = c.textContent or null
+        when "x"
+          a = c.attributes
+          if a.xmlns?.textContent is Strophe.NS.MUC_USER
+            for c2 in c.children
+              switch c2.nodeName
+                when "item"
+                  a = c2.attributes
+                  data.affiliation = a.affiliation?.textContent or null
+                  data.role = a.role?.textContent or null
+                  data.jid = a.jid?.textContent or null
+                  data.newnick = a.nick?.textContent or null
+                when "status"
+                  if c2.attributes.code
+                    data.states.push c2.attributes.code.textContent
+    data
 
 class RoomConfig
 
@@ -577,14 +711,64 @@ class RoomConfig
           @features.push attrs.var.textContent
         when "x"
           attrs = child.children[0].attributes
-          break if ((not attrs.var.textContent is 'FORM_TYPE') or (not attrs.type.textContent is 'hidden'))
+          break if (
+            (not attrs.var.textContent is 'FORM_TYPE') or
+            (not attrs.type.textContent is 'hidden') )
           for field in child.children when not field.attributes.type
             attrs = field.attributes
-            # @x[attrs.var.textContent.split("#")[1]] =
             @x.push (
               var: attrs.var.textContent
               label: attrs.label.textContent or ""
               value: field.firstChild.textContent or "" )
 
     "identities": @identities, "features": @features, "x": @x
+
+class Occupant
+  constructor: (data, @room) ->
+    @update data
+
+  modifyRole: (role, reason, success_cb, error_cb) =>
+    @room.modifyRole @nick, role, reason, success_cb, error_cb
+
+  kick: (reason, handler_cb, error_cb) =>
+    @room.kick @nick, reason, handler_cb, error_cb
+
+  voice: (reason, handler_cb, error_cb) =>
+    @room.voice @nick, reason, handler_cb, error_cb
+
+  mute: (reason, handler_cb, error_cb) =>
+    @room.mute @nick, reason, handler_cb, error_cb
+
+  op: (reason, handler_cb, error_cb) =>
+    @room.op @nick, reason, handler_cb, error_cb
+
+  deop: (reason, handler_cb, error_cb) =>
+    @room.deop @nick, reason, handler_cb, error_cb
+
+  modifyAffiliation: (affiliation, reason, success_cb, error_cb) =>
+    @room.modifyAffiliation @jid, affiliation, reason, success_cb, error_cb
+
+  ban: (reason, handler_cb, error_cb) =>
+    @room.ban @jid, reason, handler_cb, error_cb
+
+  member: (reason, handler_cb, error_cb) =>
+    @room.member @jid, reason, handler_cb, error_cb
+
+  revoke: (reason, handler_cb, error_cb) =>
+    @room.revoke @jid, reason, handler_cb, error_cb
+
+  owner: (reason, handler_cb, error_cb) =>
+    @room.owner @jid, reason, handler_cb, error_cb
+
+  admin: (reason, handler_cb, error_cb) =>
+    @room.admin @jid, reason, handler_cb, error_cb
+
+  update: (data) =>
+    @nick         = data.nick         or null
+    @affiliation  = data.affiliation  or null
+    @role         = data.role         or null
+    @jid          = data.jid          or null
+    @status       = data.status       or null
+    @show         = data.show         or null
+    @
 
