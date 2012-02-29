@@ -1,15 +1,12 @@
 (function() {
+
   Strophe.addConnectionPlugin('pep', (function() {
     var conn, init, publish, subscribe, unsubscribe;
     conn = null;
     init = function(c) {
       conn = c;
-      if (conn.caps === void 0) {
-        throw new Error("caps plugin required!");
-      }
-      if (conn.pubsub === void 0) {
-        throw new Error("pubsub plugin required!");
-      }
+      if (conn.caps === void 0) throw new Error("caps plugin required!");
+      if (conn.pubsub === void 0) throw new Error("pubsub plugin required!");
     };
     subscribe = function(node, handler) {
       conn.caps.addFeature(node);
@@ -32,4 +29,5 @@
       unsubscribe: unsubscribe
     };
   })());
+
 }).call(this);

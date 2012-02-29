@@ -9,7 +9,3 @@ strophe.archive.js is a plugin to provide Message Archiving
 
 - describe usage
 - write specs
-
-## Authors
-
-- [radsaq](https://github.com/radsaq) 

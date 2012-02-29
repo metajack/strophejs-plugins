@@ -5,7 +5,8 @@ A Strophe Plugin for In-Band Registration.
 
 ## Usage
 
-Just link the register plugin below the strophe library in your HTML head section:
+Just link the register plugin below the strophe library in your HTML head
+section:
 
 ``` html
 <head>
@@ -41,7 +42,3 @@ After that you're logged in with a fresh smelling jid.
 ## ToDo
 
 - write specs
-
-## Authors
-
-- [dodo](https://github.com/dodo) 

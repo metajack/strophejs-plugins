@@ -85,12 +85,43 @@ Strophe.addConnectionPlugin('register', {
      *      should almost always be set to 1 (the default).
      */
     connect: function (domain, callback, wait, hold) {
+        var that = this._connection;
         this.instructions = "";
         this.fields = {};
-        this._connection.domain = domain;
-        this._connection.connect(null, null, callback, wait, hold,
-                                 /* authentication */ false,
-                                 this._register_cb.bind(this));
+        this.authentication = {};
+        this.registered = false;
+        this.enabled = false;
+
+        that.connect_callback = callback;
+        that.connected = false;
+        that.authenticated = false;
+        that.disconnecting = false;
+        that.errors = 0;
+
+        that.domain = domain || that.domain;
+        that.wait = wait || that.wait;
+        that.hold = hold || that.hold;
+
+        // build the body tag
+        var body = that._buildBody().attrs({
+            to: that.domain,
+            "xml:lang": "en",
+            wait: that.wait,
+            hold: that.hold,
+            content: "text/xml; charset=utf-8",
+            ver: "1.6",
+            "xmpp:version": "1.0",
+            "xmlns:xmpp": Strophe.NS.BOSH
+        });
+
+        that._changeConnectStatus(Strophe.Status.CONNECTING, null);
+
+        that._requests.push(
+            new Strophe.Request(body.tree(),
+                                that._onRequestStateChange.bind(
+                                    that, this._register_cb.bind(this)),
+                                body.tree().getAttribute("rid")));
+        that._throttledRequestHandler();
     },
 
     /** PrivateFunction: _register_cb
@@ -107,15 +138,79 @@ Strophe.addConnectionPlugin('register', {
         var that = this._connection;
 
         Strophe.info("_register_cb was called");
-        that._connect_cb(req, this._register_cb.bind(this));
+        that.connected = true;
 
-        var bodyWrap, register;
-        bodyWrap = req.getResponse();
+        var bodyWrap = req.getResponse();
+        if (!bodyWrap) { return; }
+
+        if (that.xmlInput !== Strophe.Connection.prototype.xmlInput) {
+            that.xmlInput(bodyWrap);
+        }
+        if (that.rawInput !== Strophe.Connection.prototype.rawInput) {
+            that.rawInput(Strophe.serialize(bodyWrap));
+        }
+
+        var typ = bodyWrap.getAttribute("type");
+        var cond, conflict;
+        if (typ !== null && typ == "terminate") {
+            // an error occurred
+            cond = bodyWrap.getAttribute("condition");
+            conflict = bodyWrap.getElementsByTagName("conflict");
+            if (cond !== null) {
+                if (cond == "remote-stream-error" && conflict.length > 0) {
+                    cond = "conflict";
+                }
+                that._changeConnectStatus(Strophe.Status.CONNFAIL, cond);
+            } else {
+                that._changeConnectStatus(Strophe.Status.CONNFAIL, "unknown");
+            }
+            return;
+        }
+
+        // check to make sure we don't overwrite these if _connect_cb is
+        // called multiple times in the case of missing stream:features
+        if (!that.sid) {
+            that.sid = bodyWrap.getAttribute("sid");
+        }
+        if (!that.stream_id) {
+            that.stream_id = bodyWrap.getAttribute("authid");
+        }
+
+        var wind = bodyWrap.getAttribute('requests');
+        if (wind) { that.window = parseInt(wind, 10); }
+        var hold = bodyWrap.getAttribute('hold');
+        if (hold) { that.hold = parseInt(hold, 10); }
+        var wait = bodyWrap.getAttribute('wait');
+        if (wait) { that.wait = parseInt(wait, 10); }
+
+
+        var register, mechanisms;
         register = bodyWrap.getElementsByTagName("register");
         mechanisms = bodyWrap.getElementsByTagName("mechanism");
-
-        if (register.length === 0 && mechanisms.length === 0)
+        if (register.length === 0 && mechanisms.length === 0) {
+            // we didn't get stream:features yet, so we need wait for it
+            // by sending a blank poll request
+            var body = that._buildBody();
+            that._requests.push(
+                new Strophe.Request(body.tree(),
+                                    that._onRequestStateChange.bind(
+                                        that, this._register_cb.bind(this)),
+                                    body.tree().getAttribute("rid")));
+            that._throttledRequestHandler();
             return;
+        }
+
+        var i, mech;
+        for (i = 0; i < mechanisms.length; i++) {
+            mech = Strophe.getText(mechanisms[i]);
+            if (mech == 'DIGEST-MD5') {
+                this.authentication.sasl_digest_md5 = true;
+            } else if (mech == 'PLAIN') {
+                this.authentication.sasl_plain = true;
+            } else if (mech == 'ANONYMOUS') {
+                this.authentication.sasl_anonymous = true;
+            }
+        }
 
         if (register.length === 0) {
             that._changeConnectStatus(Strophe.Status.REGIFAIL, null);
@@ -244,5 +339,88 @@ Strophe.addConnectionPlugin('register', {
             that._changeConnectStatus(Strophe.Status.SBMTFAIL, error);
         }
         return false;
+    },
+
+    /** Function: authenticate
+     *  Login with newly registered account.
+     *
+     *  This is just a helper function to authenticate with the new account of
+     *  the successful registration. This is recommended to do in the
+     *  user supplied callback when receiving Strophe.Status.REGISTERED.
+     *  It is also possible to do it on Strophe.Status.SBMTFAIL when
+     *  connection.register.registered is true under the circumstances that an
+     *  already existing account with the appendant password was supplied.
+     */
+    authenticate: function () {
+        var auth_str, hashed_auth_str, that = this._connection;
+
+        if (Strophe.getNodeFromJid(that.jid) === null &&
+            this.authentication.sasl_anonymous) {
+            that._changeConnectStatus(Strophe.Status.AUTHENTICATING, null);
+            that._sasl_success_handler = that._addSysHandler(
+                that._sasl_success_cb.bind(that), null,
+                "success", null, null);
+            that._sasl_failure_handler = that._addSysHandler(
+                that._sasl_failure_cb.bind(that), null,
+                "failure", null, null);
+
+            that.send($build("auth", {
+                xmlns: Strophe.NS.SASL,
+                mechanism: "ANONYMOUS"
+            }).tree());
+        } else if (Strophe.getNodeFromJid(that.jid) === null) {
+            // we don't have a node, which is required for non-anonymous
+            // client connections
+            that._changeConnectStatus(Strophe.Status.CONNFAIL,
+                                      'x-strophe-bad-non-anon-jid');
+            that.disconnect();
+        } else if (this.authentication.sasl_digest_md5) {
+            that._changeConnectStatus(Strophe.Status.AUTHENTICATING, null);
+            that._sasl_challenge_handler = that._addSysHandler(
+                that._sasl_challenge1_cb.bind(that), null,
+                "challenge", null, null);
+            that._sasl_failure_handler = that._addSysHandler(
+                that._sasl_failure_cb.bind(that), null,
+                "failure", null, null);
+
+            that.send($build("auth", {
+                xmlns: Strophe.NS.SASL,
+                mechanism: "DIGEST-MD5"
+            }).tree());
+        } else if (this.authentication.sasl_plain) {
+            // Build the plain auth string (barejid null
+            // username null password) and base 64 encoded.
+            auth_str = Strophe.getBareJidFromJid(that.jid);
+            auth_str = auth_str + "\u0000";
+            auth_str = auth_str + Strophe.getNodeFromJid(that.jid);
+            auth_str = auth_str + "\u0000";
+            auth_str = auth_str + that.pass;
+
+            that._changeConnectStatus(Strophe.Status.AUTHENTICATING, null);
+            that._sasl_success_handler = that._addSysHandler(
+                that._sasl_success_cb.bind(that), null,
+                "success", null, null);
+            that._sasl_failure_handler = that._addSysHandler(
+                that._sasl_failure_cb.bind(that), null,
+                "failure", null, null);
+
+            hashed_auth_str = Base64.encode(auth_str);
+            that.send($build("auth", {
+                xmlns: Strophe.NS.SASL,
+                mechanism: "PLAIN"
+            }).t(hashed_auth_str).tree());
+        } else {
+            that._changeConnectStatus(Strophe.Status.AUTHENTICATING, null);
+            that._addSysHandler(that._auth1_cb.bind(that), null, null,
+                                null, "_auth_1");
+
+            that.send($iq({
+                type: "get",
+                to: that.domain,
+                id: "_auth_1"
+            }).c("query", {
+                xmlns: Strophe.NS.AUTH
+            }).c("username", {}).t(Strophe.getNodeFromJid(that.jid)).tree());
+        }
     },
 });
