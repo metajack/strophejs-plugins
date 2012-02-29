@@ -79,6 +79,56 @@ parseDescription = (iq) ->
         classes.push = c.textContent
   result
 
+getAddress = (clazz, service, instance) ->
+  addr = ""
+  addr += "#{clazz}@" if clazz if typeof clazz is "string"
+  addr += service
+  addr += "/#{instance}" if (typeof(instance) in ["string", "number"])
+  addr
+
+createIq = (type, to) ->
+  iqType = "set"
+  iqType = "get" if (type in ["read", "search", "describe"])
+  $iq(to: to, type: iqType)
+    .c(type, xmlns: JOAP_NS)
+
+sendRequest = (type, to, cb, opt={}) ->
+  iq = createIq type, to
+  opt.beforeSend? iq
+  success = (res) -> cb? res, null, opt.onResult?(res)
+  conn.sendIQ iq, success, onError(cb)
+
+describe = (id, cb) ->
+  sendRequest "describe", id, cb,
+    onResult: parseDescription
+
+read = (instance, limits, cb) ->
+  cb = limits if typeof limits is "function"
+  sendRequest "read", instance, cb,
+    beforeSend: (iq) -> if limits instanceof Array
+      iq.c("name").t(l).up() for l in limits
+    onResult: parseAttributes
+
+add = (clazz, attrs, cb) ->
+  cb = attrs if typeof attrs is "function"
+  sendRequest "add", clazz, cb,
+    beforeSend: (iq) -> addXMLAttributes iq, attrs
+    onResult: parseNewAddress
+
+edit = (instance, attrs, cb) ->
+  sendRequest "edit", instance, cb,
+    beforeSend: (iq) -> addXMLAttributes iq, attrs
+    onResult: parseAttributes
+
+search = (clazz, attrs, cb) ->
+  cb = attrs if typeof attrs is "function"
+  sendRequest "search", clazz, cb,
+    beforeSend: (iq) -> addXMLAttributes iq, attrs
+    onResult: parseSearch
+
+del = (instance, cb) ->
+  sendRequest "delete", instance, cb
+
 class JOAPError extends Error
 
   constructor: (@message, @code)->
@@ -88,25 +138,6 @@ class Server
 
   constructor: (@service) ->
 
-  sendRequest: (type, clazz, cb, opt={}) ->
-    iq = @createIq type, clazz, opt.instance
-    opt.beforeSend? iq
-    success = (res) -> cb? res, null, opt.onResult?(res)
-    conn.sendIQ iq, success, onError(cb)
-
-  createIq: (type, clazz, instance) ->
-    iqType = "set"
-    iqType = "get" if (type in ["read", "search", "describe"])
-    $iq(to: @getAddress(clazz, instance), type: iqType)
-      .c(type, xmlns: JOAP_NS)
-
-  getAddress: (clazz, instance) ->
-    addr = ""
-    addr += "#{clazz}@" if clazz if typeof clazz is "string"
-    addr += @service
-    addr += "/#{instance}" if (typeof(instance) in ["string", "number"])
-    addr
-
   describe: (clazz, instance, cb) ->
     if typeof clazz is "function"
       cb = clazz
@@ -114,37 +145,22 @@ class Server
     else if typeof instance is "function"
       cb = instance
       instance = null
-    @sendRequest "describe", clazz, cb,
-      instance: instance
-      onResult: parseDescription
+    describe getAddress(clazz, @service, instance), cb
 
   add: (clazz, attrs, cb) ->
-    cb = attrs if typeof attrs is "function"
-    @sendRequest "add", clazz, cb,
-      beforeSend: (iq) -> addXMLAttributes iq, attrs
-      onResult: parseNewAddress
+    add getAddress(clazz, @service), attrs, cb
 
   read: (clazz, instance, limits, cb) ->
-    cb = limits if typeof limits is "function"
-    @sendRequest "read", clazz, cb,
-      instance: instance
-      beforeSend: (iq) -> if limits instanceof Array
-        iq.c("name").t(l).up() for l in limits
-      onResult: parseAttributes
+    read getAddress(clazz, @service, instance), limits, cb
 
-  edit: (clazz, instance, attrs, cb) -> @sendRequest "edit", clazz, cb,
-    instance: instance
-    beforeSend: (iq) -> addXMLAttributes iq, attrs
-    onResult: parseAttributes
+  edit: (clazz, instance, attrs, cb) ->
+    edit getAddress(clazz, @service, instance), attrs, cb
 
-  delete: (clazz, instance, cb) -> @sendRequest "delete", clazz, cb,
-    instance: instance
+  delete: (clazz, instance, cb) ->
+    del getAddress(clazz, @service, instance), cb
 
   search: (clazz, attrs, cb) ->
-    cb = attrs if typeof attrs is "function"
-    @sendRequest "search", clazz, cb,
-      beforeSend: (iq) -> addXMLAttributes iq, attrs
-      onResult: parseSearch
+    search getAddress(clazz, @service), attrs, cb
 
 Strophe.addConnectionPlugin 'joap', do ->
 
@@ -162,4 +178,10 @@ Strophe.addConnectionPlugin 'joap', do ->
   # public API
   init: init
   getObjectServer: getObjectServer
+  describe: describe
+  add: add
+  read: read
+  edit: edit
+  delete: del
+  search: search
   JOAPError: JOAPError

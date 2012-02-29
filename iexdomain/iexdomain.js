@@ -5,7 +5,7 @@ Strophe.addConnectionPlugin('iexdomain', {
             Strophe.Request.prototype._newXHR = function() {
                 var xhr = new XDomainRequest();
                 xhr.readyState = 0;
-		
+
                 xhr.onreadystatechange = this.func.prependArg(this);
                 xhr.onerror = function() {
                     xhr.readyState = 4;

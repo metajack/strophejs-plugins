@@ -23,7 +23,7 @@ Strophe.addConnectionPlugin('ping', {
 
 	/**
 	 * Function: ping
-	 * 
+	 *
 	 * Parameters:
 	 * (String) to	- the JID you want to ping
 	 * (Function) success	- Callback function on success
@@ -39,7 +39,7 @@ Strophe.addConnectionPlugin('ping', {
 
 	/**
 	 * Function: pong
-	 * 
+	 *
 	 * Parameters:
 	 * (Object) ping	-
 	 * (Function) success	-
@@ -55,10 +55,10 @@ Strophe.addConnectionPlugin('ping', {
 
 	/**
 	 * Function: addPingHandler
-	 * 
+	 *
 	 * Parameters:
 	 * (Function) handler - Ping handler
-	 * 
+	 *
 	 * Returns:
 	 * A reference to the handler that can be used to remove it.
 	 */

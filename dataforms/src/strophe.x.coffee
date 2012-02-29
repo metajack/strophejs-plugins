@@ -49,7 +49,7 @@ class Form
   title: null
   instructions: null
 
-  toXML: ->
+  toXML: =>
 
     xml = ($build "x", { xmlns: "jabber:x:data", @type })
 
@@ -72,7 +72,7 @@ class Form
 
     xml.tree()
 
-  toJSON: ->
+  toJSON: =>
     json = {@type}
     json.title = @title if @title
     json.instructions = @instructions if @instructions
@@ -89,7 +89,7 @@ class Form
     json
 
 
-  toHTML: ->
+  toHTML: =>
 
     form = $("<form data-type='#{@type}'>")
     form.append("<h1>#{@title}</h1>") if @title
@@ -133,7 +133,7 @@ class Form
 
   @fromHTML: (html) ->
     html = $ html
-    
+
 
     f = new Form
       type: html.attr "data-type"
@@ -188,24 +188,24 @@ class Field
   var: "_no_var_was_defined_"
   required: false
 
-  addValue: (val) -> @addValues [val]
+  addValue: (val) => @addValues [val]
 
-  addValues: (vals) ->
+  addValues: (vals) =>
     multi = @type in Field._multiTypes
     if multi or ( not multi and vals.length is 1 )
       @values = [@values..., (v.toString() for v in vals)...]
     @
 
-  addOption: (opt) -> @addOptions [opt]
+  addOption: (opt) => @addOptions [opt]
 
-  addOptions: (opts) ->
+  addOptions: (opts) =>
     if @type is "list-single" or @type is "list-multi"
       if typeof opts[0] isnt "object"
         opts =  (new Option { value: o.toString() } for o in opts)
       helper.fill opts, @options, Option
     @
 
-  toJSON: ->
+  toJSON: =>
     json = { @type, @var, @required }
     json.desc = @desc if @desc
     json.label = @label if @label
@@ -217,7 +217,7 @@ class Field
         json.options.push o.toJSON()
     json
 
-  toXML: ->
+  toXML: =>
     attrs = {@type, @var}
     attrs.label = @label if @label
 
@@ -235,7 +235,7 @@ class Field
         xml.cnode(o.toXML()).up()
     xml.tree()
 
-  toHTML: ->
+  toHTML: =>
 
     switch @type.toLowerCase()
 
@@ -330,7 +330,7 @@ class Field
           when "password"
             type = "text-private"
           when "text"
-            r = (el.attr "readonly" is "readonly")
+            r = el.attr("readonly") is "readonly"
             if r
               type = "fixed"
             else
@@ -369,14 +369,14 @@ class Option
   label: ""
   value: ""
 
-  toXML: -> ($build "option", { label: @label })
+  toXML: => ($build "option", { label: @label })
     .c("value")
     .t(@value.toString())
     .tree()
 
-  toJSON: -> { @label, @value }
+  toJSON: => { @label, @value }
 
-  toHTML: -> ($ "<option>").attr('value', @value ).text( @label or @value )[0]
+  toHTML: => ($ "<option>").attr('value', @value ).text( @label or @value )[0]
 
   @fromXML: (xml) ->
     new Option { label: ($ xml).attr("label"), value: ($ xml).text() }
@@ -391,13 +391,13 @@ class Item
     @fields = []
     helper.fill opts.fields, @fields, Field if opts?.fields
 
-  toXML: ->
+  toXML: =>
     xml = $build "item"
     for f in @fields
       xml.cnode( f.toXML() ).up()
     xml.tree()
 
-  toJSON: ->
+  toJSON: =>
     json = {}
     if @fields
       json.fields = []
@@ -405,7 +405,7 @@ class Item
         json.fields.push f.toJSON()
     json
 
-  toHTML: ->
+  toHTML: =>
     fieldset = $ "<fieldset>"
     (helper.createHtmlFieldCouple f).appendTo fieldset for f in @fields
     fieldset[0]
@@ -424,6 +424,11 @@ Strophe.x =
   Field: Field
   Option:Option
   Item:Item
+
+$form = (opt) -> new Strophe.x.Form opt
+$field = (opt) -> new Strophe.x.Field opt
+$opt = (opt) -> new Strophe.x.Option opt
+$item = (opts) -> new Strophe.x.Item opts
 
 Strophe.addConnectionPlugin 'x',
 
