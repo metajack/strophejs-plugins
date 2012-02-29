@@ -1,16 +1,13 @@
 (function() {
+
   Strophe.addConnectionPlugin('caps', (function() {
     var addFeature, conn, createCapsNode, generateVerificationString, init, propertySort, removeFeature, sendPres;
     conn = null;
     init = function(c) {
       conn = c;
       Strophe.addNamespace('CAPS', "http://jabber.org/protocol/caps");
-      if (conn.disco === void 0) {
-        throw new Error("disco plugin required!");
-      }
-      if (b64_sha1 === void 0) {
-        throw new Error("SHA-1 library required!");
-      }
+      if (conn.disco === void 0) throw new Error("disco plugin required!");
+      if (b64_sha1 === void 0) throw new Error("SHA-1 library required!");
       conn.disco.addFeature(Strophe.NS.CAPS);
       conn.disco.addFeature(Strophe.NS.DISCO_INFO);
       if (conn.disco._identities.length === 0) {
@@ -87,4 +84,5 @@
       createCapsNode: createCapsNode
     };
   })());
+
 }).call(this);
