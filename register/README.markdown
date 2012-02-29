@@ -1,10 +1,12 @@
 # strophe.register.js
 
 A Strophe Plugin for In-Band Registration.
+( [XEP 0077](http://xmpp.org/extensions/xep-0077.html) )
 
 ## Usage
 
-Just link the register plugin below the strophe library in your HTML head section:
+Just link the register plugin below the strophe library in your HTML head
+section:
 
 ``` html
 <head>
@@ -25,7 +27,7 @@ var callback = function (status) {
         connection.register.submit();
     } else if (status === Strophe.Status.REGISTERED) {
         console.log("registered!");
-        connection.register.authenticate();
+        connection.authenticate();
     } else if (status === Strophe.Status.CONNECTED) {
         console.log("logged in!");
     } else {
@@ -37,3 +39,6 @@ connection.register.connect("example.com", callback, wait, hold);
 
 After that you're logged in with a fresh smelling jid.
 
+## ToDo
+
+- write specs
