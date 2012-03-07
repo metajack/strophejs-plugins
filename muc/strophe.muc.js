@@ -48,7 +48,7 @@ Strophe.addConnectionPlugin('muc', {
     });
     if (password != null) msg.cnode(Strophe.xmlElement("password", [], password));
     if (this._muc_handler == null) {
-      this._muc_handler = conn.addHandler(function(stanza) {
+      this._muc_handler = this._connection.addHandler(function(stanza) {
         var from, handler, handlers, id, roomname, x, xmlns, xquery, _i, _len;
         from = stanza.getAttribute('from');
         roomname = from.split("/")[0];
@@ -755,7 +755,7 @@ XmppRoom = (function() {
     data.nick = Strophe.getResourceFromJid(a.from.textContent);
     data.type = ((_ref = a.type) != null ? _ref.textContent : void 0) || null;
     data.states = [];
-    _ref2 = pres.children;
+    _ref2 = pres.childNodes;
     for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
       c = _ref2[_i];
       switch (c.nodeName) {
@@ -768,7 +768,7 @@ XmppRoom = (function() {
         case "x":
           a = c.attributes;
           if (((_ref3 = a.xmlns) != null ? _ref3.textContent : void 0) === Strophe.NS.MUC_USER) {
-            _ref4 = c.children;
+            _ref4 = c.childNodes;
             for (_j = 0, _len2 = _ref4.length; _j < _len2; _j++) {
               c2 = _ref4[_j];
               switch (c2.nodeName) {
@@ -803,7 +803,7 @@ RoomConfig = (function() {
 
   RoomConfig.prototype.parse = function(result) {
     var attr, attrs, child, field, identity, query, _i, _j, _k, _len, _len2, _len3, _ref;
-    query = result.getElementsByTagName("query")[0].children;
+    query = result.getElementsByTagName("query")[0].childNodes;
     this.identities = [];
     this.features = [];
     this.x = [];
@@ -823,11 +823,11 @@ RoomConfig = (function() {
           this.features.push(attrs["var"].textContent);
           break;
         case "x":
-          attrs = child.children[0].attributes;
+          attrs = child.childNodes[0].attributes;
           if ((!attrs["var"].textContent === 'FORM_TYPE') || (!attrs.type.textContent === 'hidden')) {
             break;
           }
-          _ref = child.children;
+          _ref = child.childNodes;
           for (_k = 0, _len3 = _ref.length; _k < _len3; _k++) {
             field = _ref[_k];
             if (!(!field.attributes.type)) continue;
