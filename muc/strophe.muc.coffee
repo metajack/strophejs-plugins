@@ -48,7 +48,7 @@ Strophe.addConnectionPlugin 'muc'
       msg.cnode Strophe.xmlElement("password", [], password)
 
     # One handler for all rooms that dispatches to room callbacks
-    @_muc_handler ?=  conn.addHandler (stanza) =>
+    @_muc_handler ?=  @_connection.addHandler (stanza) =>
       from = stanza.getAttribute 'from'
       roomname = from.split("/")[0]
 
@@ -668,7 +668,7 @@ class XmppRoom
     data.nick = Strophe.getResourceFromJid a.from.textContent
     data.type = a.type?.textContent or null
     data.states = []
-    for c in pres.children
+    for c in pres.childNodes
       switch c.nodeName
         when "status"
           data.status = c.textContent or null
@@ -677,7 +677,7 @@ class XmppRoom
         when "x"
           a = c.attributes
           if a.xmlns?.textContent is Strophe.NS.MUC_USER
-            for c2 in c.children
+            for c2 in c.childNodes
               switch c2.nodeName
                 when "item"
                   a = c2.attributes
@@ -696,7 +696,7 @@ class RoomConfig
     @parse info if info?
 
   parse: (result) =>
-    query = result.getElementsByTagName("query")[0].children
+    query = result.getElementsByTagName("query")[0].childNodes
     @identities =  []
     @features =  []
     @x = []
@@ -710,11 +710,11 @@ class RoomConfig
         when "feature"
           @features.push attrs.var.textContent
         when "x"
-          attrs = child.children[0].attributes
+          attrs = child.childNodes[0].attributes
           break if (
             (not attrs.var.textContent is 'FORM_TYPE') or
             (not attrs.type.textContent is 'hidden') )
-          for field in child.children when not field.attributes.type
+          for field in child.childNodes when not field.attributes.type
             attrs = field.attributes
             @x.push (
               var: attrs.var.textContent
