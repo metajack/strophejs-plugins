@@ -1,5 +1,5 @@
 (function() {
-  var JOAPError, JOAPObject, JOAP_NS, Server, add, addXMLAttributes, conn, createIq, del, describe, edit, getAddress, onError, parseAttributeDescription, parseAttributes, parseDesc, parseDescription, parseMethodDescription, parseNewAddress, parseSearch, read, search, sendRequest,
+  var JOAPClass, JOAPError, JOAPObject, JOAPServer, JOAP_NS, add, addXMLAttributes, conn, createIq, del, describe, edit, getAddress, onError, parseAttributeDescription, parseAttributes, parseDesc, parseDescription, parseMethodDescription, parseNewAddress, parseSearch, read, search, sendRequest,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -133,14 +133,7 @@
   };
 
   getAddress = function(clazz, service, instance) {
-    var addr, _ref;
-    addr = "";
-    if (typeof clazz === "string" ? clazz : void 0) addr += "" + clazz + "@";
-    addr += service;
-    if (((_ref = typeof instance) === "string" || _ref === "number")) {
-      addr += "/" + instance;
-    }
-    return addr;
+    return (new JID(clazz, service, instance)).toString();
   };
 
   createIq = function(type, to) {
@@ -239,13 +232,13 @@
 
   })(Error);
 
-  Server = (function() {
+  JOAPServer = (function() {
 
-    function Server(service) {
-      this.service = service;
+    function JOAPServer(service) {
+      this.jid = new JID(service);
     }
 
-    Server.prototype.describe = function(clazz, instance, cb) {
+    JOAPServer.prototype.describe = function(clazz, instance, cb) {
       if (typeof clazz === "function") {
         cb = clazz;
         clazz = instance = null;
@@ -253,56 +246,95 @@
         cb = instance;
         instance = null;
       }
-      return describe(getAddress(clazz, this.service, instance), cb);
+      return describe(getAddress(clazz, this.jid.domain, instance), cb);
     };
 
-    Server.prototype.add = function(clazz, attrs, cb) {
-      return add(getAddress(clazz, this.service), attrs, cb);
+    JOAPServer.prototype.add = function(clazz, attrs, cb) {
+      return add(getAddress(clazz, this.jid.domain), attrs, cb);
     };
 
-    Server.prototype.read = function(clazz, instance, limits, cb) {
-      return read(getAddress(clazz, this.service, instance), limits, cb);
+    JOAPServer.prototype.read = function(clazz, instance, limits, cb) {
+      return read(getAddress(clazz, this.jid.domain, instance), limits, cb);
     };
 
-    Server.prototype.edit = function(clazz, instance, attrs, cb) {
-      return edit(getAddress(clazz, this.service, instance), attrs, cb);
+    JOAPServer.prototype.edit = function(clazz, instance, attrs, cb) {
+      return edit(getAddress(clazz, this.jid.domain, instance), attrs, cb);
     };
 
-    Server.prototype["delete"] = function(clazz, instance, cb) {
-      return del(getAddress(clazz, this.service, instance), cb);
+    JOAPServer.prototype["delete"] = function(clazz, instance, cb) {
+      return del(getAddress(clazz, this.jid.domain, instance), cb);
     };
 
-    Server.prototype.search = function(clazz, attrs, cb) {
-      return search(getAddress(clazz, this.service), attrs, cb);
+    JOAPServer.prototype.search = function(clazz, attrs, cb) {
+      return search(getAddress(clazz, this.jid.domain), attrs, cb);
     };
 
-    return Server;
+    return JOAPServer;
 
   })();
 
   JOAPObject = (function() {
 
     function JOAPObject(id) {
-      this.id = id;
+      this.jid = new JID(id);
     }
 
     JOAPObject.prototype.read = function(limits, cb) {
-      return conn.joap.read(this.id, limits, cb);
+      return read(this.jid.toString(), limits, cb);
     };
 
     JOAPObject.prototype.edit = function(attrs, cb) {
-      return conn.joap.edit(this.id, attrs, cb);
+      return edit(this.jid.toString(), attrs, cb);
+    };
+
+    JOAPObject.prototype.describe = function(cb) {
+      return describe(this.jid.toString(), cb);
     };
 
     return JOAPObject;
 
   })();
 
-  Strophe.addConnectionPlugin('joap', (function() {
-    var getObjectServer, init;
-    getObjectServer = function(service) {
-      return new Server(service);
+  JOAPClass = (function() {
+
+    function JOAPClass(id) {
+      this.jid = new JID(id);
+    }
+
+    JOAPClass.prototype.describe = function(instance, cb) {
+      if (typeof instance === "function") {
+        cb = instance;
+        instance = null;
+      }
+      return describe(getAddress(this.jid.user, this.jid.domain, instance), cb);
     };
+
+    JOAPClass.prototype.add = function(attrs, cb) {
+      return add(getAddress(this.jid.user, this.jid.domain), attrs, cb);
+    };
+
+    JOAPClass.prototype.read = function(instance, limits, cb) {
+      return read(getAddress(this.jid.user, this.jid.domain, instance), limits, cb);
+    };
+
+    JOAPClass.prototype.edit = function(instance, attrs, cb) {
+      return edit(getAddress(this.jid.user, this.jid.domain, instance), attrs, cb);
+    };
+
+    JOAPClass.prototype["delete"] = function(instance, cb) {
+      return del(getAddress(this.jid.user, this.jid.domain, instance), cb);
+    };
+
+    JOAPClass.prototype.search = function(attrs, cb) {
+      return search(getAddress(this.jid.user, this.jid.domain), attrs, cb);
+    };
+
+    return JOAPClass;
+
+  })();
+
+  Strophe.addConnectionPlugin('joap', (function() {
+    var init;
     init = function(c) {
       conn = c;
       Strophe.addNamespace("JOAP", JOAP_NS);
@@ -315,7 +347,6 @@
     };
     return {
       init: init,
-      getObjectServer: getObjectServer,
       describe: describe,
       add: add,
       read: read,
@@ -323,7 +354,9 @@
       "delete": del,
       search: search,
       JOAPError: JOAPError,
-      JOAPObject: JOAPObject
+      JOAPServer: JOAPServer,
+      JOAPObject: JOAPObject,
+      JOAPClass: JOAPClass
     };
   })());
 

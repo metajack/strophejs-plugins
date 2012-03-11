@@ -80,11 +80,7 @@ parseDescription = (iq) ->
   result
 
 getAddress = (clazz, service, instance) ->
-  addr = ""
-  addr += "#{clazz}@" if clazz if typeof clazz is "string"
-  addr += service
-  addr += "/#{instance}" if (typeof(instance) in ["string", "number"])
-  addr
+  (new JID clazz, service, instance).toString()
 
 createIq = (type, to) ->
   iqType = "set"
@@ -134,9 +130,10 @@ class JOAPError extends Error
   constructor: (@message, @code)->
     @name = "JOAPError"
 
-class Server
+class JOAPServer
 
-  constructor: (@service) ->
+  constructor: (service) ->
+    @jid = new JID service
 
   describe: (clazz, instance, cb) ->
     if typeof clazz is "function"
@@ -145,36 +142,63 @@ class Server
     else if typeof instance is "function"
       cb = instance
       instance = null
-    describe getAddress(clazz, @service, instance), cb
+    describe getAddress(clazz, @jid.domain, instance), cb
 
   add: (clazz, attrs, cb) ->
-    add getAddress(clazz, @service), attrs, cb
+    add getAddress(clazz, @jid.domain), attrs, cb
 
   read: (clazz, instance, limits, cb) ->
-    read getAddress(clazz, @service, instance), limits, cb
+    read getAddress(clazz, @jid.domain, instance), limits, cb
 
   edit: (clazz, instance, attrs, cb) ->
-    edit getAddress(clazz, @service, instance), attrs, cb
+    edit getAddress(clazz, @jid.domain, instance), attrs, cb
 
   delete: (clazz, instance, cb) ->
-    del getAddress(clazz, @service, instance), cb
+    del getAddress(clazz, @jid.domain, instance), cb
 
   search: (clazz, attrs, cb) ->
-    search getAddress(clazz, @service), attrs, cb
+    search getAddress(clazz, @jid.domain), attrs, cb
 
 class JOAPObject
 
-  constructor: (@id) ->
+  constructor: (id) ->
+    @jid = new JID id
 
-  read: (limits, cb) ->
-    conn.joap.read @id, limits, cb
+  read: (limits, cb) -> read @jid.toString(), limits, cb
 
-  edit: (attrs, cb) ->
-    conn.joap.edit @id, attrs, cb
+  edit: (attrs, cb) -> edit @jid.toString(), attrs, cb
+
+  describe: (cb) -> describe @jid.toString(), cb
+
+class JOAPClass
+
+  constructor: (id) ->
+    @jid = new JID id
+
+  describe: (instance, cb) ->
+    if typeof instance is "function"
+      cb = instance
+      instance = null
+    describe getAddress(@jid.user, @jid.domain, instance), cb
+
+  add: (attrs, cb) ->
+    add getAddress(@jid.user, @jid.domain), attrs, cb
+
+  read: (instance, limits, cb) ->
+    read getAddress(@jid.user, @jid.domain, instance), limits, cb
+
+  edit: (instance, attrs, cb) ->
+    edit getAddress(@jid.user, @jid.domain, instance), attrs, cb
+
+  delete: (instance, cb) ->
+    del getAddress(@jid.user, @jid.domain, instance), cb
+
+  search: (attrs, cb) ->
+    search getAddress(@jid.user, @jid.domain), attrs, cb
+
 
 Strophe.addConnectionPlugin 'joap', do ->
 
-  getObjectServer = (service) -> new Server service
   init = (c) ->
     conn = c
     Strophe.addNamespace "JOAP", JOAP_NS
@@ -187,7 +211,6 @@ Strophe.addConnectionPlugin 'joap', do ->
 
   # public API
   init: init
-  getObjectServer: getObjectServer
   describe: describe
   add: add
   read: read
@@ -195,4 +218,6 @@ Strophe.addConnectionPlugin 'joap', do ->
   delete: del
   search: search
   JOAPError: JOAPError
+  JOAPServer: JOAPServer
   JOAPObject: JOAPObject
+  JOAPClass: JOAPClass

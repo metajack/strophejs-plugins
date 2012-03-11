@@ -3,6 +3,7 @@ jsdom   = require('jsdom')
 jquery  = fs.readFileSync("./lib/jquery.js").toString()
 strophe = fs.readFileSync("./lib/strophe.js").toString()
 rpc     = fs.readFileSync("./lib/strophe.rpc.js").toString()
+jid     = fs.readFileSync("./lib/jid.js").toString()
 joap    = fs.readFileSync("./strophe.joap.js").toString()
 
 describe "strophe.joap loading", ->
@@ -13,6 +14,7 @@ describe "strophe.joap loading", ->
     Strophe = null
     $ = null
     $iq = null
+    JID = null
 
     mockConnection = ->
       c = new Strophe.Connection()
@@ -46,11 +48,12 @@ describe "strophe.joap loading", ->
 
     jsdom.env
       html: '<html><body></body></html>'
-      src: [ jquery, strophe, rpc, joap ]
+      src: [ jquery, strophe, rpc, joap, jid]
       done: (errors, w) ->
         Strophe = w.Strophe
         $ = w.jQuery
         $iq = w.$iq
+        JID = w.JID
         window = w
 
     waitsFor -> !!window
@@ -59,6 +62,7 @@ describe "strophe.joap loading", ->
       (expect window.Strophe).toBeDefined()
       (expect window.$).toBeDefined()
       (expect window.jQuery).toBeDefined()
+      (expect window.JID).toBeDefined()
 
     describe "strophe.joap plugin", ->
 
@@ -72,7 +76,7 @@ describe "strophe.joap loading", ->
         (expect typeof @c.joap).toEqual "object"
 
       it "has a method for creating a new connection to an  object server", ->
-        server = @c.joap.getObjectServer "service.example.com"
+        server = new @c.joap.JOAPServer "service.example.com"
         (expect server).toBeDefined()
 
       describe "object server", ->
@@ -80,12 +84,12 @@ describe "strophe.joap loading", ->
         server = null
 
         beforeEach ->
-          server = @c.joap.getObjectServer "service.example.com"
+          server = new @c.joap.JOAPServer "service.example.com"
 
         it "can create an instance", ->
 
           spyon @c, "send", (iq) ->
-            (expect iq.attr "to").toEqual "User@service.example.com"
+            (expect iq.attr "to").toEqual "user@service.example.com"
             (expect iq.attr "type").toEqual "set"
 
             child = $ iq.children()[0]
@@ -107,7 +111,7 @@ describe "strophe.joap loading", ->
             (expect child.children().length).toEqual 2
             (expect ($ "i4", pass).text()).toEqual "2"
 
-          server.add "User", {name: "foo", pass: 2}, (iq, err, address) ->
+          server.add "user", {name: "foo", pass: 2}, (iq, err, address) ->
 
         it "can parse an error message", ->
           spyon @c, "send", (req) =>
@@ -294,11 +298,17 @@ describe "strophe.joap loading", ->
         it "can send a describe request to the server", ->
           spyon @c, "send", (iq) =>
             (expect iq.attr "to").toEqual "service.example.com"
+            res = $iq({type:'result', id: iq.attr 'id'}).c("describe")
+              .c("desc", "xml:lang":"en-US").t("Server description").up()
+            @c._dataRecv createRequest(res)
           @c.joap.describe "service.example.com" ,(iq, err, result) ->
 
         it "can send a describe requests to an instance", ->
           spyon @c, "send", (iq) =>
             (expect iq.attr "to").toEqual "Class@service.example.com/id"
+            res = $iq({type:'result', id: iq.attr 'id'}).c("describe")
+              .c("desc", "xml:lang":"en-US").t("Instance description").up()
+            @c._dataRecv createRequest(res)
           server.describe "Class", "id", (iq, err, result) ->
 
       describe "joap object", ->
@@ -311,9 +321,10 @@ describe "strophe.joap loading", ->
         it "can be created", ->
 
           joapObj = new @c.joap.JOAPObject id
-          (expect joapObj.id).toEqual id
+          (expect joapObj.jid.toString()).toEqual id
           (expect typeof joapObj.read).toEqual "function"
           (expect typeof joapObj.edit).toEqual "function"
+          (expect typeof joapObj.describe).toEqual "function"
 
         it "can read the remote state", ->
 
@@ -346,3 +357,52 @@ describe "strophe.joap loading", ->
             (expect err).toBeFalsy()
             spy()
           (expect spy).toHaveBeenCalled()
+
+        it "provied the describe method", ->
+          spyon @c, "send", (iq) =>
+            (expect iq.attr "to").toEqual "Class@service.example.com/id"
+            res = $iq({type:'result', id: iq.attr 'id'}).c("describe")
+              .c("desc", "xml:lang":"en-US").t("Instance description").up()
+            @c._dataRecv createRequest(res)
+          @obj.describe (iq, err, result) ->
+
+      describe "joap class", ->
+
+        clz = null
+
+        beforeEach ->
+          clz = new @c.joap.JOAPClass "class@service.example.com"
+
+        it "can be created", ->
+
+          (expect clz.jid.toString()).toEqual "class@service.example.com"
+          (expect typeof clz.read).toEqual "function"
+          (expect typeof clz.edit).toEqual "function"
+          (expect typeof clz.delete).toEqual "function"
+          (expect typeof clz.add).toEqual "function"
+          (expect typeof clz.search).toEqual "function"
+
+        it "can read an instance", ->
+          spyon @c, "send", (req) =>
+            res = $iq({type:'result', id: req.attr 'id'})
+              .c("read")
+                .c("attribute")
+                  .c("name").t("prop").up()
+                  .c("value").c("int").t('3').up().up()
+
+            @c._dataRecv createRequest(res)
+
+          clz.read "123", (iq, err, obj) ->
+            (expect obj.prop).toEqual 3
+
+        it "can edit a property", ->
+          spyon @c, "send", (iq) =>
+            (expect ($ "edit",iq).attr "xmlns").toEqual "jabber:iq:joap"
+
+            res = $iq({type:'result', id: iq.attr 'id'}).c("edit")
+            @c._dataRecv createRequest(res)
+
+          clz.edit "432", { age: 33 },(iq, err) ->
+            (expect typeof iq).toEqual "object"
+            (expect err).toBeFalsy()
+
