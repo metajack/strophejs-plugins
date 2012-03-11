@@ -300,3 +300,49 @@ describe "strophe.joap loading", ->
           spyon @c, "send", (iq) =>
             (expect iq.attr "to").toEqual "Class@service.example.com/id"
           server.describe "Class", "id", (iq, err, result) ->
+
+      describe "joap object", ->
+
+        id = "Class@service.example.com/id"
+
+        beforeEach ->
+          @obj = new @c.joap.JOAPObject id
+
+        it "can be created", ->
+
+          joapObj = new @c.joap.JOAPObject id
+          (expect joapObj.id).toEqual id
+          (expect typeof joapObj.read).toEqual "function"
+          (expect typeof joapObj.edit).toEqual "function"
+
+        it "can read the remote state", ->
+
+          spy = jasmine.createSpy "execSpy"
+          spyon @c, "send", (req) =>
+            res = $iq({type:'result', id: req.attr 'id'})
+              .c("read")
+                .c("attribute")
+                  .c("name").t("prop").up()
+                  .c("value").c("int").t('5').up().up()
+
+            @c._dataRecv createRequest(res)
+
+          @obj.read (iq, err, obj) ->
+            (expect obj.prop).toEqual 5
+            spy()
+          (expect spy).toHaveBeenCalled()
+
+        it "can edit a property", ->
+          spy = jasmine.createSpy "execSpy"
+          spyon @c, "send", (iq) =>
+            (expect ($ "edit",iq).attr "xmlns").toEqual "jabber:iq:joap"
+            (expect ($ "value",iq).text()).toEqual '33'
+
+            res = $iq({type:'result', id: iq.attr 'id'}).c("edit")
+            @c._dataRecv createRequest(res)
+
+          @obj.edit { age: 33 },(iq, err) ->
+            (expect typeof iq).toEqual "object"
+            (expect err).toBeFalsy()
+            spy()
+          (expect spy).toHaveBeenCalled()

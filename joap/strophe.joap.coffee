@@ -162,6 +162,16 @@ class Server
   search: (clazz, attrs, cb) ->
     search getAddress(clazz, @service), attrs, cb
 
+class JOAPObject
+
+  constructor: (@id) ->
+
+  read: (limits, cb) ->
+    conn.joap.read @id, limits, cb
+
+  edit: (attrs, cb) ->
+    conn.joap.edit @id, attrs, cb
+
 Strophe.addConnectionPlugin 'joap', do ->
 
   getObjectServer = (service) -> new Server service
@@ -185,3 +195,4 @@ Strophe.addConnectionPlugin 'joap', do ->
   delete: del
   search: search
   JOAPError: JOAPError
+  JOAPObject: JOAPObject

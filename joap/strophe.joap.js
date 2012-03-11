@@ -1,5 +1,5 @@
 (function() {
-  var JOAPError, JOAP_NS, Server, add, addXMLAttributes, conn, createIq, del, describe, edit, getAddress, onError, parseAttributeDescription, parseAttributes, parseDesc, parseDescription, parseMethodDescription, parseNewAddress, parseSearch, read, search, sendRequest,
+  var JOAPError, JOAPObject, JOAP_NS, Server, add, addXMLAttributes, conn, createIq, del, describe, edit, getAddress, onError, parseAttributeDescription, parseAttributes, parseDesc, parseDescription, parseMethodDescription, parseNewAddress, parseSearch, read, search, sendRequest,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -280,6 +280,24 @@
 
   })();
 
+  JOAPObject = (function() {
+
+    function JOAPObject(id) {
+      this.id = id;
+    }
+
+    JOAPObject.prototype.read = function(limits, cb) {
+      return conn.joap.read(this.id, limits, cb);
+    };
+
+    JOAPObject.prototype.edit = function(attrs, cb) {
+      return conn.joap.edit(this.id, attrs, cb);
+    };
+
+    return JOAPObject;
+
+  })();
+
   Strophe.addConnectionPlugin('joap', (function() {
     var getObjectServer, init;
     getObjectServer = function(service) {
@@ -304,7 +322,8 @@
       edit: edit,
       "delete": del,
       search: search,
-      JOAPError: JOAPError
+      JOAPError: JOAPError,
+      JOAPObject: JOAPObject
     };
   })());
 
