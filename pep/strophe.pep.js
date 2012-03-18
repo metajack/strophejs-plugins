@@ -19,9 +19,32 @@
       conn.caps.removeFeature("" + node + "+notify");
       return conn.caps.sendPres();
     };
-    publish = function(node, items, callback) {
-      return conn.pubsub.publish(node, items, callback);
-    };
+    /***Function
+
+        Publish and item to the given pubsub node.
+
+        Parameters:
+        (String) node -  The name of the pubsub node.
+        (Array) items -  The list of items to be published.
+        (Function) call_back - Used to determine if node
+        creation was sucessful.
+        */
+        publish: function(node, items, call_back) {
+            var that = this.conn;
+            var iqid = that.getUniqueId("pubsubpublishnode");
+
+            var iq = $iq({from:that.jid,type:'set', id:iqid})
+              .c('pubsub', { xmlns:Strophe.NS.PUBSUB })
+              .c('publish', { node:node, jid:that.jid })
+              .list('item', items);
+
+            that.addHandler(call_back, null, 'iq', null, iqid, null);
+            that.send(iq.tree());
+
+            return iqid;
+        },
+        
+
     return {
       init: init,
       publish: publish,
