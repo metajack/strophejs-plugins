@@ -31,7 +31,7 @@ Strophe.ArchivedCollection = function(connection, jid, start) {
   this.connection = connection;
   this.jid = jid;
   this.start = start;
-  this.startDate = iso8601toDate(start);
+  this.startDate = (new Date()).setISO8601(start);
 };
 
 Strophe.ArchivedCollection.prototype = {
@@ -86,40 +86,3 @@ Strophe.ArchivedMessage = function(timestamp, from, to, body) {
 Strophe.ArchivedMessage.prototype = {
 };
 
-/** Function: iso8610toDate
-   * Parses a ISO-8610 Date to a Date-Object.
-	 *
-	 * Uses a fallback if the client's browser doesn't support it.
-	 *
-	 * Quote:
-	 *   ECMAScript revision 5 adds native support for ISO-8601 dates in the Date.parse method,
-	 *   but many browsers currently on the market (Safari 4, Chrome 4, IE 6-8) do not support it.
-	 *
-	 * Credits:
-	 *  <Colin Snover at http://zetafleet.com/blog/javascript-dateparse-for-iso-8601>
-	 *
-	 * Parameters:
-	 *   (String) date - ISO-8610 Date
-	 *
-	 * Returns:
-	 *   Date-Object
-	 */
-function iso8601toDate(date) {
-  var timestamp = Date.parse(date), minutesOffset = 0;
-	if(isNaN(timestamp)) {
-		var struct = /^(\d{4}|[+\-]\d{6})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3,}))?)?(?:(Z)|([+\-])(\d{2})(?::?(\d{2}))?))?/.exec(date);
-		if(struct) {
-			if(struct[8] !== 'Z') {
-				minutesOffset = +struct[10] * 60 + (+struct[11]);
-				if(struct[9] === '+') {
-					minutesOffset = -minutesOffset;
-				}
-			}
-			return new Date(+struct[1], +struct[2] - 1, +struct[3], +struct[4], +struct[5] + minutesOffset, +struct[6], struct[7] ? +struct[7].substr(0, 3) : 0);
-		} else {
-			// XEP-0091 date
-			timestamp = Date.parse(date.replace(/^(\d{4})(\d{2})(\d{2})/, '$1-$2-$3') + 'Z');
-		}
-	}
-	return new Date(timestamp);
-};
