@@ -220,7 +220,7 @@ Strophe.addConnectionPlugin('roster',
         {
             delete item.resources[Strophe.getResourceFromJid(jid)];
         }
-        else
+        else if (!type)
         {
             // TODO: add timestamp
             item.resources[Strophe.getResourceFromJid(jid)] = {
@@ -228,6 +228,11 @@ Strophe.addConnectionPlugin('roster',
                 status   : (presence.getElementsByTagName('status').length != 0) ? Strophe.getText(presence.getElementsByTagName('status')[0]) : "",
                 priority : (presence.getElementsByTagName('priority').length != 0) ? Strophe.getText(presence.getElementsByTagName('priority')[0]) : ""
             };
+        }
+        else
+        {
+            // Stanza is not a presence notification. (It's probably a subscription type stanza.)
+            return true;
         }
         this._call_backs(this.items, item);
         return true;
@@ -304,7 +309,7 @@ Strophe.addConnectionPlugin('roster',
         {
             item.name = name;
             item.subscription = subscription;
-            item.group = groups;
+            item.groups = groups;
         }
     }
 });
