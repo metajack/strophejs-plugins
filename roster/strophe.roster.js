@@ -52,9 +52,49 @@ Strophe.addConnectionPlugin('roster',
     {
     this._connection = conn;
         this.items = [];
-        // Presence subscription
-        conn.addHandler(this._onReceivePresence.bind(this), null, 'presence', null, null, null);
-        conn.addHandler(this._onReceiveIQ.bind(this), Strophe.NS.ROSTER, 'iq', "set", null, null);
+        // Override the connect and attach methods to always add presence and roster handlers.
+        // They are removed when the connection disconnects, so must be added on connection.
+        var oldCallback, roster = this, _connect = conn.connect, _attach = conn.attach;
+        var newCallback = function(status)
+        {
+            if (status == Strophe.Status.ATTACHED || status == Strophe.Status.CONNECTED)
+            {
+                try
+                {
+                    // Presence subscription
+                    conn.addHandler(roster._onReceivePresence.bind(roster), null, 'presence', null, null, null);
+                    conn.addHandler(roster._onReceiveIQ.bind(roster), Strophe.NS.ROSTER, 'iq', "set", null, null);
+                }
+                catch (e)
+                {
+                    Strophe.error(e);
+                }
+            }
+            if (oldCallback !== null)
+                oldCallback.apply(this, arguments);
+        };
+        conn.connect = function(jid, pass, callback, wait, hold)
+        {
+            oldCallback = callback;
+            if (typeof arguments[0] == "undefined")
+                arguments[0] = null;
+            if (typeof arguments[1] == "undefined")
+                arguments[1] = null;
+            arguments[2] = newCallback;
+            _connect.apply(conn, arguments);
+        };
+        conn.attach = function(jid, sid, rid, callback, wait, hold, wind)
+        {
+            oldCallback = callback;
+            if (typeof arguments[0] == "undefined")
+                arguments[0] = null;
+            if (typeof arguments[1] == "undefined")
+                arguments[1] = null;
+            if (typeof arguments[2] == "undefined")
+                arguments[2] = null;
+            arguments[3] = newCallback;
+            _attach.apply(conn, arguments);
+        };
 
         Strophe.addNamespace('ROSTER_VER', 'urn:xmpp:features:rosterver');
     },
