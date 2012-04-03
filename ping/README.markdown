@@ -16,10 +16,11 @@ You can also add a ping handler to receive pings:
 
 Within your ping handler function you surely want to reply with a pong iq:
 
-    myHandler = function( ping ){
+    handler = function( ping ){
       ...
-      connection.ping.pong( ping )
+      connection.ping.pong( ping );
       ...
+	  return true;
     }
 
 ## ToDo
