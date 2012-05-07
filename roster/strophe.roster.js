@@ -25,6 +25,7 @@ Strophe.addConnectionPlugin('roster',
      *        name         : "",
      *        jid          : "",
      *        subscription : "",
+     *        ask          : "",
      *        groups       : ["", ""],
      *        resources    : {
      *            myresource : {
@@ -281,6 +282,7 @@ Strophe.addConnectionPlugin('roster',
         var jid           = item.getAttribute("jid");
         var name          = item.getAttribute("name");
         var subscription  = item.getAttribute("subscription");
+        var ask           = item.getAttribute("ask");
         var groups        = [];
         Strophe.forEachChild(item, 'group',
             function(group)
@@ -296,6 +298,7 @@ Strophe.addConnectionPlugin('roster',
                 name         : name,
                 jid          : jid,
                 subscription : subscription,
+                ask  	       : ask,
                 groups       : groups,
                 resources    : {}
             });
@@ -304,6 +307,7 @@ Strophe.addConnectionPlugin('roster',
         {
             item.name = name;
             item.subscription = subscription;
+            item.ask = ask;
             item.group = groups;
         }
     }
