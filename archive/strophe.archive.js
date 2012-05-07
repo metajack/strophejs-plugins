@@ -31,8 +31,7 @@ Strophe.ArchivedCollection = function(connection, jid, start) {
   this.connection = connection;
   this.jid = jid;
   this.start = start;
-  this.startDate = new Date();
-  this.startDate.setISO8601(start);
+  this.startDate = (new Date()).setISO8601(start);
 };
 
 Strophe.ArchivedCollection.prototype = {
@@ -86,3 +85,4 @@ Strophe.ArchivedMessage = function(timestamp, from, to, body) {
 
 Strophe.ArchivedMessage.prototype = {
 };
+
