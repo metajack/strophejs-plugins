@@ -219,8 +219,7 @@ Strophe.addConnectionPlugin('roster',
         var newName = name || item.name;
         var newGroups = groups || item.groups;
         var iq = $iq({type: 'set'}).c('query', {xmlns: Strophe.NS.ROSTER}).c('item', {jid: item.jid,
-                                                                                      name: newName,
-                                                                                      subscription: item.subscription});
+                                                                                      name: newName});
         for (var i = 0; i < newGroups.length; i++)
         {
             iq.c('group').t(newGroups[i]).up();
@@ -289,13 +288,16 @@ Strophe.addConnectionPlugin('roster',
         }
     },
     /** PrivateFunction: _onReceiveIQ
-     *
+     * Handle roster push.
      */
     _onReceiveIQ : function(iq)
     {
         var id = iq.getAttribute('id');
         var from = iq.getAttribute('from');
-        var iqresult = $iq({type: 'result', id: id, to: from});
+        // Receiving client MUST ignore stanza unless it has no from or from = user's JID.
+        if (from && from != "" && from != this._connection.jid && from != Strophe.getBareJidFromJid(this._connection.jid))
+            return true;
+        var iqresult = $iq({type: 'result', id: id, from: this._connection.jid});
         this._connection.send(iqresult);
         this._updateItems(iq);
         return true;
@@ -343,7 +345,7 @@ Strophe.addConnectionPlugin('roster',
                 name         : name,
                 jid          : jid,
                 subscription : subscription,
-                ask  	       : ask,
+                ask          : ask,
                 groups       : groups,
                 resources    : {}
             });
