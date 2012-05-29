@@ -153,9 +153,27 @@ Strophe.addConnectionPlugin('roster',
     {
         for (var i = 0; i < this.items.length; i++)
         {
-            if (this.items[i].jid == jid)
+            if (this.items[i] && this.items[i].jid == jid)
             {
                 return this.items[i];
+            }
+        }
+        return false;
+    },
+    /** Function: removeItem
+     * Remove item by JID
+     *
+     * Parameters:
+     *     (String) jid
+     */
+    removeItem : function(jid)
+    {
+        for (var i = 0; i < this.items.length; i++)
+        {
+            if (this.items[i] && this.items[i].jid == jid)
+            {
+                this.items.splice(i, 1);
+                return true;
             }
         }
         return false;
@@ -216,6 +234,25 @@ Strophe.addConnectionPlugin('roster',
             pres.c("status").t(message);
         this._connection.send(pres);
     },
+    /** Function: add
+     * Add roster item
+     *
+     * Parameters:
+     *   (String) jid - item jid
+     *   (String) name - name
+     *   (Array) groups
+     *   (Function) call_back
+     */
+    add: function(jid, name, groups, call_back)
+    {
+        var iq = $iq({type: 'set'}).c('query', {xmlns: Strophe.NS.ROSTER}).c('item', {jid: jid,
+                                                                                      name: name});
+        for (var i = 0; i < groups.length; i++)
+        {
+            iq.c('group').t(groups[i]).up();
+        }
+        this._connection.sendIQ(iq, call_back, call_back);
+    },
     /** Function: update
      * Update roster item
      *
@@ -240,6 +277,24 @@ Strophe.addConnectionPlugin('roster',
         {
             iq.c('group').t(newGroups[i]).up();
         }
+        this._connection.sendIQ(iq, call_back, call_back);
+    },
+    /** Function: remove
+     * Remove roster item
+     *
+     * Parameters:
+     *   (String) jid - item jid
+     *   (Function) call_back
+     */
+    remove: function(jid, call_back)
+    {
+        var item = this.findItem(jid);
+        if (!item)
+        {
+            throw "item not found";
+        }
+        var iq = $iq({type: 'set'}).c('query', {xmlns: Strophe.NS.ROSTER}).c('item', {jid: item.jid,
+                                                                                      subscription: "remove"});
         this._connection.sendIQ(iq, call_back, call_back);
     },
     /** PrivateFunction: _onReceiveRosterSuccess
@@ -353,6 +408,12 @@ Strophe.addConnectionPlugin('roster',
                 groups.push(Strophe.getText(group));
             }
         );
+
+        if (subscription == "remove")
+        {
+            this.removeItem(jid);
+            return;
+        }
 
         var item = this.findItem(jid);
         if (!item)
