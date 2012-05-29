@@ -165,40 +165,56 @@ Strophe.addConnectionPlugin('roster',
      *
      * Parameters:
      *     (String) jid
+     *     (String) message
      */
-    subscribe: function(jid)
+    subscribe: function(jid, message)
     {
-        this._connection.send($pres({to: jid, type: "subscribe"}));
+        var pres = $pres({to: jid, type: "subscribe"});
+        if (message && message != "")
+            pres.c("status").t(message);
+        this._connection.send(pres);
     },
     /** Function: unsubscribe
      * Unsubscribe presence
      *
      * Parameters:
      *     (String) jid
+     *     (String) message
      */
-    unsubscribe: function(jid)
+    unsubscribe: function(jid, message)
     {
-        this._connection.send($pres({to: jid, type: "unsubscribe"}));
+        var pres = $pres({to: jid, type: "unsubscribe"});
+        if (message && message != "")
+            pres.c("status").t(message);
+        this._connection.send(pres);
     },
     /** Function: authorize
      * Authorize presence subscription
      *
      * Parameters:
      *     (String) jid
+     *     (String) message
      */
-    authorize: function(jid)
+    authorize: function(jid, message)
     {
-        this._connection.send($pres({to: jid, type: "subscribed"}));
+        var pres = $pres({to: jid, type: "subscribed"});
+        if (message && message != "")
+            pres.c("status").t(message);
+        this._connection.send(pres);
     },
     /** Function: unauthorize
      * Unauthorize presence subscription
      *
      * Parameters:
      *     (String) jid
+     *     (String) message
      */
-    unauthorize: function(jid)
+    unauthorize: function(jid, message)
     {
-        this._connection.send($pres({to: jid, type: "unsubscribed"}));
+        var pres = $pres({to: jid, type: "unsubscribed"});
+        if (message && message != "")
+            pres.c("status").t(message);
+        this._connection.send(pres);
     },
     /** Function: update
      * Update roster item
