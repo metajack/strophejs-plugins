@@ -5,13 +5,14 @@ A strophe plugin for the Jabber Object Access Protocol
 
 ## Usage
 
-Just link the rpc plugin and the joap plugin below the strophe library in your
+Link the `rpc`, `jid` and the `joap` plugin below the strophe library in your
 HTML head section:
 
 ``` html
 <head>
 <!-- ... -->
 <script type="text/javascript" src="strophe.min.js"></script>
+<script type="text/javascript" src="jid.js"></script>
 <script type="text/javascript" src="strophe.disco.js"></script>
 <script type="text/javascript" src="strophe.rpc.js"></script>
 <script type="text/javascript" src="strophe.joap.js"></script>
@@ -22,8 +23,10 @@ HTML head section:
 After your client is sucessfully connected you can create, read, update and
 delete objects.
 
+### Server
+
 ``` coffeescript
-objectServer = connection.joap.getObjectServer "component.example.org"
+objectServer = new connection.joap.JOAPServer "component.example.org"
 
 # requesting the server description
 objectServer.describe (iq, err, parsedDescription) ->
@@ -32,7 +35,7 @@ objectServer.describe (iq, err, parsedDescription) ->
 objectServer.describe "User", (iq, err, parsedDescription) ->
 
 # creating a new instance
-objectServer.add "User", { name:"My Name", age: 99 }, (iq, err, instanceId) ->
+objectServer.add "User", { name:"My Name", age: 99 }, (iq, err, instanceAddress) ->
 
 # reading an instance
 objectServer.read "User", "instanceId", (iq, err, parsedResult) ->
@@ -50,8 +53,30 @@ objectServer.delete "User", "instanceId", (iq, err) ->
 objectServer.search "User", {age: 60} , (iq, err, arrayOfInstanceIDs) ->
 ```
 
+### Class
+
+``` coffeescript
+aClass = new connection.joap.JOAPClass "myClass@component.example.org"
+
+# requesting a class description
+aClass.describe (iq, err, parsedDescription) ->
+
+# creating a new instance
+aClass.add { aProperty:"aValue" }, (iq, err, instanceAddress) ->
+```
+
+### Object
+
+``` coffeescript
+obj = new connection.joap.JOAPObject "myClass@component.example.org/instanceId"
+
+# modifying properties
+obj.edit { key: 'value' }, (iq, err) ->
+```
+
 ## Dependencies
 
+- jid.js
 - [rpc](https://github.com/metajack/strophejs-plugins/tree/master/rpc)
 - [service discovery](https://github.com/metajack/strophejs-plugins/tree/master/disco) (optional)
 
