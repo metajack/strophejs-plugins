@@ -145,6 +145,8 @@
 			node = c.getAttribute('node');
 		if (!this._knownCapabilities[ver]) {
 			return this._requestCapabilities(from, node, ver);
+		} else {
+			this._jidVerIndex[from] = ver;
 		}
 		if (!this._jidVerIndex[from] || !this._jidVerIndex[from] !== ver) {
 			this._jidVerIndex[from] = ver;

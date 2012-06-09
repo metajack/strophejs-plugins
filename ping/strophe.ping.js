@@ -25,9 +25,10 @@ Strophe.addConnectionPlugin('ping', {
 	 * Function: ping
 	 *
 	 * Parameters:
-	 * (String) to	- the JID you want to ping
-	 * (Function) success	- Callback function on success
-	 * (Function) error	- Callback function on error
+	 * (String) to - The JID you want to ping
+	 * (Function) success - Callback function on success
+	 * (Function) error - Callback function on error
+	 * (Integer) timeout - Timeout in milliseconds
 	 */
 	ping: function(jid, success, error, timeout)
 	{
@@ -41,9 +42,7 @@ Strophe.addConnectionPlugin('ping', {
 	 * Function: pong
 	 *
 	 * Parameters:
-	 * (Object) ping	-
-	 * (Function) success	-
-	 * (Function) error	-
+	 * (Object) ping - The ping stanza from the server 
 	 */
 	pong: function(ping)
 	{
