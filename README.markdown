@@ -65,6 +65,8 @@ https://github.com/metajack/strophejs-plugins .
 - [Roster Versioning](strophejs-plugins/tree/master/roster/)
   ([XEP 0237](http://xmpp.org/extensions/xep-0237.html))
 
+- [Message Archive Management](strophejs-plugins/tree/master/mam/)
+  ([XEP 0313](http://xmpp.org/extensions/xep-0313.html))
 
 ### Other Plugins
 
