@@ -24,16 +24,16 @@ query:
     var _p = this._p;
     var attr = {type:"get"};
     var mamAttr = {xmlns: Strophe.NS.MAM};
+    var iq = $iq(attr).c("query", mamAttr);
     for (i=0; i < this._p.length; i++) {
       var pn = _p[i];
       var p = options[pn]; delete options[pn];
       if(!!p) {
-        attr[pn]=p;
+				iq.c(pn).t(p).up();
       }
     }
     var onMessage = options["onMessage"]; delete options['onMessage'];
     var onComplete = options["onComplete"]; delete options['onComplete'];
-    var iq = $iq(attr).c("query", mamAttr);
     iq.cnode(new Strophe.RSM(options).toXML());
     this._c.addHandler(onMessage, Strophe.NS.MAM, "message", null);
     return this._c.sendIQ(iq, onComplete);
