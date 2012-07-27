@@ -32,13 +32,13 @@ Strophe.addConnectionPlugin 'vcard',
       (String) jid - optional - The name of the entity to request the vCard
          If no jid is given, this function retrieves the current user's vcard.
     ###
-    get: (handler_cb, jid) ->
+    get: (handler_cb, jid, error_cb) ->
         iq = buildIq "get", jid
-        this._connection.sendIQ iq.tree(), handler_cb
+        this._connection.sendIQ iq, handler_cb, error_cb
 
     ### Function
         Set an entity's vCard.
     ###
-    set: (handler_cb, vCardEl, jid) ->
+    set: (handler_cb, vCardEl, jid, error_cb) ->
         iq = buildIq "set", jid, vCardEl
-        this._connection.sendIQ iq.tree(), handler_cb
+        this._connection.sendIQ iq, handler_cb, error_rb
