@@ -251,6 +251,9 @@ Strophe.addConnectionPlugin('register', {
                 // it provides info about given data fields in a textual way.
                 this.instructions = Strophe.getText(field);
                 continue;
+            } else if (field.tagName.toLowerCase() === 'x') {
+                // ignore x for now
+                continue;
             }
             this.fields[field.tagName.toLowerCase()] = Strophe.getText(field);
         }
