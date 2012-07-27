@@ -50,6 +50,7 @@ Strophe.addConnectionPlugin 'muc'
     # One handler for all rooms that dispatches to room callbacks
     @_muc_handler ?=  @_connection.addHandler (stanza) =>
       from = stanza.getAttribute 'from'
+      return true unless from
       roomname = from.split("/")[0]
 
       # Abort if the stanza is not for a known MUC
@@ -291,18 +292,22 @@ Strophe.addConnectionPlugin 'muc'
   Save a room configuration.
   Parameters:
   (String) room - The multi-user chat room name.
-  (Array) configarray - an array of form elements used to configure the room.
+  (Array) config- Form Object or an array of form elements used to configure the room.
   Returns:
   id - the unique id used to save the configuration.
   ###
-  saveConfiguration: (room, configarray) ->
-    config = $iq(
+  saveConfiguration: (room, config) ->
+    iq = $iq(
       to: room
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_OWNER)
-    .c("x", xmlns: "jabber:x:data", type: "submit")
-    config.cnode(conf).up() for conf in configarray
-    stanza = config.tree()
+    if config instanceof Form
+      config.type = "submit"
+      iq.cnode config.toXML()
+    else
+      iq.c("x", xmlns: "jabber:x:data", type: "submit")
+      iq.cnode(conf).up() for conf in config
+    stanza = iq.tree()
     @_connection.sendIQ stanza
 
   ###Function
@@ -494,9 +499,8 @@ class XmppRoom
     @client.rooms[@name] = @
     @addHandler 'presence', @_roomRosterHandler
 
-  join: (msg_handler_cb, pres_handler_cb) ->
-    unless @client.rooms[@name]
-      @client.join(@name, @nick, msg_handler_cb, pres_handler_cb, @password)
+  join: (msg_handler_cb, pres_handler_cb, roster_cb) ->
+    @client.join(@name, @nick, msg_handler_cb, pres_handler_cb, roster_cb, @password)
 
   leave: (handler_cb, message) ->
     @client.leave @name, @nick, handler_cb, message
@@ -520,8 +524,8 @@ class XmppRoom
   cancelConfigure: ->
     @client.cancelConfigure @name
 
-  saveConfiguration: (configarray) ->
-    @client.saveConfiguration @name, configarray
+  saveConfiguration: (config) ->
+    @client.saveConfiguration @name, config
 
   queryOccupants: (success_cb, error_cb) ->
     @client.queryOccupants @name, success_cb, error_cb

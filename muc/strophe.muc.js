@@ -57,6 +57,9 @@ Strophe.addConnectionPlugin('muc', {
       this._muc_handler = this._connection.addHandler(function(stanza) {
         var from, handler, handlers, id, roomname, x, xmlns, xquery, _i, _len;
         from = stanza.getAttribute('from');
+        if (!from) {
+          return true;
+        }
         roomname = from.split("/")[0];
         if (!_this.rooms[roomname]) {
           return true;
@@ -329,27 +332,33 @@ Strophe.addConnectionPlugin('muc', {
   Save a room configuration.
   Parameters:
   (String) room - The multi-user chat room name.
-  (Array) configarray - an array of form elements used to configure the room.
+  (Array) config- Form Object or an array of form elements used to configure the room.
   Returns:
   id - the unique id used to save the configuration.
   */
 
-  saveConfiguration: function(room, configarray) {
-    var conf, config, stanza, _i, _len;
-    config = $iq({
+  saveConfiguration: function(room, config) {
+    var conf, iq, stanza, _i, _len;
+    iq = $iq({
       to: room,
       type: "set"
     }).c("query", {
       xmlns: Strophe.NS.MUC_OWNER
-    }).c("x", {
-      xmlns: "jabber:x:data",
-      type: "submit"
     });
-    for (_i = 0, _len = configarray.length; _i < _len; _i++) {
-      conf = configarray[_i];
-      config.cnode(conf).up();
+    if (config instanceof Form) {
+      config.type = "submit";
+      iq.cnode(config.toXML());
+    } else {
+      iq.c("x", {
+        xmlns: "jabber:x:data",
+        type: "submit"
+      });
+      for (_i = 0, _len = config.length; _i < _len; _i++) {
+        conf = config[_i];
+        iq.cnode(conf).up();
+      }
     }
-    stanza = config.tree();
+    stanza = iq.tree();
     return this._connection.sendIQ(stanza);
   },
   /*Function
@@ -588,10 +597,8 @@ XmppRoom = (function() {
     this.addHandler('presence', this._roomRosterHandler);
   }
 
-  XmppRoom.prototype.join = function(msg_handler_cb, pres_handler_cb) {
-    if (!this.client.rooms[this.name]) {
-      return this.client.join(this.name, this.nick, msg_handler_cb, pres_handler_cb, this.password);
-    }
+  XmppRoom.prototype.join = function(msg_handler_cb, pres_handler_cb, roster_cb) {
+    return this.client.join(this.name, this.nick, msg_handler_cb, pres_handler_cb, roster_cb, this.password);
   };
 
   XmppRoom.prototype.leave = function(handler_cb, message) {
@@ -623,8 +630,8 @@ XmppRoom = (function() {
     return this.client.cancelConfigure(this.name);
   };
 
-  XmppRoom.prototype.saveConfiguration = function(configarray) {
-    return this.client.saveConfiguration(this.name, configarray);
+  XmppRoom.prototype.saveConfiguration = function(config) {
+    return this.client.saveConfiguration(this.name, config);
   };
 
   XmppRoom.prototype.queryOccupants = function(success_cb, error_cb) {
