@@ -288,8 +288,8 @@ Strophe.addConnectionPlugin('muc', {
   id - the unique id used to send the configuration request
   */
 
-  configure: function(room, handler_cb) {
-    var config, id, stanza;
+  configure: function(room, handler_cb, error_cb) {
+    var config, stanza;
     config = $iq({
       to: room,
       type: "get"
@@ -297,14 +297,7 @@ Strophe.addConnectionPlugin('muc', {
       xmlns: Strophe.NS.MUC_OWNER
     });
     stanza = config.tree();
-    id = this._connection.sendIQ(stanza);
-    if (handler_cb != null) {
-      this._connection.addHandler(function(stanza) {
-        handler_cb(stanza);
-        return false;
-      }, Strophe.NS.MUC_OWNER, "iq", null, id);
-    }
-    return id;
+    return this._connection.sendIQ(stanza, handler_cb, error_cb);
   },
   /*Function
   Cancel the room configuration
@@ -337,7 +330,7 @@ Strophe.addConnectionPlugin('muc', {
   id - the unique id used to save the configuration.
   */
 
-  saveConfiguration: function(room, config) {
+  saveConfiguration: function(room, config, success_cb, error_cb) {
     var conf, iq, stanza, _i, _len;
     iq = $iq({
       to: room,
@@ -359,7 +352,7 @@ Strophe.addConnectionPlugin('muc', {
       }
     }
     stanza = iq.tree();
-    return this._connection.sendIQ(stanza);
+    return this._connection.sendIQ(stanza, success_cb, error_cb);
   },
   /*Function
   Parameters:
@@ -368,7 +361,7 @@ Strophe.addConnectionPlugin('muc', {
   id - the unique id used to create the chat room.
   */
 
-  createInstantRoom: function(room) {
+  createInstantRoom: function(room, success_cb, error_cb) {
     var roomiq;
     roomiq = $iq({
       to: room,
@@ -379,7 +372,7 @@ Strophe.addConnectionPlugin('muc', {
       xmlns: "jabber:x:data",
       type: "submit"
     });
-    return this._connection.sendIQ(roomiq.tree());
+    return this._connection.sendIQ(roomiq.tree(), success_cb, error_cb);
   },
   /*Function
   Set the topic of the chat room.
@@ -409,7 +402,7 @@ Strophe.addConnectionPlugin('muc', {
   (Object) item - Object with nick and role or jid and affiliation attribute
   (String) reason - Optional reason for the change.
   (Function) handler_cb - Optional callback for success
-  (Function) errer_cb - Optional callback for error
+  (Function) error_cb - Optional callback for error
   Returns:
   iq - the id of the mode change request.
   */
@@ -438,7 +431,7 @@ Strophe.addConnectionPlugin('muc', {
   (String) affiliation - The new affiliation of the user.
   (String) reason - Optional reason for the change.
   (Function) handler_cb - Optional callback for success
-  (Function) errer_cb - Optional callback for error
+  (Function) error_cb - Optional callback for error
   Returns:
   iq - the id of the mode change request.
   */
@@ -476,7 +469,7 @@ Strophe.addConnectionPlugin('muc', {
   (String) affiliation - The new affiliation of the user.
   (String) reason - Optional reason for the change.
   (Function) handler_cb - Optional callback for success
-  (Function) errer_cb - Optional callback for error
+  (Function) error_cb - Optional callback for error
   Returns:
   iq - the id of the mode change request.
   */
@@ -550,9 +543,10 @@ Strophe.addConnectionPlugin('muc', {
   Parameters:
   (String) server - name of chat server.
   (String) handle_cb - Function to call for room list return.
+  (String) error_cb - Function to call on error.
   */
 
-  listRooms: function(server, handle_cb) {
+  listRooms: function(server, handle_cb, error_cb) {
     var iq;
     iq = $iq({
       to: server,
@@ -561,7 +555,7 @@ Strophe.addConnectionPlugin('muc', {
     }).c("query", {
       xmlns: Strophe.NS.DISCO_ITEMS
     });
-    return this._connection.sendIQ(iq, handle_cb);
+    return this._connection.sendIQ(iq, handle_cb, error_cb);
   },
   test_append_nick: function(room, nick) {
     return room + (nick != null ? "/" + (Strophe.escapeNode(nick)) : "");

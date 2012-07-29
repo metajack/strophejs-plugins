@@ -250,26 +250,14 @@ Strophe.addConnectionPlugin 'muc'
   Returns:
   id - the unique id used to send the configuration request
   ###
-  configure: (room, handler_cb) ->
+  configure: (room, handler_cb, error_cb) ->
     # send iq to start room configuration
     config = $iq(
       to:room
       type: "get" )
     .c("query", xmlns: Strophe.NS.MUC_OWNER)
     stanza = config.tree()
-    id = @_connection.sendIQ stanza
-
-    if handler_cb?
-      @_connection.addHandler(
-        (stanza) ->
-          handler_cb stanza
-          return false
-        Strophe.NS.MUC_OWNER
-        "iq"
-        null
-        id )
-
-    return id
+    @_connection.sendIQ stanza, handler_cb, error_cb
 
   ###Function
   Cancel the room configuration
@@ -296,7 +284,7 @@ Strophe.addConnectionPlugin 'muc'
   Returns:
   id - the unique id used to save the configuration.
   ###
-  saveConfiguration: (room, config) ->
+  saveConfiguration: (room, config, success_cb, error_cb) ->
     iq = $iq(
       to: room
       type: "set" )
@@ -308,7 +296,7 @@ Strophe.addConnectionPlugin 'muc'
       iq.c("x", xmlns: "jabber:x:data", type: "submit")
       iq.cnode(conf).up() for conf in config
     stanza = iq.tree()
-    @_connection.sendIQ stanza
+    @_connection.sendIQ stanza, success_cb, error_cb
 
   ###Function
   Parameters:
@@ -316,13 +304,13 @@ Strophe.addConnectionPlugin 'muc'
   Returns:
   id - the unique id used to create the chat room.
   ###
-  createInstantRoom: (room) ->
+  createInstantRoom: (room, success_cb, error_cb) ->
     roomiq = $iq(
       to: room
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_OWNER)
     .c("x", xmlns: "jabber:x:data", type: "submit")
-    @_connection.sendIQ roomiq.tree()
+    @_connection.sendIQ roomiq.tree(), success_cb, error_cb
 
   ###Function
   Set the topic of the chat room.
@@ -349,7 +337,7 @@ Strophe.addConnectionPlugin 'muc'
   (Object) item - Object with nick and role or jid and affiliation attribute
   (String) reason - Optional reason for the change.
   (Function) handler_cb - Optional callback for success
-  (Function) errer_cb - Optional callback for error
+  (Function) error_cb - Optional callback for error
   Returns:
   iq - the id of the mode change request.
   ###
@@ -375,7 +363,7 @@ Strophe.addConnectionPlugin 'muc'
   (String) affiliation - The new affiliation of the user.
   (String) reason - Optional reason for the change.
   (Function) handler_cb - Optional callback for success
-  (Function) errer_cb - Optional callback for error
+  (Function) error_cb - Optional callback for error
   Returns:
   iq - the id of the mode change request.
   ###
@@ -411,7 +399,7 @@ Strophe.addConnectionPlugin 'muc'
   (String) affiliation - The new affiliation of the user.
   (String) reason - Optional reason for the change.
   (Function) handler_cb - Optional callback for success
-  (Function) errer_cb - Optional callback for error
+  (Function) error_cb - Optional callback for error
   Returns:
   iq - the id of the mode change request.
   ###
@@ -473,14 +461,15 @@ Strophe.addConnectionPlugin 'muc'
   Parameters:
   (String) server - name of chat server.
   (String) handle_cb - Function to call for room list return.
+  (String) error_cb - Function to call on error.
   ###
-  listRooms: (server, handle_cb) ->
+  listRooms: (server, handle_cb, error_cb) ->
     iq = $iq(
       to: server
       from: @_connection.jid
       type: "get" )
     .c("query", xmlns: Strophe.NS.DISCO_ITEMS)
-    @_connection.sendIQ iq, handle_cb
+    @_connection.sendIQ iq, handle_cb, error_cb
 
   test_append_nick: (room, nick) ->
     room + if nick? then "/#{Strophe.escapeNode nick}" else ""
