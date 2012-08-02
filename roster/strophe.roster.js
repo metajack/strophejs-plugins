@@ -129,7 +129,7 @@ Strophe.addConnectionPlugin('roster',
             this.items = items || [];
         }
         var iq = $iq({type: 'get',  'id' : this._connection.getUniqueId('roster')}).c('query', attrs);
-        this._connection.sendIQ(iq,
+        return this._connection.sendIQ(iq,
                                 this._onReceiveRosterSuccess.bind(this, userCallback),
                                 this._onReceiveRosterError.bind(this, userCallback));
     },
@@ -277,7 +277,7 @@ Strophe.addConnectionPlugin('roster',
         {
             iq.c('group').t(newGroups[i]).up();
         }
-        this._connection.sendIQ(iq, call_back, call_back);
+        return this._connection.sendIQ(iq, call_back, call_back);
     },
     /** Function: remove
      * Remove roster item
