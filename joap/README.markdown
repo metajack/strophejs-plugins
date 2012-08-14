@@ -51,6 +51,9 @@ objectServer.delete "User", "instanceId", (iq, err) ->
 
 # searching for instances
 objectServer.search "User", {age: 60} , (iq, err, arrayOfInstanceIDs) ->
+
+# searching and reading in one step
+aClass.searchAndRead "User", {type: "admin"}, ["email"], (iq, err, arrayOfInstancObjects) ->
 ```
 
 ### Class
@@ -63,6 +66,9 @@ aClass.describe (iq, err, parsedDescription) ->
 
 # searching for class instances
 aClass.search (iq, err, arrayOfInstanceIDs) ->
+
+# searching and reading
+aClass.searchAndRead filter, limits, (iq, err, arrayOfInstances) ->
 
 # creating a new instance
 aClass.add { aProperty:"aValue" }, (iq, err, instanceAddress) ->

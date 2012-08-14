@@ -122,6 +122,26 @@ search = (clazz, attrs, cb) ->
     beforeSend: (iq) -> addXMLAttributes iq, attrs
     onResult: parseSearch
 
+searchAndRead = (clazz, attrs, limits, cb) ->
+  if typeof limits is "function"
+    cb = limits; limits = null
+  if typeof attrs is "function" and not limits?
+    cb = attrs; attrs = null
+  search clazz, attrs, (iq, err, res) ->
+    if err?
+      cb err
+    else
+      objects = []
+      count   = res.length
+      readCB  = (iq, err, o) ->
+        if err?
+          cb err
+        else
+          count--
+          objects.push o
+          cb null, objects if count is 0
+      for id in res then do (id) -> read id, limits, readCB
+
 del = (instance, cb) ->
   sendRequest "delete", instance, cb
 
@@ -158,6 +178,9 @@ class JOAPServer
 
   search: (clazz, attrs, cb) ->
     search getAddress(clazz, @jid.domain), attrs, cb
+
+  searchAndRead: (clazz, attrs, limits, cb) ->
+    searchAndRead getAddress(clazz, @jid.domain), attrs, limits, cb
 
 class JOAPObject
 
@@ -196,6 +219,8 @@ class JOAPClass
   search: (attrs, cb) ->
     search getAddress(@jid.user, @jid.domain), attrs, cb
 
+  searchAndRead: (attrs, limits, cb) ->
+    searchAndRead getAddress(@jid.user, @jid.domain), attrs, limits, cb
 
 Strophe.addConnectionPlugin 'joap', do ->
 

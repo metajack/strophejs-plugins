@@ -359,6 +359,7 @@ describe "strophe.joap plugin", ->
         (expect typeof clz.delete).toEqual "function"
         (expect typeof clz.add).toEqual "function"
         (expect typeof clz.search).toEqual "function"
+        (expect typeof clz.searchAndRead).toEqual "function"
 
       it "can read an instance", (done) ->
         spyon @c, "send", (req) =>
@@ -382,10 +383,36 @@ describe "strophe.joap plugin", ->
 
           @c._dataRecv createRequest(res)
 
-        clz.search "x", (iq, err, ids) ->
+        clz.search (iq, err, ids) ->
           (expect ids).toEqual [
             "Class@service.example.com/id0"
             "Class@service.example.com/id2" ]
+          done()
+
+      it "can search and read instances", (done) ->
+        x = 0
+        spyon @c, "send", (iq) =>
+          switch ($ iq).children()[0].tagName.toLowerCase()
+            when "search"
+              res = $iq({type:'result', id: iq.attr 'id'}).c("search")
+                .c("item").t("Class@service.example.com/id0").up()
+                .c("item").t("Class@service.example.com/id2").up()
+              @c._dataRecv createRequest(res)
+
+            when "read"
+              x++
+              res = $iq({type:'result', id: iq.attr 'id'})
+                .c("read")
+                  .c("attribute")
+                    .c("name").t("prop").up()
+                    .c("value").c("int").t(x.toString()).up().up()
+              @c._dataRecv createRequest(res)
+
+        clz.searchAndRead (err, objects) ->
+          (expect objects instanceof Array).toBe true
+          (expect objects.length).toBe 2
+          (expect objects[0].prop).toBe 1
+          (expect objects[1].prop).toBe 2
           done()
 
       it "can edit a property", (done) ->
