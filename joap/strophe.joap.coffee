@@ -1,5 +1,7 @@
-# This program is distributed under the terms of the MIT license.
-# Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
+###
+This program is distributed under the terms of the MIT license.
+Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
+###
 
 JOAP_NS = "jabber:iq:joap"
 
@@ -127,6 +129,8 @@ searchAndRead = (clazz, attrs, limits, cb) ->
     cb = limits; limits = null
   if typeof attrs is "function" and not limits?
     cb = attrs; attrs = null
+  else if attrs instanceof Array and not limits?
+    limits = attrs; attrs = null
   search clazz, attrs, (iq, err, res) ->
     if err?
       cb err
@@ -242,6 +246,7 @@ Strophe.addConnectionPlugin 'joap', do ->
   edit: edit
   delete: del
   search: search
+  searchAndRead: searchAndRead
   JOAPError: JOAPError
   JOAPServer: JOAPServer
   JOAPObject: JOAPObject
