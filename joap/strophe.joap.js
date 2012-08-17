@@ -37,7 +37,12 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 
   addXMLAttributes = function(iq, attrs) {
     var k, v, _results;
-    if (typeof attrs === "object") {
+    if (!(attrs != null)) {
+      return;
+    }
+    if (attrs instanceof Array) {
+      return typeof console !== "undefined" && console !== null ? typeof console.warn === "function" ? console.warn("No attributes added: attribute parameter is not an object") : void 0 : void 0;
+    } else if (typeof attrs === "object") {
       _results = [];
       for (k in attrs) {
         v = attrs[k];
@@ -227,6 +232,7 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
   search = function(clazz, attrs, cb) {
     if (typeof attrs === "function") {
       cb = attrs;
+      attrs = null;
     }
     return sendRequest("search", clazz, cb, {
       beforeSend: function(iq) {
@@ -255,25 +261,29 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
       } else {
         objects = [];
         count = res.length;
-        readCB = function(iq, err, o) {
-          if (err != null) {
-            return cb(err);
-          } else {
-            count--;
-            objects.push(o);
-            if (count === 0) {
-              return cb(null, objects);
+        if (count > 0) {
+          readCB = function(iq, err, o) {
+            if (err != null) {
+              return cb(err);
+            } else {
+              count--;
+              objects.push(o);
+              if (count === 0) {
+                return cb(null, objects);
+              }
             }
+          };
+          _results = [];
+          for (_i = 0, _len = res.length; _i < _len; _i++) {
+            id = res[_i];
+            _results.push((function(id) {
+              return read(id, limits, readCB);
+            })(id));
           }
-        };
-        _results = [];
-        for (_i = 0, _len = res.length; _i < _len; _i++) {
-          id = res[_i];
-          _results.push((function(id) {
-            return read(id, limits, readCB);
-          })(id));
+          return _results;
+        } else {
+          return cb(null, objects);
         }
-        return _results;
       }
     });
   };

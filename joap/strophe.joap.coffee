@@ -20,7 +20,10 @@ onError = (cb=->) -> (iq) ->
     cb iq, new JOAPError "Unknown error"
 
 addXMLAttributes = (iq, attrs) ->
-  if typeof attrs is "object"
+  return if not attrs?
+  if attrs instanceof Array
+    return console?.warn? "No attributes added: attribute parameter is not an object"
+  else if typeof attrs is "object"
     for k,v of attrs
       iq.c("attribute")
         .c("name").t(k).up()
@@ -119,7 +122,8 @@ edit = (instance, attrs, cb) ->
     onResult: parseAttributes
 
 search = (clazz, attrs, cb) ->
-  cb = attrs if typeof attrs is "function"
+  if typeof attrs is "function"
+    cb = attrs; attrs=null
   sendRequest "search", clazz, cb,
     beforeSend: (iq) -> addXMLAttributes iq, attrs
     onResult: parseSearch
@@ -137,14 +141,17 @@ searchAndRead = (clazz, attrs, limits, cb) ->
     else
       objects = []
       count   = res.length
-      readCB  = (iq, err, o) ->
-        if err?
-          cb err
-        else
-          count--
-          objects.push o
-          cb null, objects if count is 0
-      for id in res then do (id) -> read id, limits, readCB
+      if count > 0
+        readCB  = (iq, err, o) ->
+          if err?
+            cb err
+          else
+            count--
+            objects.push o
+            cb null, objects if count is 0
+        for id in res then do (id) -> read id, limits, readCB
+      else
+        cb null, objects
 
 del = (instance, cb) ->
   sendRequest "delete", instance, cb
