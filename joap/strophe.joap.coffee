@@ -38,11 +38,11 @@ parseAttributes = (iq) ->
   data
 
 parseNewAddress = (iq) ->
-  address = iq.getElementsByTagName("newAddress")[0].textContent
+  address = new JID(iq.getElementsByTagName("newAddress")[0].textContent).toString()
 
 parseSearch = (iq) ->
   items = iq.getElementsByTagName("item")
-  (i.textContent for i in items)
+  (new JID(i.textContent).toString() for i in items)
 
 parseAttributeDescription = (d) ->
   name: d.getElementsByTagName("name")[0]?.textContent
@@ -77,7 +77,7 @@ parseDescription = (iq) ->
         md = parseMethodDescription c
         result.methods[md.name] = md
       when "superclass"
-        result.superclass = c.textContent
+        result.superclass = new JID(c.textContent).toString()
       when "timestamp"
         result.timestamp = c.textContent
       when "class"
@@ -104,7 +104,8 @@ describe = (id, cb) ->
     onResult: parseDescription
 
 read = (instance, limits, cb) ->
-  cb = limits if typeof limits is "function"
+  if typeof limits is "function"
+    cb = limits; limits = null
   sendRequest "read", instance, cb,
     beforeSend: (iq) -> if limits instanceof Array
       iq.c("name").t(l).up() for l in limits

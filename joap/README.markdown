@@ -87,6 +87,7 @@ obj.edit { key: 'value' }, (iq, err) ->
 
 - jid.js
 - [rpc](https://github.com/metajack/strophejs-plugins/tree/master/rpc)
+- [punycode](https://github.com/bestiejs/punycode.js/) (optional)
 - [service discovery](https://github.com/metajack/strophejs-plugins/tree/master/disco) (optional)
 
 ## Available JOAP server implementations

@@ -98,29 +98,27 @@ describe "strophe.joap plugin", ->
         (expect err.message).toEqual "JOAP server is unavailable"
         done()
 
-    it "//can parse an error message", (done) ->
-
     it "can parse the new instance id", (done) ->
       spyon @c, "send", (req) =>
         res = $iq({type:'result', id: req.attr 'id'})
-          .c("add").c("newAddress").t("User@example.org/markus")
+          .c("add").c("newAddress").t("user@example.org/markus")
         @c._dataRecv createRequest(res)
       server.add "User", {name: "foo", pass: 2}, (iq, err, instanceId) ->
-        (expect instanceId).toEqual "User@example.org/markus"
+        (expect instanceId).toEqual "user@example.org/markus"
         done()
 
     it "can add a new instance addressed by a full JID", (done) ->
       spyon @c, "send", (req) =>
         res = $iq({type:'result', id: req.attr 'id'})
-          .c("add").c("newAddress").t("User@service.example.org/markus")
+          .c("add").c("newAddress").t("user@service.example.org/markus")
         @c._dataRecv createRequest(res)
-      @c.joap.add "User@service.example.org", {name: "foo", pass: 2}, (iq, err, instanceId) ->
-        (expect instanceId).toEqual "User@service.example.org/markus"
+      @c.joap.add "user@service.example.org", {name: "foo", pass: 2}, (iq, err, instanceId) ->
+        (expect instanceId).toEqual "user@service.example.org/markus"
         done()
 
     it "can edit an instance", (done) ->
       spyon @c, "send", (iq) =>
-        (expect iq.attr "to").toEqual "User@service.example.com/myId"
+        (expect iq.attr "to").toEqual "user@service.example.com/myId"
         (expect iq.attr "type").toEqual "set"
         (expect ($ "edit",iq).attr "xmlns").toEqual "jabber:iq:joap"
         ($ "attribute",iq).each ->
@@ -136,18 +134,18 @@ describe "strophe.joap plugin", ->
 
     it "can edit an instance addressed by a full JID", (done) ->
       spyon @c, "send", (iq) =>
-        (expect iq.attr "to").toEqual "User@service.example.com/myId"
+        (expect iq.attr "to").toEqual "user@service.example.com/myId"
         res = $iq({type:'result', id: iq.attr 'id'}).c("edit")
         @c._dataRecv createRequest(res)
 
-      @c.joap.edit "User@service.example.com/myId",{ name:"y", age: 66 },(iq, err) ->
+      @c.joap.edit "user@service.example.com/myId",{ name:"y", age: 66 },(iq, err) ->
         (expect typeof iq).toEqual "object"
         (expect err).toBeFalsy()
         done()
 
     it "can read an instance", (done) ->
       spyon @c, "sendIQ", (iq) ->
-        (expect iq.attr "to").toEqual "User@service.example.com/myId"
+        (expect iq.attr "to").toEqual "user@service.example.com/myId"
         (expect iq.attr "type").toEqual "get"
         (expect ($ "read",iq).attr "xmlns").toEqual "jabber:iq:joap"
         done()
@@ -155,9 +153,9 @@ describe "strophe.joap plugin", ->
 
     it "can read from a full JID", (done) ->
       spyon @c, "sendIQ", (iq) ->
-        (expect iq.attr "to").toEqual "User@service.example.com/myId"
+        (expect iq.attr "to").toEqual "user@service.example.com/myId"
         done()
-      @c.joap.read "User@service.example.com/myId", (iq, err, obj) ->
+      @c.joap.read "user@service.example.com/myId", (iq, err, obj) ->
 
     it "can parse the read attributes", (done) ->
       spyon @c, "send", (req) =>
@@ -190,7 +188,7 @@ describe "strophe.joap plugin", ->
 
     it "can delete an instance", (done) ->
       spyon @c, "send", (iq) =>
-        (expect iq.attr "to").toEqual "User@service.example.com/myId"
+        (expect iq.attr "to").toEqual "user@service.example.com/myId"
         (expect iq.attr "type").toEqual "set"
         (expect ($ "delete",iq).attr "xmlns").toEqual "jabber:iq:joap"
         res = $iq({type:'result', id: iq.attr 'id'}).c("delete")
@@ -203,18 +201,18 @@ describe "strophe.joap plugin", ->
 
     it "can delete an instance addressed by a full JID", (done) ->
       spyon @c, "send", (iq) =>
-        (expect iq.attr "to").toEqual "User@service.example.com/myId"
+        (expect iq.attr "to").toEqual "user@service.example.com/myId"
         res = $iq({type:'result', id: iq.attr 'id'}).c("delete")
         @c._dataRecv createRequest(res)
 
-      @c.joap.delete "User@service.example.com/myId", (iq, err) ->
+      @c.joap.delete "user@service.example.com/myId", (iq, err) ->
         (expect typeof iq).toEqual "object"
         (expect err).toBeFalsy()
         done()
 
     it "can search instances", (done) ->
       spyon @c, "send", (iq) =>
-        (expect iq.attr "to").toEqual "User@service.example.com"
+        (expect iq.attr "to").toEqual "user@service.example.com"
         (expect iq.attr "type").toEqual "get"
         (expect ($ "search",iq).attr "xmlns").toEqual "jabber:iq:joap"
         res = $iq({type:'result', id: iq.attr 'id'}).c("search")
@@ -224,25 +222,25 @@ describe "strophe.joap plugin", ->
 
       server.search "User", (iq, err, result) ->
         (expect typeof iq).toEqual "object"
-        (expect result[0]).toEqual "Class@service.example.com/id0"
-        (expect result[1]).toEqual "Class@service.example.com/id2"
+        (expect result[0]).toEqual "class@service.example.com/id0"
+        (expect result[1]).toEqual "class@service.example.com/id2"
         done()
 
     it "can search instances addressed by a full JID", (done) ->
       spyon @c, "send", (iq) =>
-        (expect iq.attr "to").toEqual "User@service.example.com"
+        (expect iq.attr "to").toEqual "user@service.example.com"
         res = $iq({type:'result', id: iq.attr 'id'}).c("search")
           .c("item").t("Class@service.example.com/id0").up()
         @c._dataRecv createRequest(res)
 
-      @c.joap.search "User@service.example.com", (iq, err, result) ->
+      @c.joap.search "user@service.example.com", (iq, err, result) ->
         (expect typeof iq).toEqual "object"
-        (expect result[0]).toEqual "Class@service.example.com/id0"
+        (expect result[0]).toEqual "class@service.example.com/id0"
         done()
 
     it "can send a describe request to a class", (done) ->
       spyon @c, "send", (iq) =>
-        (expect iq.attr "to").toEqual "Class@service.example.com"
+        (expect iq.attr "to").toEqual "class@service.example.com"
         (expect iq.attr "type").toEqual "get"
         (expect ($ "describe", iq).attr "xmlns").toEqual "jabber:iq:joap"
         res = $iq({type:'result', id: iq.attr 'id'}).c("describe")
@@ -266,7 +264,7 @@ describe "strophe.joap plugin", ->
         (expect result.desc["en-US"]).toEqual "Class description"
         (expect result.attributes.myAttribute.type).toEqual "int"
         (expect result.attributes.myAttribute.desc["en-US"]).toEqual "Foo"
-        (expect result.superclass).toEqual "SuperClass@service.example.com"
+        (expect result.superclass).toEqual "superclass@service.example.com"
         done()
 
     it "can send a describe request to the server", (done) ->
@@ -286,7 +284,7 @@ describe "strophe.joap plugin", ->
 
     it "can send a describe requests to an instance", (done) ->
       spyon @c, "send", (iq) =>
-        (expect iq.attr "to").toEqual "Class@service.example.com/id"
+        (expect iq.attr "to").toEqual "class@service.example.com/id"
         res = $iq({type:'result', id: iq.attr 'id'}).c("describe")
           .c("desc", "xml:lang":"en-US").t("Instance description").up()
         @c._dataRecv createRequest(res)
@@ -295,7 +293,7 @@ describe "strophe.joap plugin", ->
 
     describe "joap object", ->
 
-      id = "Class@service.example.com/id"
+      id = "class@service.example.com/id"
 
       beforeEach ->
         @obj = new @c.joap.JOAPObject id
@@ -338,7 +336,7 @@ describe "strophe.joap plugin", ->
 
       it "provied the describe method", (done) ->
         spyon @c, "send", (iq) =>
-          (expect iq.attr "to").toEqual "Class@service.example.com/id"
+          (expect iq.attr "to").toEqual "class@service.example.com/id"
           res = $iq({type:'result', id: iq.attr 'id'}).c("describe")
             .c("desc", "xml:lang":"en-US").t("Instance description").up()
           @c._dataRecv createRequest(res)
@@ -378,15 +376,15 @@ describe "strophe.joap plugin", ->
       it "can search instances", (done) ->
         spyon @c, "send", (iq) =>
           res = $iq({type:'result', id: iq.attr 'id'}).c("search")
-            .c("item").t("Class@service.example.com/id0").up()
+            .c("item").t("class@service.example.com/id0").up()
             .c("item").t("Class@service.example.com/id2").up()
 
           @c._dataRecv createRequest(res)
 
         clz.search (iq, err, ids) ->
           (expect ids).toEqual [
-            "Class@service.example.com/id0"
-            "Class@service.example.com/id2" ]
+            "class@service.example.com/id0"
+            "class@service.example.com/id2" ]
           done()
 
       it "can search and read instances", (done) ->
@@ -395,8 +393,8 @@ describe "strophe.joap plugin", ->
           switch ($ iq).children()[0].tagName.toLowerCase()
             when "search"
               res = $iq({type:'result', id: iq.attr 'id'}).c("search")
-                .c("item").t("Class@service.example.com/id0").up()
-                .c("item").t("Class@service.example.com/id2").up()
+                .c("item").t("class@service.example.com/id0").up()
+                .c("item").t("class@service.example.com/id2").up()
               @c._dataRecv createRequest(res)
 
             when "read"

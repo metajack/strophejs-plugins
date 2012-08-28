@@ -66,7 +66,7 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 
   parseNewAddress = function(iq) {
     var address;
-    return address = iq.getElementsByTagName("newAddress")[0].textContent;
+    return address = new JID(iq.getElementsByTagName("newAddress")[0].textContent).toString();
   };
 
   parseSearch = function(iq) {
@@ -75,7 +75,7 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
     _results = [];
     for (_i = 0, _len = items.length; _i < _len; _i++) {
       i = items[_i];
-      _results.push(i.textContent);
+      _results.push(new JID(i.textContent).toString());
     }
     return _results;
   };
@@ -137,7 +137,7 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
           result.methods[md.name] = md;
           break;
         case "superclass":
-          result.superclass = c.textContent;
+          result.superclass = new JID(c.textContent).toString();
           break;
         case "timestamp":
           result.timestamp = c.textContent;
@@ -191,6 +191,7 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
   read = function(instance, limits, cb) {
     if (typeof limits === "function") {
       cb = limits;
+      limits = null;
     }
     return sendRequest("read", instance, cb, {
       beforeSend: function(iq) {
