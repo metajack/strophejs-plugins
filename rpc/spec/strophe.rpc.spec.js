@@ -1,3 +1,5 @@
+buster.spec.expose()
+
 var mockConnection = helper.mockConnection,
   spyon = helper.spyon, receive = helper.receive;
 
@@ -161,7 +163,7 @@ describe("Strophe Jabber-RPC plugin", function() {
       var handler;
 
       beforeEach(function() {
-        handler = jasmine.createSpy();
+        handler = sinon.spy();
       });
 
       it("should be possible to add a request handler", function() {
@@ -246,7 +248,7 @@ describe("Strophe Jabber-RPC plugin", function() {
       });
 
       it("should NOT send forbidden access to the right nodes", function() {
-        spyOn(connection, "send");
+        spyon(connection, "send");
         var iq = $iq({type: "set", id: "123", from: "foo@jabber.org", to: connection.jid})
           .c("query", {xmlns: Strophe.NS.RPC});
         receive(connection, iq);

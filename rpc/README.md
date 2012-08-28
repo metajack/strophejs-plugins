@@ -98,11 +98,16 @@ connection.rpc.addJidToWhiteList("*@*");
 
 ## Tests & specs
 
-I use the node module `jasmine-runner` for the tests. Install it and use it as follow :
+I use the node module `buster` for the tests. Install it and use it as follow :
 
 ```bash
-$ npm install jasmine-runner
-$ jasmine mon
+$ npm install buster
+$ buster server
 ```
 
-The tests run in the browser at the address `localhost:8124`.
+Open a browser and navigate to `http://localhost:1111` and capture the browser.
+Then you can run the tests:
+
+```
+$  buster test --browser
+```
