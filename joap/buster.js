@@ -6,11 +6,11 @@ config["joap"] = {
   specHelpers: ["spec/browserSetup.coffee"],
   sources: ["strophe.joap.js"],
   libs: [
-    "jis.js",
+    "lib/punycode.js",
+    "jid.js",
     "lib/jquery.js",
     "lib/strophe.js",
-    "lib/strophe.rpc.js",
-    "lib/punycode.js" ],
+    "lib/strophe.rpc.js" ],
   extensions: [require("buster-coffee")],
 };
 

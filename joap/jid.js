@@ -15,7 +15,7 @@ https://github.com/astro/node-xmpp/blob/master/lib/xmpp/jid.js
 (function() {
   var JID, toUnicode;
 
-  toUnicode = punycode.toUnicode || function(a) {
+  toUnicode = (typeof punycode !== "undefined" && punycode !== null ? punycode.toUnicode : void 0) || function(a) {
     return a;
   };
 

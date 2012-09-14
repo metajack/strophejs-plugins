@@ -8,7 +8,7 @@ This is coffee-script fork of
 https://github.com/astro/node-xmpp/blob/master/lib/xmpp/jid.js
 ###
 
-toUnicode  = punycode.toUnicode or (a) -> a
+toUnicode  = punycode?.toUnicode or (a) -> a
 
 class JID
 
