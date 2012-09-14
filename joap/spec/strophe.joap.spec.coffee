@@ -424,3 +424,38 @@ describe "strophe.joap plugin", ->
           (expect typeof iq).toEqual "object"
           (expect err).toBeFalsy()
           done()
+
+    describe "joap rpc", ->
+
+      it "can send a request to an instance", (done) ->
+        spyon @c, "send", (iq) =>
+          (expect ($ "query", iq).attr "xmlns").toEqual "jabber:iq:rpc"
+          call =  $ "methodCall", iq
+          (expect call.length).toEqual 1
+          (expect ($ "methodName", call).text()).toEqual "testMethod"
+          params = $ "params", call
+          (expect params.length).toEqual 1
+          res = $iq({type:'result', id: iq.attr 'id'}).c("query")
+            .c("methodResponse").c("params").c("param").c("value").c("int").t("2")
+          @c._dataRecv createRequest(res.tree())
+
+        server.methodCall "testMethod", "Class", "instance", [1, "x", false], (iq, err, result) ->
+          (expect err?).toEqual false
+          (expect result).toBe 2
+          done()
+
+      it "can send a request without parameters", (done) ->
+        spyon @c, "send", (iq) =>
+          call =  $ "methodCall", iq
+          (expect call.length).toEqual 1
+          (expect ($ "methodName", call).text()).toEqual "myFunction"
+
+          res = $iq({type:'result', id: iq.attr 'id'}).c("query")
+            .c("methodResponse").c("params").c("param").c("value").c("int").t("3")
+          @c._dataRecv createRequest(res.tree())
+
+        server.methodCall "myFunction", (iq, err, result) ->
+          (expect err?).toEqual false
+          console.log result
+          (expect result).toBe 3
+          done()

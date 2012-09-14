@@ -53,7 +53,10 @@ objectServer.delete "User", "instanceId", (iq, err) ->
 objectServer.search "User", {age: 60} , (iq, err, arrayOfInstanceIDs) ->
 
 # searching and reading in one step
-aClass.searchAndRead "User", {type: "admin"}, ["email"], (iq, err, arrayOfInstancObjects) ->
+objectServer.searchAndRead "User", {type: "admin"}, ["email"], (iq, err, arrayOfInstancObjects) ->
+
+# performing a method call
+objectServer.methodCall "myMethod", "User", ["param1","param2"], (iq, err, result) ->
 ```
 
 ### Class
@@ -93,10 +96,6 @@ obj.edit { key: 'value' }, (iq, err) ->
 ## Available JOAP server implementations
 
 - [node-xmpp-joap](https://github.com/flosse/node-xmpp-joap)
-
-## ToDos
-
-- RPC support
 
 ## Tests & specs
 

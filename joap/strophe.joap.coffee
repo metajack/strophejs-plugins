@@ -4,6 +4,7 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 ###
 
 JOAP_NS = "jabber:iq:joap"
+RPC_NS  = "jabber:iq:rpc"
 
 # Private static members
 
@@ -29,6 +30,17 @@ addXMLAttributes = (iq, attrs) ->
         .c("name").t(k).up()
         .cnode(conn.rpc._convertToXML v).up().up()
 
+addRPCElements = (iq, method, params=[]) ->
+  throw new TypeError unless typeof method is "string"
+  iq.c("methodCall").c("methodName").t(method).up()
+  if not (params instanceof Array)
+    console?.warn? "No parameters added: parameter is not an array"
+    return
+  if params.length > 0
+    iq.c("params")
+    for p in params
+      iq.c("param").c("x").up().up()
+
 parseAttributes = (iq) ->
   attrs = iq.getElementsByTagName("attribute")
   data = {}
@@ -36,6 +48,11 @@ parseAttributes = (iq) ->
     key   = a.getElementsByTagName("name")[0].textContent
     data[key] = conn.rpc._convertFromXML a.getElementsByTagName("value")[0]
   data
+
+parseRPCParams = (iq) ->
+  conn.rpc._convertFromXML iq
+    .getElementsByTagName("param")[0]
+    .getElementsByTagName("value")[0]
 
 parseNewAddress = (iq) ->
   address = new JID(iq.getElementsByTagName("newAddress")[0].textContent).toString()
@@ -88,10 +105,10 @@ getAddress = (clazz, service, instance) ->
   (new JID clazz, service, instance).toString()
 
 createIq = (type, to) ->
-  iqType = "set"
-  iqType = "get" if (type in ["read", "search", "describe"])
+  iqType = if (type in ["read", "search", "describe"]) then "get" else "set"
+  xmlns  = if type is "query" then RPC_NS else JOAP_NS
   $iq(to: to, type: iqType)
-    .c(type, xmlns: JOAP_NS)
+    .c(type, xmlns: xmlns)
 
 sendRequest = (type, to, cb, opt={}) ->
   iq = createIq type, to
@@ -157,6 +174,11 @@ searchAndRead = (clazz, attrs, limits, cb) ->
 del = (instance, cb) ->
   sendRequest "delete", instance, cb
 
+methodCall = (method, address, params, cb) ->
+  sendRequest "query", address, cb,
+    beforeSend: (iq) -> addRPCElements iq, method, params
+    onResult: parseRPCParams
+
 class JOAPError extends Error
 
   constructor: (@message, @code)->
@@ -169,11 +191,9 @@ class JOAPServer
 
   describe: (clazz, instance, cb) ->
     if typeof clazz is "function"
-      cb = clazz
-      clazz = instance = null
+      cb = clazz; clazz = instance = null
     else if typeof instance is "function"
-      cb = instance
-      instance = null
+      cb = instance; instance = null
     describe getAddress(clazz, @jid.domain, instance), cb
 
   add: (clazz, attrs, cb) ->
@@ -194,6 +214,15 @@ class JOAPServer
   searchAndRead: (clazz, attrs, limits, cb) ->
     searchAndRead getAddress(clazz, @jid.domain), attrs, limits, cb
 
+  methodCall: (method, clazz, instance, params, cb) ->
+    if typeof clazz is "function"
+      cb = clazz; clazz = instance = params = null
+    else if typeof instance is "function"
+      cb = instance; instance = params = null
+    else if typeof params is "function"
+      cb = params; params = null
+    methodCall method, getAddress(clazz, @jid.domain, instance), params, cb
+
 class JOAPObject
 
   constructor: (id) ->
@@ -204,6 +233,11 @@ class JOAPObject
   edit: (attrs, cb) -> edit @jid.toString(), attrs, cb
 
   describe: (cb) -> describe @jid.toString(), cb
+
+  methodCall: (method, params, cb) ->
+    if typeof params is "function"
+      cb = params; params = null
+    methodCall method, @jid.toString(), params, cb
 
 class JOAPClass
 
@@ -233,6 +267,13 @@ class JOAPClass
 
   searchAndRead: (attrs, limits, cb) ->
     searchAndRead getAddress(@jid.user, @jid.domain), attrs, limits, cb
+
+  methodCall: (method, instance, params, cb) ->
+    if typeof instance is "function"
+      cb = instance; instance = params = null
+    else if typeof params is "function"
+      cb = params; params = null
+    methodCall method, getAddress(@jid.user, @jid.domain, instance), params, cb
 
 Strophe.addConnectionPlugin 'joap', do ->
 

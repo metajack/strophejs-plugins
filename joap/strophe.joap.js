@@ -7,11 +7,13 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 
 
 (function() {
-  var JOAPClass, JOAPError, JOAPObject, JOAPServer, JOAP_NS, add, addXMLAttributes, conn, createIq, del, describe, edit, getAddress, onError, parseAttributeDescription, parseAttributes, parseDesc, parseDescription, parseMethodDescription, parseNewAddress, parseSearch, read, search, searchAndRead, sendRequest,
+  var JOAPClass, JOAPError, JOAPObject, JOAPServer, JOAP_NS, RPC_NS, add, addRPCElements, addXMLAttributes, conn, createIq, del, describe, edit, getAddress, methodCall, onError, parseAttributeDescription, parseAttributes, parseDesc, parseDescription, parseMethodDescription, parseNewAddress, parseRPCParams, parseSearch, read, search, searchAndRead, sendRequest,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   JOAP_NS = "jabber:iq:joap";
+
+  RPC_NS = "jabber:iq:rpc";
 
   conn = null;
 
@@ -52,6 +54,34 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
     }
   };
 
+  addRPCElements = function(iq, method, params) {
+    var p, _i, _len, _results;
+    if (params == null) {
+      params = [];
+    }
+    if (typeof method !== "string") {
+      throw new TypeError;
+    }
+    iq.c("methodCall").c("methodName").t(method).up();
+    if (!(params instanceof Array)) {
+      if (typeof console !== "undefined" && console !== null) {
+        if (typeof console.warn === "function") {
+          console.warn("No parameters added: parameter is not an array");
+        }
+      }
+      return;
+    }
+    if (params.length > 0) {
+      iq.c("params");
+      _results = [];
+      for (_i = 0, _len = params.length; _i < _len; _i++) {
+        p = params[_i];
+        _results.push(iq.c("param").c("x").up().up());
+      }
+      return _results;
+    }
+  };
+
   parseAttributes = function(iq) {
     var a, attrs, data, key, _i, _len;
     attrs = iq.getElementsByTagName("attribute");
@@ -62,6 +92,10 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
       data[key] = conn.rpc._convertFromXML(a.getElementsByTagName("value")[0]);
     }
     return data;
+  };
+
+  parseRPCParams = function(iq) {
+    return conn.rpc._convertFromXML(iq.getElementsByTagName("param")[0].getElementsByTagName("value")[0]);
   };
 
   parseNewAddress = function(iq) {
@@ -154,16 +188,14 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
   };
 
   createIq = function(type, to) {
-    var iqType;
-    iqType = "set";
-    if ((type === "read" || type === "search" || type === "describe")) {
-      iqType = "get";
-    }
+    var iqType, xmlns;
+    iqType = (type === "read" || type === "search" || type === "describe") ? "get" : "set";
+    xmlns = type === "query" ? RPC_NS : JOAP_NS;
     return $iq({
       to: to,
       type: iqType
     }).c(type, {
-      xmlns: JOAP_NS
+      xmlns: xmlns
     });
   };
 
@@ -293,6 +325,15 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
     return sendRequest("delete", instance, cb);
   };
 
+  methodCall = function(method, address, params, cb) {
+    return sendRequest("query", address, cb, {
+      beforeSend: function(iq) {
+        return addRPCElements(iq, method, params);
+      },
+      onResult: parseRPCParams
+    });
+  };
+
   JOAPError = (function(_super) {
 
     __extends(JOAPError, _super);
@@ -348,6 +389,20 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
       return searchAndRead(getAddress(clazz, this.jid.domain), attrs, limits, cb);
     };
 
+    JOAPServer.prototype.methodCall = function(method, clazz, instance, params, cb) {
+      if (typeof clazz === "function") {
+        cb = clazz;
+        clazz = instance = params = null;
+      } else if (typeof instance === "function") {
+        cb = instance;
+        instance = params = null;
+      } else if (typeof params === "function") {
+        cb = params;
+        params = null;
+      }
+      return methodCall(method, getAddress(clazz, this.jid.domain, instance), params, cb);
+    };
+
     return JOAPServer;
 
   })();
@@ -368,6 +423,14 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 
     JOAPObject.prototype.describe = function(cb) {
       return describe(this.jid.toString(), cb);
+    };
+
+    JOAPObject.prototype.methodCall = function(method, params, cb) {
+      if (typeof params === "function") {
+        cb = params;
+        params = null;
+      }
+      return methodCall(method, this.jid.toString(), params, cb);
     };
 
     return JOAPObject;
@@ -410,6 +473,17 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 
     JOAPClass.prototype.searchAndRead = function(attrs, limits, cb) {
       return searchAndRead(getAddress(this.jid.user, this.jid.domain), attrs, limits, cb);
+    };
+
+    JOAPClass.prototype.methodCall = function(method, instance, params, cb) {
+      if (typeof instance === "function") {
+        cb = instance;
+        instance = params = null;
+      } else if (typeof params === "function") {
+        cb = params;
+        params = null;
+      }
+      return methodCall(method, getAddress(this.jid.user, this.jid.domain, instance), params, cb);
     };
 
     return JOAPClass;
