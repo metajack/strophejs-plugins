@@ -511,6 +511,7 @@ Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
       "delete": del,
       search: search,
       searchAndRead: searchAndRead,
+      methodCall: methodCall,
       JOAPError: JOAPError,
       JOAPServer: JOAPServer,
       JOAPObject: JOAPObject,

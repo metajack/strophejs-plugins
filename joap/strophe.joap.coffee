@@ -296,6 +296,7 @@ Strophe.addConnectionPlugin 'joap', do ->
   delete: del
   search: search
   searchAndRead: searchAndRead
+  methodCall: methodCall
   JOAPError: JOAPError
   JOAPServer: JOAPServer
   JOAPObject: JOAPObject
