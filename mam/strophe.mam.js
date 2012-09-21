@@ -22,7 +22,7 @@ init:
 query:
   function(jid, options) {
     var _p = this._p;
-    var attr = {type:"get"};
+    var attr = {type:"get",to:jid};
     var mamAttr = {xmlns: Strophe.NS.MAM};
     var iq = $iq(attr).c("query", mamAttr);
     for (i=0; i < this._p.length; i++) {
