@@ -41,4 +41,4 @@ Strophe.addConnectionPlugin 'vcard',
     ###
     set: (handler_cb, vCardEl, jid, error_cb) ->
         iq = buildIq "set", jid, vCardEl
-        this._connection.sendIQ iq, handler_cb, error_rb
+        this._connection.sendIQ iq, handler_cb, error_cb
