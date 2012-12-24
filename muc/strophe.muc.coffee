@@ -156,7 +156,7 @@ Strophe.addConnectionPlugin 'muc'
     if html_message?
       msg.c("html", xmlns: Strophe.NS.XHTML_IM)
       .c("body", xmlns: Strophe.NS.XHTML)
-      .h(html_message)
+      .t(html_message)
       if msg.node.childNodes.length is 0
         # html creation or import failed somewhere; fallback to plaintext
         parent = msg.node.parentNode
