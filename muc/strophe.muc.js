@@ -176,7 +176,7 @@
           xmlns: Strophe.NS.XHTML_IM
         }).c("body", {
           xmlns: Strophe.NS.XHTML
-        }).h(html_message);
+        }).t(html_message);
         if (msg.node.childNodes.length === 0) {
           parent = msg.node.parentNode;
           msg.up().up();
@@ -586,9 +586,7 @@
       this.nick = nick;
       this.password = password;
       this._roomRosterHandler = __bind(this._roomRosterHandler, this);
-
       this._addOccupant = __bind(this._addOccupant, this);
-
       if (client.muc) {
         this.client = client.muc;
       }
@@ -863,8 +861,7 @@
   RoomConfig = (function() {
 
     function RoomConfig(info) {
-      this.parse = __bind(this.parse, this);
-      if (info != null) {
+      this.parse = __bind(this.parse, this);      if (info != null) {
         this.parse(info);
       }
     }
@@ -926,31 +923,18 @@
     function Occupant(data, room) {
       this.room = room;
       this.update = __bind(this.update, this);
-
       this.admin = __bind(this.admin, this);
-
       this.owner = __bind(this.owner, this);
-
       this.revoke = __bind(this.revoke, this);
-
       this.member = __bind(this.member, this);
-
       this.ban = __bind(this.ban, this);
-
       this.modifyAffiliation = __bind(this.modifyAffiliation, this);
-
       this.deop = __bind(this.deop, this);
-
       this.op = __bind(this.op, this);
-
       this.mute = __bind(this.mute, this);
-
       this.voice = __bind(this.voice, this);
-
       this.kick = __bind(this.kick, this);
-
       this.modifyRole = __bind(this.modifyRole, this);
-
       this.update(data);
     }
 
