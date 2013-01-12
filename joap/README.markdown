@@ -75,6 +75,9 @@ aClass.searchAndRead filter, limits, (iq, err, arrayOfInstances) ->
 
 # creating a new instance
 aClass.add { aProperty:"aValue" }, (iq, err, instanceAddress) ->
+
+# subscribe to attribute changes of all instances
+aClass.subscribe successHandler, changeHandler, {bare:true}
 ```
 
 ### Object
@@ -84,6 +87,9 @@ obj = new connection.joap.JOAPObject "myClass@component.example.org/instanceId"
 
 # modifying properties
 obj.edit { key: 'value' }, (iq, err) ->
+
+# subscribe to attribute changes of this instance
+aClass.subscribe successHandler, changeHandler, {bare:true}
 ```
 
 ## Dependencies
