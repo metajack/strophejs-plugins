@@ -105,14 +105,15 @@ parseDescription = (iq) ->
 getAddress = (clazz, service, instance) ->
   (new JID clazz, service, instance).toString()
 
-createIq = (type, to) ->
+createIq = (type, to, customAttrs) ->
   iqType = if (type in ["read", "search", "describe"]) then "get" else "set"
   xmlns  = if type is "query" then RPC_NS else JOAP_NS
-  $iq(to: to, type: iqType)
-    .c(type, xmlns: xmlns)
+  attrs  = xmlns: xmlns
+  attrs[k]=v for k,v of attrs when v? if customAttrs?
+  $iq(to: to, type: iqType).c(type, attrs)
 
 sendRequest = (type, to, cb, opt={}) ->
-  iq = createIq type, to
+  iq = createIq type, to, opt.attrs
   opt.beforeSend? iq
   success = (res) -> cb? res, null, opt.onResult?(res)
   conn.sendIQ iq, success, onError(cb)
@@ -147,6 +148,20 @@ search = (clazz, attrs, cb) ->
     beforeSend: (iq) -> addXMLAttributes iq, attrs
     onResult: parseSearch
 
+subscribe = (clazz, cb, handler, opt) ->
+  sendRequest "subscribe", clazz, cb,
+    attrs: { bare: opt.bare }
+    onResult: (iq) ->
+      if handler?
+        conn.addHandler handler, JOAP_NS, "message"
+
+unsubscribe = (clazz, cb, handler, opt) ->
+  sendRequest "unsubscribe", clazz, cb,
+    attrs: { bare: opt.bare }
+    onResult: (iq) ->
+      if handler?
+        conn.deleteHandler handler
+
 searchAndRead = (clazz, attrs, limits, cb) ->
   if typeof limits is "function"
     cb = limits; limits = null
@@ -179,6 +194,16 @@ methodCall = (method, address, params, cb) ->
   sendRequest "query", address, cb,
     beforeSend: (iq) -> addRPCElements iq, method, params
     onResult: parseRPCParams
+
+createEventWrapper = (type, jid, fn) ->
+  return (-> false) unless typeof fn is "function"
+  match = switch type
+    when "server"   then (from) -> from.domain is jid.domain
+    when "class"    then (from) -> from.user is jid.user and from.domain is jid.domain
+    when "instance" then (from) -> from.equals jid
+  (xml) ->
+    from = new JID xml.getAttribute 'from'
+    if match from then fn xml else true
 
 class JOAPError extends Error
 
@@ -235,6 +260,13 @@ class JOAPObject
 
   describe: (cb) -> describe @jid.toString(), cb
 
+  subscribe: (cb, handler, opt) ->
+    wrapper = createEventWrapper "instance", @jid, handler
+    subscribe @jid.toString(), cb, wrapper, opt
+
+  unsubscribe: (cb, handlerRef, opt) ->
+    unsubscribe @jid.toString(), cb, handlerRef, opt
+
   methodCall: (method, params, cb) ->
     if typeof params is "function"
       cb = params; params = null
@@ -268,6 +300,13 @@ class JOAPClass
 
   searchAndRead: (attrs, limits, cb) ->
     searchAndRead getAddress(@jid.user, @jid.domain), attrs, limits, cb
+
+  subscribe: (cb, handler, opt) ->
+    wrapper = createEventWrapper "class", @jid, handler
+    subscribe getAddress(@jid.user, @jid.domain), cb, wrapper, opt
+
+  unsubscribe: (cb, handlerRef, opt) ->
+    unsubscribe getAddress(@jid.user, @jid.domain), cb, handlerRef, opt
 
   methodCall: (method, instance, params, cb) ->
     if typeof instance is "function"
