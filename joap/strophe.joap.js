@@ -396,7 +396,7 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
       var from;
       from = new JID(xml.getAttribute('from'));
       if (match(from)) {
-        return fn(xml);
+        return fn(xml, parseAttributes(xml), from);
       } else {
         return true;
       }
