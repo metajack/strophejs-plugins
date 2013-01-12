@@ -1,6 +1,6 @@
 ###
 This program is distributed under the terms of the MIT license.
-Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
+Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 ###
 
 JOAP_NS = "jabber:iq:joap"
@@ -39,7 +39,8 @@ addRPCElements = (iq, method, params=[]) ->
   if params.length > 0
     iq.c("params")
     for p in params
-      iq.c("param").c("x").up().up()
+      iq.c("param")
+        .cnode(conn.rpc._convertToXML p).up().up()
 
 parseAttributes = (iq) ->
   attrs = iq.getElementsByTagName("attribute")
