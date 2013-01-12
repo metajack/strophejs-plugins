@@ -37,12 +37,15 @@ Strophe.addConnectionPlugin 'muc'
   (String) password - The optional password to use. (password protected
   rooms only)
   ###
-  join: (room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password) ->
+  join: (room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password, history_attrs) ->
     room_nick = @test_append_nick(room, nick)
     msg = $pres(
       from: @_connection.jid
       to: room_nick )
     .c("x", xmlns: Strophe.NS.MUC)
+
+    if history_attrs?
+      msg = msg.c("history", history_attrs)
 
     if password?
       msg.cnode Strophe.xmlElement("password", [], password)
@@ -153,7 +156,7 @@ Strophe.addConnectionPlugin 'muc'
     if html_message?
       msg.c("html", xmlns: Strophe.NS.XHTML_IM)
       .c("body", xmlns: Strophe.NS.XHTML)
-      .h(html_message)
+      .t(html_message)
       if msg.node.childNodes.length is 0
         # html creation or import failed somewhere; fallback to plaintext
         parent = msg.node.parentNode
