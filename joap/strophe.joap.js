@@ -99,8 +99,13 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
   };
 
   parseNewAddress = function(iq) {
-    var address;
-    return address = new JID(iq.getElementsByTagName("newAddress")[0].textContent).toString();
+    var a;
+    a = iq.getElementsByTagName("newAddress")[0];
+    if (a != null) {
+      return new JID(a.textContent).toString();
+    } else {
+      return void 0;
+    }
   };
 
   parseSearch = function(iq) {
@@ -155,29 +160,31 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
       classes: []
     };
     describe = iq.getElementsByTagName("describe")[0];
-    _ref = describe.childNodes;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      c = _ref[_i];
-      switch (c.tagName.toLowerCase()) {
-        case "desc":
-          result.desc[c.getAttribute("xml:lang")] = c.textContent;
-          break;
-        case "attributedescription":
-          ad = parseAttributeDescription(c);
-          result.attributes[ad.name] = ad;
-          break;
-        case "methoddescription":
-          md = parseMethodDescription(c);
-          result.methods[md.name] = md;
-          break;
-        case "superclass":
-          result.superclass = new JID(c.textContent).toString();
-          break;
-        case "timestamp":
-          result.timestamp = c.textContent;
-          break;
-        case "class":
-          classes.push = c.textContent;
+    if (describe != null) {
+      _ref = describe.childNodes;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        c = _ref[_i];
+        switch (c.tagName.toLowerCase()) {
+          case "desc":
+            result.desc[c.getAttribute("xml:lang")] = c.textContent;
+            break;
+          case "attributedescription":
+            ad = parseAttributeDescription(c);
+            result.attributes[ad.name] = ad;
+            break;
+          case "methoddescription":
+            md = parseMethodDescription(c);
+            result.methods[md.name] = md;
+            break;
+          case "superclass":
+            result.superclass = new JID(c.textContent).toString();
+            break;
+          case "timestamp":
+            result.timestamp = c.textContent;
+            break;
+          case "class":
+            classes.push = c.textContent;
+        }
       }
     }
     return result;
@@ -258,7 +265,7 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
       beforeSend: function(iq) {
         return addXMLAttributes(iq, attrs);
       },
-      onResult: parseAttributes
+      onResult: parseNewAddress
     });
   };
 
