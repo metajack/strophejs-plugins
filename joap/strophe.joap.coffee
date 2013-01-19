@@ -206,7 +206,9 @@ createEventWrapper = (type, jid, fn) ->
     when "instance" then (from) -> from.equals jid
   (xml) ->
     from = new JID xml.getAttribute 'from'
-    if match from then fn xml, parseAttributes(xml), from else true
+    if match from
+      fn xml, parseAttributes(xml.getElementsByTagName("event")[0]), from
+    else true
 
 class JOAPError extends Error
 
