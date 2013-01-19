@@ -56,7 +56,9 @@ parseRPCParams = (iq) ->
     .getElementsByTagName("value")[0]
 
 parseNewAddress = (iq) ->
-  address = new JID(iq.getElementsByTagName("newAddress")[0].textContent).toString()
+  a = iq.getElementsByTagName("newAddress")[0]
+  if a? then new JID(a.textContent).toString()
+  else undefined
 
 parseSearch = (iq) ->
   items = iq.getElementsByTagName("item")
@@ -84,22 +86,23 @@ parseDesc = (desc) ->
 parseDescription = (iq) ->
   result = desc: {}, attributes: {}, methods: {}, classes: []
   describe = iq.getElementsByTagName("describe")[0]
-  for c in describe.childNodes
-    switch c.tagName.toLowerCase()
-      when "desc"
-        result.desc[c.getAttribute "xml:lang"] = c.textContent
-      when "attributedescription"
-        ad = parseAttributeDescription c
-        result.attributes[ad.name] = ad
-      when "methoddescription"
-        md = parseMethodDescription c
-        result.methods[md.name] = md
-      when "superclass"
-        result.superclass = new JID(c.textContent).toString()
-      when "timestamp"
-        result.timestamp = c.textContent
-      when "class"
-        classes.push = c.textContent
+  if describe?
+   for c in describe.childNodes
+     switch c.tagName.toLowerCase()
+       when "desc"
+         result.desc[c.getAttribute "xml:lang"] = c.textContent
+       when "attributedescription"
+         ad = parseAttributeDescription c
+         result.attributes[ad.name] = ad
+       when "methoddescription"
+         md = parseMethodDescription c
+         result.methods[md.name] = md
+       when "superclass"
+         result.superclass = new JID(c.textContent).toString()
+       when "timestamp"
+         result.timestamp = c.textContent
+       when "class"
+         classes.push = c.textContent
   result
 
 getAddress = (clazz, service, instance) ->
@@ -139,7 +142,7 @@ add = (clazz, attrs, cb) ->
 edit = (instance, attrs, cb) ->
   sendRequest "edit", instance, cb,
     beforeSend: (iq) -> addXMLAttributes iq, attrs
-    onResult: parseAttributes
+    onResult: parseNewAddress
 
 search = (clazz, attrs, cb) ->
   if typeof attrs is "function"
