@@ -202,8 +202,8 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
       xmlns: xmlns
     };
     if (customAttrs != null) {
-      for (k in attrs) {
-        v = attrs[k];
+      for (k in customAttrs) {
+        v = customAttrs[k];
         if (v != null) {
           attrs[k] = v;
         }

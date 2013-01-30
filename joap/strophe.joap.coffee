@@ -112,7 +112,7 @@ createIq = (type, to, customAttrs) ->
   iqType = if (type in ["read", "search", "describe"]) then "get" else "set"
   xmlns  = if type is "query" then RPC_NS else JOAP_NS
   attrs  = xmlns: xmlns
-  attrs[k]=v for k,v of attrs when v? if customAttrs?
+  attrs[k]=v for k,v of customAttrs when v? if customAttrs?
   $iq(to: to, type: iqType).c(type, attrs)
 
 sendRequest = (type, to, cb, opt={}) ->
