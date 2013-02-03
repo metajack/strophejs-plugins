@@ -292,13 +292,21 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
   };
 
   subscribe = function(clazz, cb, handler, opt) {
+    var ref;
+    if (handler != null) {
+      ref = conn.addHandler(handler, JOAP_NS, "message");
+    }
     return sendRequest("subscribe", clazz, cb, {
       attrs: {
         bare: opt.bare
       },
       onResult: function(iq) {
         if (handler != null) {
-          return conn.addHandler(handler, JOAP_NS, "message");
+          if (iq.getAttribute('type' === 'error')) {
+            return conn.deleteHandler(ref);
+          } else {
+            return ref;
+          }
         }
       }
     });

@@ -152,11 +152,16 @@ search = (clazz, attrs, cb) ->
     onResult: parseSearch
 
 subscribe = (clazz, cb, handler, opt) ->
+  if handler?
+    ref = conn.addHandler handler, JOAP_NS, "message"
   sendRequest "subscribe", clazz, cb,
     attrs: { bare: opt.bare }
     onResult: (iq) ->
       if handler?
-        conn.addHandler handler, JOAP_NS, "message"
+        if iq.getAttribute 'type' is 'error'
+          conn.deleteHandler ref
+        else
+          ref
 
 unsubscribe = (clazz, cb, handler, opt) ->
   sendRequest "unsubscribe", clazz, cb,
