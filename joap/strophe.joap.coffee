@@ -155,7 +155,7 @@ subscribe = (clazz, cb, handler, opt={}) ->
   if handler?
     ref = conn.addHandler handler, JOAP_NS, "message"
   sendRequest "subscribe", clazz, cb,
-    attrs: { bare: opt.bare }
+    attrs: { bare: opt.bare, type: opt.type }
     onResult: (iq) ->
       if handler?
         if iq.getAttribute 'type' is 'error'
@@ -165,7 +165,7 @@ subscribe = (clazz, cb, handler, opt={}) ->
 
 unsubscribe = (clazz, cb, handler, opt={}) ->
   sendRequest "unsubscribe", clazz, cb,
-    attrs: { bare: opt.bare }
+    attrs: { bare: opt.bare, type: opt.type }
     onResult: (iq) ->
       if handler?
         conn.deleteHandler handler

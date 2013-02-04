@@ -301,7 +301,8 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
     }
     return sendRequest("subscribe", clazz, cb, {
       attrs: {
-        bare: opt.bare
+        bare: opt.bare,
+        type: opt.type
       },
       onResult: function(iq) {
         if (handler != null) {
@@ -321,7 +322,8 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
     }
     return sendRequest("unsubscribe", clazz, cb, {
       attrs: {
-        bare: opt.bare
+        bare: opt.bare,
+        type: opt.type
       },
       onResult: function(iq) {
         if (handler != null) {
