@@ -151,7 +151,7 @@ search = (clazz, attrs, cb) ->
     beforeSend: (iq) -> addXMLAttributes iq, attrs
     onResult: parseSearch
 
-subscribe = (clazz, cb, handler, opt) ->
+subscribe = (clazz, cb, handler, opt={}) ->
   if handler?
     ref = conn.addHandler handler, JOAP_NS, "message"
   sendRequest "subscribe", clazz, cb,
@@ -163,7 +163,7 @@ subscribe = (clazz, cb, handler, opt) ->
         else
           ref
 
-unsubscribe = (clazz, cb, handler, opt) ->
+unsubscribe = (clazz, cb, handler, opt={}) ->
   sendRequest "unsubscribe", clazz, cb,
     attrs: { bare: opt.bare }
     onResult: (iq) ->

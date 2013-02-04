@@ -293,6 +293,9 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 
   subscribe = function(clazz, cb, handler, opt) {
     var ref;
+    if (opt == null) {
+      opt = {};
+    }
     if (handler != null) {
       ref = conn.addHandler(handler, JOAP_NS, "message");
     }
@@ -313,6 +316,9 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
   };
 
   unsubscribe = function(clazz, cb, handler, opt) {
+    if (opt == null) {
+      opt = {};
+    }
     return sendRequest("unsubscribe", clazz, cb, {
       attrs: {
         bare: opt.bare
