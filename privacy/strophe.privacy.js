@@ -4,6 +4,7 @@
  *Author:
     Helios Technologiez <adm@heliostech.hk>
 */
+var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 Strophe.addConnectionPlugin('privacy', {
   _connection: null,
@@ -27,6 +28,7 @@ Strophe.addConnectionPlugin('privacy', {
 
   init: function(conn) {
     this._connection = conn;
+    this._listChangeCallback = null;
     Strophe.addNamespace('PRIVACY', "jabber:iq:privacy");
   },
 
@@ -46,6 +48,31 @@ Strophe.addConnectionPlugin('privacy', {
    *    (Function) listChangeCallback - Called upon list change.
    */
   getListNames: function(successCallback, failCallback, listChangeCallback) {
+    this._listChangeCallback = listChangeCallback;
+    this._successCallback = successCallback;
+    this._connection.sendIQ($iq({type: "get", id: this._connection.getUniqueId("privacy")})
+                            .c("query", {xmlns: Strophe.NS.PRIVACY}),
+                            __bind(function(stanza) {
+                              var _lists = this.lists;
+                              this.lists = {};
+                              var listNames = stanza.getElementsByTagName("list");
+                              for(var i = 0; i < listNames; ++i) {
+                                var listName = listNames[i].getAttribute("name");
+                                if(_lists.hasOwnProperty(listNames))
+                                  this.lists[listName] = _lists[listName];
+                                else this.lists[listName] = new List(listName, false);
+                                this.lists[listName]._isPulled = false
+                              }
+                              var activeNode = stanza.getElementsByTagName("active");
+                              if(activeNode.length == 1) this._active = activeNode[0].getAttribute("name");
+                              var defaultNode = stanza.getElementsByTagName("default");
+                              if(defaultNode.length == 1) this._default = defaultNode[0].getAttribute("name");
+                              try {
+                                this._successCallback();
+                              } catch(e) {
+                                Strophe.error("Error while processing callback privacy list names pull.");
+                              }
+                            }, this), failCallback);
   },
 
   /** Function: newList
@@ -58,6 +85,8 @@ Strophe.addConnectionPlugin('privacy', {
    *    New list, or existing list if it exists.
    */
   newList: function(name) {
+    if(!this.lists.hasOwnProperty(name)) this.lists[name] = new List(name, true);
+    return this.lists[name];
   },
 
   /** Function: newItem
@@ -74,6 +103,13 @@ Strophe.addConnectionPlugin('privacy', {
    *    New list, or existing list if it exists.
    */
   newItem: function(type, value, action, order, block) {
+    var item = new Item();
+    item.type = type;
+    item.value = value;
+    item.action = action;
+    item.order = order;
+    item.blocked = block;
+    return item;
   },
 
   /** Function: deleteList
@@ -85,6 +121,18 @@ Strophe.addConnectionPlugin('privacy', {
    *    (Function) failCallback - Called upon fail deletion.
    */
   deleteList: function(name, successCallback, failCallback) {
+    this._connection.sendIQ($iq({type: "set", id: this._connection.getUniqueId("privacy")})
+                            .c("query", {xmlns: Strophe.NS.PRIVACY})
+                            .c("list", {name: name}),
+                            __bind(function() {
+                              delete this.lists[name];
+                              try {
+                                successCallback();
+                              } catch(e) {
+                                Strophe.error("Exception while running callback after removing list");
+                              }
+                            }, this),
+                            failCallback);
   },
 
   /** Function: saveList
@@ -99,6 +147,37 @@ Strophe.addConnectionPlugin('privacy', {
    *    True if list is ok, and is sent to server, false otherwise.
    */
   saveList: function(name, successCallback, failCallback) {
+    if(!this.lists.hasOwnProperty(name)) {
+      Strophe.error("Trying to save uninitialized list");
+      throw new Error("List not found");
+    }
+    var listModel = this.lists[name];
+    if(!listModel.validate()) return false;
+    var listIQ = $iq({type: "set", id: this._connection.getUniqueId("privacy")});
+    var list = listIQ.c("query", {xmlns: Strophe.NS.PRIVACY})
+      .c("list", {name: name});
+    var count = listModel.items.length;
+    for(var i = 0; i < count; ++i) {
+      var item = listModel.items[i];
+      var itemNode = list.c("item", { type: item.type,
+                                      value: item.value,
+                                      action: item.action,
+                                      order: item.order});
+      if(item.block && item.block.length > 0) {
+        var blockCount = item.block.length;
+        for(var j = 0; j < blockCount; ++j)
+          itemNode.c(item.block[j]);
+      }
+    }
+    this._connection.sendIQ(listIQ, __bind(function() {
+      try {
+        listModel._isPulled = true;
+        successCallback();
+      } catch(e) {
+        Strophe.error("Exception in callback when saving list " + name);
+      }
+    }, this), failCallback);
+    return true;
   },
 
   /** Function: loadList
@@ -110,7 +189,41 @@ Strophe.addConnectionPlugin('privacy', {
    *    (Function) failCallback - Called upon fail load.
    */
   loadList: function(name, successcb, failcb) {
-  };
+    this._connection.sendIQ($iq({type: "get", id: this._connection.getUniqueId("privacy")})
+                            .c("query", {xmlns: Strophe.NS.PRIVACY})
+                            .c("list", {name: name}),
+                            __bind(function(stanza) {
+                              var lists = stanza.getElementsByTagName("list");
+                              var listsSize = lists.length;
+                              for(var i = 0; i < listsSize; ++i) {
+                                var list = lists[i];
+                                var listModel = this.newList(list.getAttribute("name"));
+                                listModel.items = [];
+                                var items = list.getElementsByTagName("item");
+                                var itemsSize = items.length;
+                                for(var j = 0; j < itemsSize; ++j) {
+                                  var item = items[j];
+                                  var blocks = [];
+                                  var blockNodes = item.childNodes;
+                                  var nodesSize = blockNodes.length;
+                                  for(var k = 0; k < nodesSize; ++k)
+                                    blocks.push(blockNodes[k].nodeName);
+                                  listModel.items.push(this.newItem(item.getAttribute('type'),
+                                                                    item.getAttribute('value'),
+                                                                    item.getAttribute('action'),
+                                                                    item.getAttribute('order'),
+                                                                    blocks));
+                                }
+                              }
+                              this.lists[name];
+                              try {
+                                successCallback();
+                              } catch(e) {
+                                Strophe.error("Exception while running callback after loading list");
+                              }
+                            }, this),
+                            failCallback);
+  },
 
   /** Function: setActive
    *  Sets given list as active.
@@ -120,13 +233,26 @@ Strophe.addConnectionPlugin('privacy', {
    *    (Function) successCallback - Called upon successful setting.
    *    (Function) failCallback - Called upon fail setting.
    */
-  setActive: function(nameOrList, successCallback, failCallback) {
+  setActive: function(name, successCallback, failCallback) {
+    this._connection.sendIQ($iq({type: "set", id: this._connection.getUniqueId("privacy")})
+                            .c("query", {xmlns: Strophe.NS.PRIVACY})
+                            .c("active", {name: name}),
+                            __bind(function() {
+                              this._active = name;
+                              try {
+                                successCallback();
+                              } catch(e) {
+                                Strophe.error("Exception while running callback after setting active list");
+                              }
+                            }, this),
+                            failCallback);
   },
 
   /** Function: getActive
    *  Returns currently active list of null.
    */
   getActive: function() {
+    return this._active;
   },
 
   /** Function: setDefault
@@ -137,17 +263,31 @@ Strophe.addConnectionPlugin('privacy', {
    *    (Function) successCallback - Called upon successful setting.
    *    (Function) failCallback - Called upon fail setting.
    */
-  setDefault: function(nameOrList, successCallback, failCallback) {
+  setDefault: function(name, successCallback, failCallback) {
+    this._connection.sendIQ($iq({type: "set", id: this._connection.getUniqueId("privacy")})
+                            .c("query", {xmlns: Strophe.NS.PRIVACY})
+                            .c("default", {name: name}),
+                            __bind(function() {
+                              this._default = name;
+                              try {
+                                successCallback();
+                              } catch(e) {
+                                Strophe.error("Exception while running callback after setting default list");
+                              }
+                            }, this),
+                            failCallback);
   },
 
   /** Function: getDefault
    *  Returns currently default list of null.
    */
   getDefault: function() {
+    return this._default;
   }
 });
 
 /**
+ * Class: Item
  * Describes single rule.
  */
 function Item() {
@@ -180,6 +320,22 @@ function Item() {
  *  Checks if item is of valid structure
  */
 Item.prototype.validate = function() {
+  if(["jid", "group", "subscription"].indexOf(this.type) < 0) return false;
+  if(this.type == "subscription") {
+    if(["both", "to", "from", "none"].indexOf(this.value) < 0) return false;
+  }
+  if(["allow", "deny"].indexOf(this.action) < 0) return false;
+  if(!this.order || !/^\d+$/.exec(this.order)) return false;
+  if(this.blocked) {
+    if(typeof(this.blocked) != "object") return false;
+    var possibleBlocks = ["message", "iq", "presence-in", "presence-out"];
+    var blockCount = this.blocked.length;
+    for(var i = 0; i < blockCount; ++i) {
+      if(possibleBlocks.indexOf(this.blocked[i]) < 0) return false;
+      possibleBlocks.splice(this.blocked[i], 1);
+    }
+  }
+  return true;
 };
 
 /** Function: copy
@@ -194,21 +350,22 @@ Item.prototype.copy = function(item) {
 };
 
 /**
+ * Class: List
  * Contains list of rules. There is no layering.
  */
-function List(isPulled) {
+function List(name, isPulled) {
   /** PrivateVariable: _name
    *  List name.
    *
    *  Not changeable. Create new, copy this one, and delete, if you wish to rename.
    */
-  this._name = null;
+  this._name = name;
   /** PrivateVariable: _isPulled
    *  If list is pulled from server and up to date.
    *
    *  Is false upon first getting of list of lists, or after getting stanza about update
    */
-  this._isPulled = isLoaded;
+  this._isPulled = isPulled;
   /** Variable: items
    *  Items of this list.
    */
@@ -219,12 +376,21 @@ function List(isPulled) {
  *  Returns list name
  */
 List.prototype.getName = function() {
+  return this._name;
 };
 
 /** Function: validate
  *  Checks if list is of valid structure
  */
 List.prototype.validate = function() {
+  var orders = [];
+  var itemCount = this.items.length;
+  for(var i = 0; i < itemCount; ++i) {
+    if(!this.items[i].validate()) return false;
+    if(orders.indexOf(this.items[i].order) >= 0) return false;
+    orders.push(this.items[i].order);
+  }
+  return true;
 };
 
 /** Function: copy

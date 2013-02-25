@@ -1,9 +1,21 @@
+/**
+ * Unfortunately, this testing suit will not work under chrome, because it brakes security, according to chrome - you
+ * are not allowed to make any requests outside you domain name (which usually will be localhost), you cannot even make
+ * calls to different port - which makes creating local tigase servers pretty useless. But if you decided to overcome
+ * all difficulties, and finally test this plugin under chrome - you are welcome to share config files and simple howto.
+ * Also, ConnectionSentinel is a subject to become part of the buster testing tools for connection management.
+ *
+ * Different domains (tigase.im and sure.im) were selected for strophe was not up to connect to same domain, or better
+ * to say, i did not want to disconnect. Anyway i fell into strange issues which maybe should be reported and solved in
+ * Strophe itself.
+ */
+
 var id = 0;
 
-const server = "tigase.im";
-const gate = "http://" + server + ":5280/xmpp-httpbind"
+const gate = "http://tigase.im:5280/xmpp-httpbind"
 const user = "dima@tigase.im";
 const password = "master";
+const othergate = "http://sure.im:5280/xmpp-httpbind"
 const otheruser = "dima1@tigase.im";
 const otherpassword = "master";
 
@@ -71,7 +83,7 @@ ConnectionSentinel.prototype._onConnectionStatus = function(status, reason) {
 
 buster.testCase("Check privacy lists", {
   setUp: function() {
-    this.timeout = 12000;
+    this.timeout = 3000;
     this.connection = new ConnectionSentinel();
     var pr = this.connection.connect(gate, user, password);
     this.plugin = this.connection._connection.privacy;
@@ -85,30 +97,35 @@ buster.testCase("Check privacy lists", {
 
   "Basic usage. Add list, set active": function() {
     assert(this.connection._connected, "Connection is not available");
+    this.timeout = 15000;
     var sconn = this.connection._connection;
     var d = when.defer();
     function alertAndStop(say) {
       return function() {
-        alert(false, say);
+        assert(false, say);
         d.resolver.resolve();
       }
     };
     this.plugin.getListNames(function() {
       var list = this.plugin.newList("buster-tester");
-      list.items = [this.plugin.newItem("kid", otheruser, "block", 10)];
+      list.items = [this.plugin.newItem("jid", otheruser, "deny", 10)];
       function saveListSuccess() {
         this.plugin.setActive(list.getName(), function() {
           this.otherConnection = new ConnectionSentinel();
-          this.otherConnection.connect(gate, otheruser, otherpassword).then(function() {
+          this.otherConnection.connect(othergate, otheruser, otherpassword).then(function() {
             var messageTimerId = setTimeout(function() {
-              alert(true, "Messages was filtered! or lost....");
-              d.promise.resolver.resolve();
+              assert(true, "Messages was filtered! or lost....");
+              this.otherConnection.disconnect().then(function() {
+                d.resolver.resolve();
+              }.bind(this));
             }.bind(this), 2000);
             sconn.addHandler(function() {
               clearTimeout(messageTimerId);
-              alertAndStop()();
-            }.bind(this), null, "message", null, null, otheruser);
-            this.otherConnection.send($msg({type: "chat"}).c("body", {}, "hello, dima!"));
+              this.otherConnection.disconnect().then(function() {
+                alertAndStop("Message was accepted")();
+              }.bind(this));
+            }.bind(this), null, "message");
+            this.otherConnection._connection.send($msg({type: "chat", to: user}).c("body", {}, "hello, dima!"));
           }.bind(this), alertAndStop("Unable to connect with other user"));
         }.bind(this), alertAndStop("Unable to set active list."));
       };
@@ -138,10 +155,10 @@ buster.testCase("Check privacy lists", {
 
   "List validation": function() {
     var list = this.plugin.newList("booster-list-name");
-    list.items = [this.plugin.newItem("jid", "user1@example.com", "block", 2),
-                  this.plugin.newItem("jid", "user8@example.com", "block", 5, ["presence-out", "iq"]),
+    list.items = [this.plugin.newItem("jid", "user1@example.com", "deny", 2),
+                  this.plugin.newItem("jid", "user8@example.com", "deny", 5, ["presence-out", "iq"]),
                   this.plugin.newItem("jid", "example.com/work", "allow", 8),
-                  this.plugin.newItem("jid", "example.com", "block", 10, ["message"])];
+                  this.plugin.newItem("jid", "example.com", "deny", 10, ["message"])];
     assert(list.validate(), "Valid list");
 
     list.items[2].order = list.items[0].order;
