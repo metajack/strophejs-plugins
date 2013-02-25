@@ -11,7 +11,7 @@ Strophe.addConnectionPlugin('privacy', {
   /** Variable: lists
    *  Available privacy lists
    */
-  lists: [],
+  lists: {},
   /** PrivateVariable: _default
    *  Default privacy list
    */
@@ -37,13 +37,15 @@ Strophe.addConnectionPlugin('privacy', {
   /** Function: getListNames
    *  Initial call to get all list names.
    *
-   *  This has to be called before any actions with lists.
+   *  This has to be called before any actions with lists. This is separated from init method, to be able to put
+   *  callbacks on the success and fail events.
    *
    *  Params:
    *    (Function) successCallback - Called upon successful deletion.
    *    (Function) failCallback - Called upon fail deletion.
+   *    (Function) listChangeCallback - Called upon list change.
    */
-  getListNames: function(successCallback, failCallback) {
+  getListNames: function(successCallback, failCallback, listChangeCallback) {
   },
 
   /** Function: newList
@@ -58,36 +60,63 @@ Strophe.addConnectionPlugin('privacy', {
   newList: function(name) {
   },
 
+  /** Function: newItem
+   *  Create new item.
+   *
+   *  Params:
+   *    (String) type - Type of item.
+   *    (String) value - Value of item.
+   *    (String) action - Action for the matching.
+   *    (String) order - Order of rule..
+   *    (String) block - Block list.
+   *
+   *  Returns:
+   *    New list, or existing list if it exists.
+   */
+  newItem: function(type, value, action, order, block) {
+  },
+
   /** Function: deleteList
    *  Delete list.
    *
    *  Params:
-   *    (String|List) nameOrList - List name, or list itself.
+   *    (String) name - List name.
    *    (Function) successCallback - Called upon successful deletion.
    *    (Function) failCallback - Called upon fail deletion.
    */
-  deleteList: function(nameOrList, successCallback, failCallback) {
+  deleteList: function(name, successCallback, failCallback) {
   },
 
   /** Function: saveList
    *  Saves list.
    *
    *  Params:
-   *    (String|List) nameOrList - List name, or list itself.
+   *    (String) name - List name.
    *    (Function) successCallback - Called upon successful setting.
    *    (Function) failCallback - Called upon fail setting.
    *
    *  Returns:
    *    True if list is ok, and is sent to server, false otherwise.
    */
-  saveList: function(nameOrList, successCallback, failCallback) {
+  saveList: function(name, successCallback, failCallback) {
   },
+
+  /** Function: loadList
+   *  Loads list from server
+   *
+   *  Params:
+   *    (String) name - List name.
+   *    (Function) successCallback - Called upon successful load.
+   *    (Function) failCallback - Called upon fail load.
+   */
+  loadList: function(name, successcb, failcb) {
+  };
 
   /** Function: setActive
    *  Sets given list as active.
    *
    *  Params:
-   *    (String|List) nameOrList - List name, or list itself.
+   *    (String) name - List name.
    *    (Function) successCallback - Called upon successful setting.
    *    (Function) failCallback - Called upon fail setting.
    */
@@ -104,7 +133,7 @@ Strophe.addConnectionPlugin('privacy', {
    *  Sets given list as default.
    *
    *  Params:
-   *    (String|List) nameOrList - List name, or list itself.
+   *    (String) name - List name.
    *    (Function) successCallback - Called upon successful setting.
    *    (Function) failCallback - Called upon fail setting.
    */
@@ -186,6 +215,12 @@ function List(isPulled) {
   this.items = [];
 };
 
+/** Function: getName
+ *  Returns list name
+ */
+List.prototype.getName = function() {
+};
+
 /** Function: validate
  *  Checks if list is of valid structure
  */
@@ -203,6 +238,6 @@ List.prototype.copy = function(list) {
   var l = list.items.length;
   for(var i = 0; i < l; ++i) {
     this.items[i] = new Item();
-    this.items[i].copy(list.items.[i]);
+    this.items[i].copy(list.items[i]);
   }
 };
