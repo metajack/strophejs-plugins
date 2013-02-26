@@ -1,7 +1,8 @@
 Strophe.addConnectionPlugin('iexdomain', {
     init: function(conn) {
         // replace Strophe.Request._newXHR with new IE CrossDomain version
-        if (window.XDomainRequest) {
+        var nativeXHR = new XMLHttpRequest();
+        if (window.XDomainRequest && ! "withCredentials" in nativeXHR) {
             Strophe.Request.prototype._newXHR = function() {
                 var xhr = new XDomainRequest();
                 xhr.readyState = 0;
