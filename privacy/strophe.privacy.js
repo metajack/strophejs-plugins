@@ -49,14 +49,13 @@ Strophe.addConnectionPlugin('privacy', {
    */
   getListNames: function(successCallback, failCallback, listChangeCallback) {
     this._listChangeCallback = listChangeCallback;
-    this._successCallback = successCallback;
     this._connection.sendIQ($iq({type: "get", id: this._connection.getUniqueId("privacy")})
                             .c("query", {xmlns: Strophe.NS.PRIVACY}),
                             __bind(function(stanza) {
                               var _lists = this.lists;
                               this.lists = {};
                               var listNames = stanza.getElementsByTagName("list");
-                              for(var i = 0; i < listNames; ++i) {
+                              for(var i = 0; i < listNames.length; ++i) {
                                 var listName = listNames[i].getAttribute("name");
                                 if(_lists.hasOwnProperty(listNames))
                                   this.lists[listName] = _lists[listName];
@@ -67,11 +66,13 @@ Strophe.addConnectionPlugin('privacy', {
                               if(activeNode.length == 1) this._active = activeNode[0].getAttribute("name");
                               var defaultNode = stanza.getElementsByTagName("default");
                               if(defaultNode.length == 1) this._default = defaultNode[0].getAttribute("name");
-                              try {
-                                this._successCallback();
-                              } catch(e) {
-                                Strophe.error("Error while processing callback privacy list names pull.");
-                              }
+                              this._isInitialized = true;
+                              if(successCallback)
+                                try {
+                                  successCallback();
+                                } catch(e) {
+                                  Strophe.error("Error while processing callback privacy list names pull.");
+                                }
                             }, this), failCallback);
   },
 
@@ -126,11 +127,12 @@ Strophe.addConnectionPlugin('privacy', {
                             .c("list", {name: name}),
                             __bind(function() {
                               delete this.lists[name];
-                              try {
-                                successCallback();
-                              } catch(e) {
-                                Strophe.error("Exception while running callback after removing list");
-                              }
+                              if(successCallback)
+                                try {
+                                  successCallback();
+                                } catch(e) {
+                                  Strophe.error("Exception while running callback after removing list");
+                                }
                             }, this),
                             failCallback);
   },
@@ -170,12 +172,13 @@ Strophe.addConnectionPlugin('privacy', {
       }
     }
     this._connection.sendIQ(listIQ, __bind(function() {
-      try {
-        listModel._isPulled = true;
-        successCallback();
-      } catch(e) {
-        Strophe.error("Exception in callback when saving list " + name);
-      }
+      listModel._isPulled = true;
+      if(successCallback)
+        try {
+          successCallback();
+        } catch(e) {
+          Strophe.error("Exception in callback when saving list " + name);
+        }
     }, this), failCallback);
     return true;
   },
@@ -188,7 +191,7 @@ Strophe.addConnectionPlugin('privacy', {
    *    (Function) successCallback - Called upon successful load.
    *    (Function) failCallback - Called upon fail load.
    */
-  loadList: function(name, successcb, failcb) {
+  loadList: function(name, successCallback, failCallback) {
     this._connection.sendIQ($iq({type: "get", id: this._connection.getUniqueId("privacy")})
                             .c("query", {xmlns: Strophe.NS.PRIVACY})
                             .c("list", {name: name}),
@@ -216,11 +219,12 @@ Strophe.addConnectionPlugin('privacy', {
                                 }
                               }
                               this.lists[name];
-                              try {
-                                successCallback();
-                              } catch(e) {
-                                Strophe.error("Exception while running callback after loading list");
-                              }
+                              if(successCallback)
+                                try {
+                                  successCallback();
+                                } catch(e) {
+                                  Strophe.error("Exception while running callback after loading list");
+                                }
                             }, this),
                             failCallback);
   },
@@ -239,11 +243,12 @@ Strophe.addConnectionPlugin('privacy', {
                             .c("active", {name: name}),
                             __bind(function() {
                               this._active = name;
-                              try {
-                                successCallback();
-                              } catch(e) {
-                                Strophe.error("Exception while running callback after setting active list");
-                              }
+                              if(successCallback)
+                                try {
+                                  successCallback();
+                                } catch(e) {
+                                  Strophe.error("Exception while running callback after setting active list");
+                                }
                             }, this),
                             failCallback);
   },
@@ -269,11 +274,12 @@ Strophe.addConnectionPlugin('privacy', {
                             .c("default", {name: name}),
                             __bind(function() {
                               this._default = name;
-                              try {
-                                successCallback();
-                              } catch(e) {
-                                Strophe.error("Exception while running callback after setting default list");
-                              }
+                              if(successCallback)
+                                try {
+                                  successCallback();
+                                } catch(e) {
+                                  Strophe.error("Exception while running callback after setting default list");
+                                }
                             }, this),
                             failCallback);
   },

@@ -4,10 +4,10 @@ config["My tests"] = {
   rootPath: "../",
   environment: "browser", // or "node"
   libs: [
-    "strophe.min.js"
+    "strophe.min.js", "test/strophe.sentinel.js"
   ],
   extensions: [
-    require("when")
+    require("when"), require("sinon")
   ],
   sources: [
     "strophe.privacy.js"
