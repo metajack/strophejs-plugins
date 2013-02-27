@@ -78,6 +78,8 @@ buster.testCase("Check privacy lists", {
     assert(item.validate(), "Valid item");
     item = this.plugin.newItem("subscription", "from", "deny", 5, ["message", "iq"]);
     assert(item.validate(), "Valid item");
+    item = this.plugin.newItem("", "", "deny", 5, ["message", "iq"]);
+    assert(item.validate(), "Valid item with fall-through case.");
 
     item = this.plugin.newItem("WRONG", "blabla.com", "deny", 10);
     refute(item.validate(), "Bad type name");

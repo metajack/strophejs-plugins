@@ -161,15 +161,14 @@ Strophe.addConnectionPlugin('privacy', {
     var count = listModel.items.length;
     for(var i = 0; i < count; ++i) {
       var item = listModel.items[i];
-      var itemNode = list.c("item", { type: item.type,
-                                      value: item.value,
-                                      action: item.action,
-                                      order: item.order});
+      var itemNode = list.c("item", { action: item.action, order: item.order});
+      if(item.type != "") itemNode.attrs({type: item.type, value: item.value});
       if(item.block && item.block.length > 0) {
         var blockCount = item.block.length;
         for(var j = 0; j < blockCount; ++j)
-          itemNode.c(item.block[j]);
+          itemNode.c(item.block[j]).up();
       }
+      itemNode.up();
     }
     this._connection.sendIQ(listIQ, __bind(function() {
       listModel._isPulled = true;
@@ -238,9 +237,11 @@ Strophe.addConnectionPlugin('privacy', {
    *    (Function) failCallback - Called upon fail setting.
    */
   setActive: function(name, successCallback, failCallback) {
-    this._connection.sendIQ($iq({type: "set", id: this._connection.getUniqueId("privacy")})
-                            .c("query", {xmlns: Strophe.NS.PRIVACY})
-                            .c("active", {name: name}),
+    var iq = $iq({type: "set", id: this._connection.getUniqueId("privacy")})
+      .c("query", {xmlns: Strophe.NS.PRIVACY})
+      .c("active");
+    if(name) iq.attrs({name: name});
+    this._connection.sendIQ(iq,
                             __bind(function() {
                               this._active = name;
                               if(successCallback)
@@ -269,9 +270,11 @@ Strophe.addConnectionPlugin('privacy', {
    *    (Function) failCallback - Called upon fail setting.
    */
   setDefault: function(name, successCallback, failCallback) {
-    this._connection.sendIQ($iq({type: "set", id: this._connection.getUniqueId("privacy")})
-                            .c("query", {xmlns: Strophe.NS.PRIVACY})
-                            .c("default", {name: name}),
+    var iq = $iq({type: "set", id: this._connection.getUniqueId("privacy")})
+      .c("query", {xmlns: Strophe.NS.PRIVACY})
+      .c("default");
+    if(name) iq.attrs({name: name});
+    this._connection.sendIQ(iq,
                             __bind(function() {
                               this._default = name;
                               if(successCallback)
@@ -326,7 +329,7 @@ function Item() {
  *  Checks if item is of valid structure
  */
 Item.prototype.validate = function() {
-  if(["jid", "group", "subscription"].indexOf(this.type) < 0) return false;
+  if(["jid", "group", "subscription", ""].indexOf(this.type) < 0) return false;
   if(this.type == "subscription") {
     if(["both", "to", "from", "none"].indexOf(this.value) < 0) return false;
   }
@@ -383,6 +386,17 @@ function List(name, isPulled) {
  */
 List.prototype.getName = function() {
   return this._name;
+};
+
+/** Function: isPulled
+ *  If list is pulled from server.
+ *
+ * This is false for list names just taken from server. you need to make loadList to see all the contents of the list.
+ * Also this is possible when list was changed somewhere else, and you've got announcement about update. Same loadList
+ * is your savior.
+ */
+List.prototype.isPulled = function() {
+  return this._isPulled;
 };
 
 /** Function: validate
