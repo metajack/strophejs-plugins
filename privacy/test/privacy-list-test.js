@@ -3,83 +3,21 @@
  * are not allowed to make any requests outside you domain name (which usually will be localhost), you cannot even make
  * calls to different port - which makes creating local tigase servers pretty useless. But if you decided to overcome
  * all difficulties, and finally test this plugin under chrome - you are welcome to share config files and simple howto.
- * Also, ConnectionSentinel is a subject to become part of the buster testing tools for connection management.
  *
  * Different domains (tigase.im and sure.im) were selected for strophe was not up to connect to same domain, or better
- * to say, i did not want to disconnect. Anyway i fell into strange issues which maybe should be reported and solved in
+ * to say, it did not want to disconnect. Anyway i fell into strange issues which maybe should be reported and solved in
  * Strophe itself.
  */
 
 var id = 0;
 
-const gate = "http://tigase.im:5280/xmpp-httpbind"
+(function() {
+const gate = "http://tigase.im:5280/xmpp-httpbind";
 const user = "dima@tigase.im";
 const password = "master";
-const othergate = "http://sure.im:5280/xmpp-httpbind"
+const othergate = "http://sure.im:5280/xmpp-httpbind";
 const otheruser = "dima1@tigase.im";
 const otherpassword = "master";
-
-function ConnectionSentinel() {
-  this._connected = false;
-  this._connecting = false;
-  this._disconnecting = false;
-};
-
-ConnectionSentinel.prototype.connect = function(gate, user, password) {
-  if(this._connected) return;
-  if(this._connecting) return;
-  this._connecting = true;
-  this._connection = new Strophe.Connection(gate);
-  this._connectionDeferred = when.defer();
-  this._connection.connect(user, password, this._onConnectionStatus.bind(this));
-  return this._connectionDeferred.promise;
-};
-
-ConnectionSentinel.prototype.disconnect = function(successcb) {
-  if(!this._connected) return;
-  if(this._disconnecting) return;
-  this._disconnecting = true;
-  this._disconnectionDeferred = when.defer();
-  this._connection.disconnect();
-  return this._disconnectionDeferred.promise;
-}
-
-ConnectionSentinel.prototype._onConnectionStatus = function(status, reason) {
-  if(this._connecting) {
-    if([Strophe.Status.CONNECTED, Strophe.Status.CONNFAIL, Strophe.Status.ERROR, Strophe.Status.AUTHFAIL].indexOf(status) >= 0) {
-      this._connecting = false;
-      if(status == Strophe.Status.CONNECTED) {
-        this._connected = true;
-        try {
-          this._connectionDeferred.resolver.resolve(true);
-        } catch(e) {
-          console.log("Error on connection success callback");
-        }
-      } else { //if(status == Strophe.Status.CONNFAIL) {
-        this._connected = false;
-        try {
-          this._connectionDeferred.resolver.resolve(false);
-        } catch(e) {
-          console.log("Error on connection fail callback");
-        }
-      }
-      this._connectionDeferred = null;
-    }
-  } else if(this._disconnecting) {
-    if([Strophe.Status.DISCONNECTED].indexOf(status) >= 0) {
-      this._connected = false;
-      try {
-        this._disconnectionDeferred.resolver.resolve();
-      } catch(e) {
-        console.log("Error on disconnection callback");
-      }
-      this._disconnecting = false;
-      this._disconnectionDeferred = null;
-      this._connection = null;
-    }
-  }
-  return true;
-}
 
 buster.testCase("Check privacy lists", {
   setUp: function() {
@@ -140,6 +78,8 @@ buster.testCase("Check privacy lists", {
     assert(item.validate(), "Valid item");
     item = this.plugin.newItem("subscription", "from", "deny", 5, ["message", "iq"]);
     assert(item.validate(), "Valid item");
+    item = this.plugin.newItem("", "", "deny", 5, ["message", "iq"]);
+    assert(item.validate(), "Valid item with fall-through case.");
 
     item = this.plugin.newItem("WRONG", "blabla.com", "deny", 10);
     refute(item.validate(), "Bad type name");
@@ -167,3 +107,4 @@ buster.testCase("Check privacy lists", {
     refute(list.validate(), "One of the items is invalid.");
   }
 });
+})();
