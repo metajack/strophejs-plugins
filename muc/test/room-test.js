@@ -2,113 +2,89 @@
 
 var id = 0;
 
-function Deffered() {
-  this.id = ++id;
-  this.callbacks = [];
+(function() {
+const gate = "http://tigase.im:5280/xmpp-httpbind";
+const user = "dima@tigase.im";
+const password = "master";
 
-  this.then = function(callback) {
-    this.callbacks.push(callback);
-  };
+function RoomClient(name) {
+  var messages = [];
+  var presences = [];
+  var wrongHandler = false;
 
-  this.finish = function() {
-    var newCallbacks = [];
-    for(var i = 0; i < this.callbacks.length; ++i) {
-      try {
-        if(this.callbacks[i]()) newCallbacks.push(this.callbacks[i]);
-      } catch(e) {
-        console.log("Error while processing finish");
-        console.log(e);
-        console.log(e.stack);
-        // that's bad...
-      }
+  this.message = when.defer();
+  this.presence = when.defer();
+  this.fail = when.defer();
+
+  this.messages = function() { return messages.slice(); }
+  this.presences = function() { return presences.slice(); }
+  this.wrongHandler = function() { return wrongHandler; }
+  this.name = function() { return name; }
+
+  this.onMessage = function(stanza, room) {
+    if(room.name != name) {
+      wrongHandler = true;
+      this.fail.resolver.resolve();
+      this.fail = when.defer();
+      return false;
     }
-    this.callbacks = newCallbacks;
-  };
+
+    messages.push(stanza);
+    this.message.resolver.resolve();
+    this.message = when.defer();
+    return true;
+  }.bind(this);
+
+  this.onPresence = function(stanza, room) {
+    if(room.name != name) {
+      wrongHandler = true;
+      this.fail.resolver.resolve();
+      this.fail = when.defer();
+      return false;
+    }
+
+    presences.push(stanza);
+    this.presence.resolver.resolve();
+    this.presence = when.defer();
+    return true;
+  }.bind(this);
 };
 
 buster.testCase("Check room handlers", {
   setUp: function() {
-    this.timeout = 3000;
+    this.timeout = 7000;
 
-    this.connectionSentinel = new Deffered();
+    this.connection = new ConnectionSentinel();
+    var pr = this.connection.connect(gate, user, password);
+    this.plugin = this.connection._connection.muc;
 
-    this.connectionSentinel.connectionStatus = function(status) {
-      if(status != this.waitForStatus) return;
-      this.waitForStatus = -1;
-      this.finish();
-    }.bind(this.connectionSentinel);
-
-    this.connectionSentinel.waitForStatus = Strophe.Status.CONNECTED;
-
-    this.conn = new Strophe.Connection("http://tigase.im:5280/xmpp-httpbind");
-    this.conn.connect("dima@tigase.im", "master", this.connectionSentinel.connectionStatus);
-
-    return this.connectionSentinel;
+    return pr;
   },
 
   tearDown: function() {
-    // this.connectionSentinel.waitForStatus = Strophe.Status.DISCONNECTED;
-    this.conn.disconnect();
-    // return this.connectionSentinel;
+    if(!this.connection._connected) return;
+    return this.connection.disconnect();
   },
 
   "Rooms should have separate callbacks": function() {
-    function RoomClient(name) {
-      var messages = [];
-      var presences = [];
-      var wrongHandler = false;
-
-      this.message = new Deffered();
-      this.presence = new Deffered();
-      this.fail = new Deffered();
-
-      this.messages = function() { return messages.slice(); }
-      this.presences = function() { return presences.slice(); }
-      this.wrongHandler = function() { return wrongHandler; }
-      this.name = function() { return name; }
-
-      this.onMessage = function(stanza, room) {
-        if(room.name != name) {
-          wrongHandler = true;
-          this.fail.finish();
-          return false;
-        }
-
-        messages.push(stanza);
-        this.message.finish();
-      }.bind(this);
-
-      this.onPresence = function(stanza, room) {
-        if(room.name != name) {
-          wrongHandler = true;
-          this.fail.finish();
-          return false;
-        }
-
-        presences.push(stanza);
-        this.presence.finish();
-      }.bind(this);
-    };
-
-    var sentinel = new Deffered();
+    var sentinel = when.defer();
 
     var rooms = [new RoomClient("room-1@muc.tigase.im"),
-                 new RoomClient("room-2@muc.tigase.im"),
-                 new RoomClient("room-3@muc.tigase.im")];
+                 new RoomClient("room-2@muc.tigase.im")];
 
     var gotPresence = false;
     var gotMessage = false;
-    this.conn.muc.join(rooms[0].name(), "dima", rooms[0].onMessage, rooms[0].onPresence);
-    rooms[0].presence.then(function() {
+    this.plugin.join(rooms[0].name(), "dima", rooms[0].onMessage, rooms[0].onPresence);
+    rooms[0].presence.promise.then(function() {
       gotPresence = true;
-      this.conn.muc.groupchat(rooms[0].name(), "Hello, world!");
+      this.plugin.groupchat(rooms[0].name(), "Hello, world!");
       return true;
     }.bind(this));
-    rooms[0].message.then(function() {
+    rooms[0].message.promise.then(function() {
       gotMessage = true;
       return true;
     });
-    this.conn.muc.join(rooms[1].name(), "dima", rooms[1].onMessage, rooms[1].onPresence);
+    this.plugin.join(rooms[1].name(), "dima", rooms[1].onMessage, rooms[1].onPresence);
 
     setTimeout(function() {
       assert(gotPresence);
@@ -116,9 +92,45 @@ buster.testCase("Check room handlers", {
       refute(rooms[0].wrongHandler());
       refute(rooms[1].wrongHandler());
 
-      sentinel.finish();
+      sentinel.resolver.resolve();
     }, 2000);
 
-    return sentinel;
+    return sentinel.promise;
+  },
+
+  "Callback should not be removed when we leave one room": function() {
+    var sentinel = when.defer();
+
+    var rooms = [new RoomClient("room-6@muc.tigase.im"),
+                 new RoomClient("room-7@muc.tigase.im")];
+
+    var gotMessage = false;
+    var messageWasSent = false;
+    this.plugin.join(rooms[0].name(), "dima", rooms[0].onMessage, rooms[0].onPresence);
+    rooms[0].presence.promise.then(function() {
+      this.plugin.join(rooms[1].name(), "dima", rooms[1].onMessage, rooms[1].onPresence);
+      rooms[1].presence.promise.then(function() {
+        this.plugin.leave(rooms[0].name(), "dima");
+        setTimeout(function() {
+          messageWasSent = true;
+          this.plugin.groupchat(rooms[1].name(), "Hello, world!");
+          rooms[1].message.promise.then(function() {
+
+            gotMessage = true;
+            return true;
+          }.bind(this));
+        }.bind(this), 1000);
+        return true;
+      }.bind(this));
+      return true;
+    }.bind(this));
+
+    setTimeout(function() {
+      assert(messageWasSent, "Message has to be sent, i.e. all the room join/leave worked");
+      assert(gotMessage, "Message has to be received.");
+      sentinel.resolver.resolve();
+    }.bind(this), 6000);
+    return sentinel.promise;
   }
 });
+})();

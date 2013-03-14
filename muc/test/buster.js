@@ -2,14 +2,17 @@ var config = module.exports;
 
 config["MUC tests"] = {
   env: "browser",
-  rootPath: "../",
+  rootPath: "../../",
   libs: [
-    "strophe.min.js"
+    "test-helpers/strophe.min.js", "test-helpers/strophe.sentinel.js"
+  ],
+  extensions: [
+    require("when")
   ],
   sources: [
-    "strophe.muc.js"
+    "muc/strophe.muc.js"
   ],
   tests: [
-    "test/*-test.js"
+    "muc/test/*-test.js"
   ]
 };

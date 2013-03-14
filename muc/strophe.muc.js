@@ -13,7 +13,8 @@ var Occupant, RoomConfig, XmppRoom,
 
 Strophe.addConnectionPlugin('muc', {
   _connection: null,
-  rooms: [],
+  rooms: {},
+  roomNames: [],
   /*Function
   Initialize the MUC plugin. Sets the correct connection object and
   extends the namesace.
@@ -41,7 +42,7 @@ Strophe.addConnectionPlugin('muc', {
   */
 
   join: function(room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password, history_attrs) {
-    var msg, room_nick, _base, _ref, _ref1,
+    var msg, room_nick, _ref,
       _this = this;
     room_nick = this.test_append_nick(room, nick);
     msg = $pres({
@@ -93,8 +94,9 @@ Strophe.addConnectionPlugin('muc', {
         return true;
       });
     }
-    if ((_ref1 = (_base = this.rooms)[room]) == null) {
-      _base[room] = new XmppRoom(this, room, nick, password);
+    if (!this.rooms.hasOwnProperty(room)) {
+      this.rooms[room] = new XmppRoom(this, room, nick, password);
+      this.roomNames.push(room);
     }
     if (pres_handler_cb) {
       this.rooms[room].addHandler('presence', pres_handler_cb);
@@ -119,11 +121,15 @@ Strophe.addConnectionPlugin('muc', {
   */
 
   leave: function(room, nick, handler_cb, exit_msg) {
-    var presence, presenceid, room_nick;
+    var id, presence, presenceid, room_nick;
+    id = this.roomNames.indexOf(room);
     delete this.rooms[room];
-    if (this.rooms.length === 0) {
-      this._connection.deleteHandler(this._muc_handler);
-      this._muc_handler = null;
+    if (id >= 0) {
+      this.roomNames.splice(id, 1);
+      if (this.roomNames.length === 0) {
+        this._connection.deleteHandler(this._muc_handler);
+        this._muc_handler = null;
+      }
     }
     room_nick = this.test_append_nick(room, nick);
     presenceid = this._connection.getUniqueId();
@@ -585,7 +591,6 @@ XmppRoom = (function() {
       this.client = client.muc;
     }
     this.name = Strophe.getBareJidFromJid(name);
-    this.client.rooms[this.name] = this;
     this.addHandler('presence', this._roomRosterHandler);
   }
 
