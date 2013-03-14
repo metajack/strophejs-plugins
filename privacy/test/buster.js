@@ -1,18 +1,18 @@
 var config = module.exports;
 
 config["My tests"] = {
-  rootPath: "../",
+  rootPath: "../../",
   environment: "browser", // or "node"
   libs: [
-    "strophe.min.js", "test/strophe.sentinel.js"
+    "test-helpers/strophe.min.js", "test-helpers/strophe.sentinel.js"
   ],
   extensions: [
     require("when"), require("sinon")
   ],
   sources: [
-    "strophe.privacy.js"
+    "privacy/strophe.privacy.js"
   ],
   tests: [
-    "test/*-test.js"
+    "privacy/test/*-test.js"
   ]
 }
