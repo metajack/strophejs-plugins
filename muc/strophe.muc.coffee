@@ -9,7 +9,8 @@
 
 Strophe.addConnectionPlugin 'muc'
   _connection: null
-  rooms: []
+  rooms: {}
+  roomNames: []
 
   ###Function
   Initialize the MUC plugin. Sets the correct connection object and
@@ -81,11 +82,9 @@ Strophe.addConnectionPlugin 'muc'
 
       return true
 
-    @rooms[room] ?= new XmppRoom(
-      @
-      room
-      nick
-      password )
+    unless @rooms.hasOwnProperty(room)
+      @rooms[room] = new XmppRoom(@, room, nick, password )
+      @roomNames.push room
 
     @rooms[room].addHandler 'presence', pres_handler_cb if pres_handler_cb
     @rooms[room].addHandler 'message', msg_handler_cb if msg_handler_cb
@@ -105,10 +104,13 @@ Strophe.addConnectionPlugin 'muc'
   iqid - The unique id for the room leave.
   ###
   leave: (room, nick, handler_cb, exit_msg) ->
+    id = @roomNames.indexOf room
     delete @rooms[room]
-    if @rooms.length is 0
-      @_connection.deleteHandler @_muc_handler
-      @_muc_handler = null
+    if id >=0
+      @roomNames.splice id, 1
+      if @roomNames.length is 0
+        @_connection.deleteHandler @_muc_handler
+        @_muc_handler = null
     room_nick = @test_append_nick room, nick
     presenceid = @_connection.getUniqueId()
     presence = $pres (
@@ -488,7 +490,6 @@ class XmppRoom
     @_handler_ids = 0
     @client = client.muc if client.muc
     @name = Strophe.getBareJidFromJid name
-    @client.rooms[@name] = @
     @addHandler 'presence', @_roomRosterHandler
 
   join: (msg_handler_cb, pres_handler_cb, roster_cb) ->
