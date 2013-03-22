@@ -68,6 +68,9 @@ https://github.com/metajack/strophejs-plugins .
 - [Message Archive Management](strophejs-plugins/tree/master/mam/)
   ([XEP 0313](http://xmpp.org/extensions/xep-0313.html))
 
+- [In-Band Bytestreams](strophejs-plugins/tree/master/ibb/)
+  ([XEP 0047](http://xmpp.org/extensions/xep-0047.html))
+
 ### Other Plugins
 
 - [Serverdate](strophejs-plugins/tree/master/serverdate/) - Syncs a local clock
