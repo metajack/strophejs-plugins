@@ -11,74 +11,74 @@ https://github.com/metajack/strophejs-plugins .
 
 ### XMPP Extensions
 
-- [Data Forms](/metajack/strophejs-plugins/tree/master/dataforms/)
+- [Data Forms](/dataforms/)
   ([XEP 0004](http://xmpp.org/extensions/xep-0004.html))
 
-- [Jabber-RPC](/metajack/strophejs-plugins/tree/master/rpc/)
+- [Jabber-RPC](/rpc/)
   ([XEP 0009](http://xmpp.org/extensions/xep-0009.html))
 
-- [Service Discovery](/metajack/strophejs-plugins/tree/master/disco/)
+- [Service Discovery](/disco/)
   ([XEP 0030](http://xmpp.org/extensions/xep-0030.html))
 
-- [Multi-User Chat](/metajack/strophejs-plugins/tree/master/muc/)
+- [Multi-User Chat](/muc/)
   ([XEP 0045](http://xmpp.org/extensions/xep-0045.html))
 
-- [Private XML Storage](/metajack/strophejs-plugins/tree/master/private/)
+- [Private XML Storage](/private/)
   ([XEP 0049](http://xmpp.org/extensions/xep-0049.html))
 
-- [Ad-Hoc Commands](/metajack/strophejs-plugins/tree/master/cmds/)
+- [Ad-Hoc Commands](/cmds/)
   ([XEP 0050](http://xmpp.org/extensions/xep-0050.html))
 
-- [vcard-temp](/metajack/strophejs-plugins/tree/master/vcard/)
+- [vcard-temp](/vcard/)
   ([XEP 0054](http://xmpp.org/extensions/xep-0054.html))
 
-- [Result Set Management](/metajack/strophejs-plugins/tree/master/rsm/)
+- [Result Set Management](/rsm/)
   ([XEP 0059](http://xmpp.org/extensions/xep-0059.html))
 
-- [Publish-Subscribe](/metajack/strophejs-plugins/tree/master/pubsub/)
+- [Publish-Subscribe](/pubsub/)
   ([XEP 0060](http://xmpp.org/extensions/xep-0060.html))
 
-- [Jabber Object Access Protocol](/metajack/strophejs-plugins/tree/master/joap/)
+- [Jabber Object Access Protocol](/joap/)
   ([XEP 0075](http://xmpp.org/extensions/xep-0075.html))
 
-- [In-Band Registration](/metajack/strophejs-plugins/tree/master/register/)
+- [In-Band Registration](/register/)
   ([XEP 0077](http://xmpp.org/extensions/xep-0077.html))
 
-- [Chat State Notifications](/metajack/strophejs-plugins/tree/master/chatstates/)
+- [Chat State Notifications](/chatstates/)
   ([XEP 0085](http://xmpp.org/extensions/xep-0085.html))
 
-- [Entity Capabilities](/metajack/strophejs-plugins/tree/master/caps/)
+- [Entity Capabilities](/caps/)
   ([XEP 0115](http://xmpp.org/extensions/xep-0115.html))
 
-- [Message Archiving](/metajack/strophejs-plugins/tree/master/archive/)
+- [Message Archiving](/archive/)
   ([XEP 0136](http://xmpp.org/extensions/xep-0136.html))
 
-- [Personal Eventing Protocol](/metajack/strophejs-plugins/tree/master/pep/)
+- [Personal Eventing Protocol](/pep/)
   ([XEP 0163](http://xmpp.org/extensions/xep-0163.html))
 
-- [Message Delivery Receipts](/metajack/strophejs-plugins/tree/master/receipts/)
+- [Message Delivery Receipts](/receipts/)
   ([XEP 0184](http://xmpp.org/extensions/xep-0184.html))
 
-- [XMPP Ping](/metajack/strophejs-plugins/tree/master/ping/)
+- [XMPP Ping](/ping/)
   ([XEP 0199](http://xmpp.org/extensions/xep-0199.html))
 
-- [Roster Versioning](/metajack/strophejs-plugins/tree/master/roster/)
+- [Roster Versioning](/roster/)
   ([XEP 0237](http://xmpp.org/extensions/xep-0237.html))
 
-- [Message Archive Management](/metajack/strophejs-plugins/tree/master/mam/)
+- [Message Archive Management](/mam/)
   ([XEP 0313](http://xmpp.org/extensions/xep-0313.html))
 
-- [In-Band Bytestreams](/metajack/strophejs-plugins/tree/master/ibb/)
+- [In-Band Bytestreams](/ibb/)
   ([XEP 0047](http://xmpp.org/extensions/xep-0047.html))
 
 ### Other Plugins
 
-- [Serverdate](/metajack/strophejs-plugins/tree/master/serverdate/) - Syncs a local clock
+- [Serverdate](/serverdate/) - Syncs a local clock
   to the servers
 
-- [epic](/metajack/strophejs-plugins/tree/master/epic/)
+- [epic](/epic/)
 
-- [iexdomain](/metajack/strophejs-plugins/tree/master/iexdomain/) - Support for IE
+- [iexdomain](/iexdomain/) - Support for IE
   XDomainRequest
 
 ## Contribute
