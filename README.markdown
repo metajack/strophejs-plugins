@@ -71,6 +71,9 @@ https://github.com/metajack/strophejs-plugins .
 - [In-Band Bytestreams](/ibb/)
   ([XEP 0047](http://xmpp.org/extensions/xep-0047.html))
 
+- [SI File Transfer](/si-filetransfer/)
+  ([XEP 0096](http://xmpp.org/extensions/xep-0096.html))
+
 ### Other Plugins
 
 - [Serverdate](/serverdate/) - Syncs a local clock

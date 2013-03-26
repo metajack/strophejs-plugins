@@ -18,25 +18,12 @@
   Strophe.addConnectionPlugin('ibb', {
 
     _c: null,
-    _h: null,
     _cb: null,
 
     init: function (c) {  
       this._c = c;
       Strophe.addNamespace('IBB', 'http://jabber.org/protocol/ibb');
-    },
-
-    statusChanged: function (status) {
-      if (status === Strophe.Status.CONNECTED) {
-        this._h = this._c.addHandler(
-          this._receive.bind(this), Strophe.NS.IBB, 'iq', 'set'
-        );
-      } else if (status === Strophe.Status.DISCONNECTED) {
-        if (this._h) {
-          this._c.deleteHandler(this._h);
-          this._h = null;
-        }
-      }
+      c.addHandler(this._receive.bind(this), Strophe.NS.IBB, 'iq', 'set');
     },
 
     _createErr: function (to, id, type, name) {
@@ -52,9 +39,9 @@
       return iq;
     },
 
-    _receive: function (message) {
+    _receive: function (m) {
 
-      var $m = $(message);
+      var $m = $(m);
       var from = $m.attr('from');
       var id = $m.attr('id')
 
@@ -73,14 +60,15 @@
       var type = child.tagName.toLowerCase();
       var sid = $(child).attr('sid');
 
-      var data;
+      var data, seq;
       if (type === 'data') {
         data = $(child).text();
+        seq = $(child).attr('seq');
       }
 
       // callback message
       if (typeof this._cb === 'function') {
-        this._cb(type, from, sid, data);
+        this._cb(type, from, sid, data, seq);
       }
 
       return true;  // keep handler active
