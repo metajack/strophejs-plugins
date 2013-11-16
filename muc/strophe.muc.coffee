@@ -300,7 +300,7 @@ Strophe.addConnectionPlugin 'muc',
       to: room
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_OWNER)
-    if config instanceof Form
+    if typeof Form isnt "undefined" and config instanceof Form
       config.type = "submit"
       iq.cnode config.toXML()
     else
