@@ -7,7 +7,7 @@
     Andreas Guth <guth@dbis.rwth-aachen.de>
 ###
 
-Strophe.addConnectionPlugin 'muc'
+Strophe.addConnectionPlugin 'muc',
   _connection: null
   rooms: {}
   roomNames: []
