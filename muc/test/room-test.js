@@ -3,7 +3,7 @@
 var id = 0;
 
 (function() {
-const gate = "http://tigase.im:5280/xmpp-httpbind";
+const gate = "https://conversejs.org/http-bind";
 const user = "dima@tigase.im";
 const password = "master";
 
@@ -52,7 +52,7 @@ function RoomClient(name) {
 
 buster.testCase("Check room handlers", {
   setUp: function() {
-    this.timeout = 7000;
+    this.timeout = 20000;
 
     this.connection = new ConnectionSentinel();
     var pr = this.connection.connect(gate, user, password);
