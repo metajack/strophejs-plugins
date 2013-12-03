@@ -163,10 +163,10 @@ Strophe.addConnectionPlugin('privacy', {
       var item = listModel.items[i];
       var itemNode = list.c("item", { action: item.action, order: item.order});
       if(item.type != "") itemNode.attrs({type: item.type, value: item.value});
-      if(item.block && item.block.length > 0) {
-        var blockCount = item.block.length;
+      if(item.blocked && item.blocked.length > 0) {
+        var blockCount = item.blocked.length;
         for(var j = 0; j < blockCount; ++j)
-          itemNode.c(item.block[j]).up();
+          itemNode.c(item.blocked[j]).up();
       }
       itemNode.up();
     }
