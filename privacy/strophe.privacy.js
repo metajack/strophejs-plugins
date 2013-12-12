@@ -97,19 +97,19 @@ Strophe.addConnectionPlugin('privacy', {
    *    (String) type - Type of item.
    *    (String) value - Value of item.
    *    (String) action - Action for the matching.
-   *    (String) order - Order of rule..
-   *    (String) block - Block list.
+   *    (String) order - Order of rule.
+   *    (String) blocked - Block list.
    *
    *  Returns:
    *    New list, or existing list if it exists.
    */
-  newItem: function(type, value, action, order, block) {
+  newItem: function(type, value, action, order, blocked) {
     var item = new Item();
     item.type = type;
     item.value = value;
     item.action = action;
     item.order = order;
-    item.blocked = block;
+    item.blocked = blocked;
     return item;
   },
 
