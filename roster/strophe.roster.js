@@ -190,10 +190,10 @@ Strophe.addConnectionPlugin('roster',
     subscribe: function(jid, message, nick) {
         var pres = $pres({to: jid, type: "subscribe"});
         if (message && message !== "") {
-            pres.c("status").t(message);
+            pres.c("status").t(message).up();
         }
         if (nick && nick !== "") {
-            pres.c('nick', {'xmlns': Strophe.NS.NICK}).t(nick);
+            pres.c('nick', {'xmlns': Strophe.NS.NICK}).t(nick).up();
         }
         this._connection.send(pres);
     },
