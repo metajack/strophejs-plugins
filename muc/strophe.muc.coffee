@@ -7,9 +7,10 @@
     Andreas Guth <guth@dbis.rwth-aachen.de>
 ###
 
-Strophe.addConnectionPlugin 'muc'
+Strophe.addConnectionPlugin 'muc',
   _connection: null
-  rooms: []
+  rooms: {}
+  roomNames: []
 
   ###Function
   Initialize the MUC plugin. Sets the correct connection object and
@@ -34,8 +35,11 @@ Strophe.addConnectionPlugin 'muc'
   specified chat room.
   (Function) pres_handler_cb - The function call back to handle presence
   in the chat room.
+  (Function) roster_cb - The function call to handle roster info in the chat room
   (String) password - The optional password to use. (password protected
   rooms only)
+  (Object) history_attrs - Optional attributes for retrieving history
+  (XML DOM Element) extended_presence - Optional XML for extending presence
   ###
   join: (room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password, history_attrs) ->
     room_nick = @test_append_nick(room, nick)
@@ -45,10 +49,13 @@ Strophe.addConnectionPlugin 'muc'
     .c("x", xmlns: Strophe.NS.MUC)
 
     if history_attrs?
-      msg = msg.c("history", history_attrs)
+      msg = msg.c("history", history_attrs).up
 
     if password?
       msg.cnode Strophe.xmlElement("password", [], password)
+
+    if extended_presence?
+      msg.up.cnode extended_presence
 
     # One handler for all rooms that dispatches to room callbacks
     @_muc_handler ?=  @_connection.addHandler (stanza) =>
@@ -81,11 +88,9 @@ Strophe.addConnectionPlugin 'muc'
 
       return true
 
-    @rooms[room] ?= new XmppRoom(
-      @
-      room
-      nick
-      password )
+    unless @rooms.hasOwnProperty(room)
+      @rooms[room] = new XmppRoom(@, room, nick, password )
+      @roomNames.push room
 
     @rooms[room].addHandler 'presence', pres_handler_cb if pres_handler_cb
     @rooms[room].addHandler 'message', msg_handler_cb if msg_handler_cb
@@ -105,10 +110,13 @@ Strophe.addConnectionPlugin 'muc'
   iqid - The unique id for the room leave.
   ###
   leave: (room, nick, handler_cb, exit_msg) ->
+    id = @roomNames.indexOf room
     delete @rooms[room]
-    if @rooms.length is 0
-      @_connection.deleteHandler @_muc_handler
-      @_muc_handler = null
+    if id >=0
+      @roomNames.splice id, 1
+      if @roomNames.length is 0
+        @_connection.deleteHandler @_muc_handler
+        @_muc_handler = null
     room_nick = @test_append_nick room, nick
     presenceid = @_connection.getUniqueId()
     presence = $pres (
@@ -292,7 +300,7 @@ Strophe.addConnectionPlugin 'muc'
       to: room
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_OWNER)
-    if config instanceof Form
+    if typeof Form isnt "undefined" and config instanceof Form
       config.type = "submit"
       iq.cnode config.toXML()
     else
@@ -479,16 +487,15 @@ Strophe.addConnectionPlugin 'muc'
 
 class XmppRoom
 
-  roster: {}
-  _message_handlers: {}
-  _presence_handlers: {}
-  _roster_handlers: {}
-  _handler_ids: 0
 
   constructor: (@client, @name, @nick, @password) ->
+    @roster = {}
+    @_message_handlers = {}
+    @_presence_handlers = {}
+    @_roster_handlers = {}
+    @_handler_ids = 0
     @client = client.muc if client.muc
     @name = Strophe.getBareJidFromJid name
-    @client.rooms[@name] = @
     @addHandler 'presence', @_roomRosterHandler
 
   join: (msg_handler_cb, pres_handler_cb, roster_cb) ->
