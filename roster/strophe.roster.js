@@ -15,34 +15,6 @@
  */
 Strophe.addConnectionPlugin('roster',
 {
-    _connection: null,
-
-    _callbacks : [],
-    /** Property: items
-     * Roster items
-     * [
-     *    {
-     *        name         : "",
-     *        jid          : "",
-     *        subscription : "",
-     *        ask          : "",
-     *        groups       : ["", ""],
-     *        resources    : {
-     *            myresource : {
-     *                show   : "",
-     *                status : "",
-     *                priority : ""
-     *            }
-     *        }
-     *    }
-     * ]
-     */
-    items : [],
-    /** Property: ver
-     * current roster revision
-     * always null if server doesn't support xep 237
-     */
-    ver : null,
     /** Function: init
      * Plugin init
      *
@@ -52,7 +24,32 @@ Strophe.addConnectionPlugin('roster',
     init: function(conn)
     {
         this._connection = conn;
-        this.items = [];
+        this._callbacks = [];
+        /** Property: items
+         * Roster items
+         * [
+         *    {
+         *        name         : "",
+         *        jid          : "",
+         *        subscription : "",
+         *        ask          : "",
+         *        groups       : ["", ""],
+         *        resources    : {
+         *            myresource : {
+         *                show   : "",
+         *                status : "",
+         *                priority : ""
+         *            }
+         *        }
+         *    }
+         * ]
+         */
+        items = [];
+              /** Property: ver
+               * current roster revision
+               * always null if server doesn't support xep 237
+               */
+        ver = null;
         // Override the connect and attach methods to always add presence and roster handlers.
         // They are removed when the connection disconnects, so must be added on connection.
         var oldCallback, roster = this, _connect = conn.connect, _attach = conn.attach;
