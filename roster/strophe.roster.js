@@ -51,7 +51,7 @@ Strophe.addConnectionPlugin('roster',
      */
     init: function(conn)
     {
-    this._connection = conn;
+        this._connection = conn;
         this.items = [];
         // Override the connect and attach methods to always add presence and roster handlers.
         // They are removed when the connection disconnects, so must be added on connection.
@@ -77,24 +77,24 @@ Strophe.addConnectionPlugin('roster',
         conn.connect = function(jid, pass, callback, wait, hold)
         {
             oldCallback = callback;
-            if (typeof arguments[0] == "undefined")
-                arguments[0] = null;
-            if (typeof arguments[1] == "undefined")
-                arguments[1] = null;
-            arguments[2] = newCallback;
-            _connect.apply(conn, arguments);
+            if (typeof jid  == "undefined")
+                jid  = null;
+            if (typeof pass == "undefined")
+                pass = null;
+            callback = newCallback;
+            _connect.apply(conn, [jid, pass, callback, wait, hold]);
         };
         conn.attach = function(jid, sid, rid, callback, wait, hold, wind)
         {
             oldCallback = callback;
-            if (typeof arguments[0] == "undefined")
-                arguments[0] = null;
-            if (typeof arguments[1] == "undefined")
-                arguments[1] = null;
-            if (typeof arguments[2] == "undefined")
-                arguments[2] = null;
-            arguments[3] = newCallback;
-            _attach.apply(conn, arguments);
+            if (typeof jid == "undefined")
+                jid = null;
+            if (typeof sid == "undefined")
+                sid = null;
+            if (typeof rid == "undefined")
+                rid = null;
+            callback = newCallback;
+            _attach.apply(conn, [jid, sid, rid, callback, wait, hold, wind]);
         };
 
         Strophe.addNamespace('ROSTER_VER', 'urn:xmpp:features:rosterver');
@@ -207,7 +207,7 @@ Strophe.addConnectionPlugin('roster',
     unsubscribe: function(jid, message)
     {
         var pres = $pres({to: jid, type: "unsubscribe"});
-        if (message && message != "")
+        if (message && message !== "")
             pres.c("status").t(message);
         this._connection.send(pres);
     },
@@ -221,7 +221,7 @@ Strophe.addConnectionPlugin('roster',
     authorize: function(jid, message)
     {
         var pres = $pres({to: jid, type: "subscribed"});
-        if (message && message != "")
+        if (message && message !== "")
             pres.c("status").t(message);
         this._connection.send(pres);
     },
@@ -235,7 +235,7 @@ Strophe.addConnectionPlugin('roster',
     unauthorize: function(jid, message)
     {
         var pres = $pres({to: jid, type: "unsubscribed"});
-        if (message && message != "")
+        if (message && message !== "")
             pres.c("status").t(message);
         this._connection.send(pres);
     },
@@ -340,9 +340,9 @@ Strophe.addConnectionPlugin('roster',
         {
             // TODO: add timestamp
             item.resources[Strophe.getResourceFromJid(jid)] = {
-                show     : (presence.getElementsByTagName('show').length != 0) ? Strophe.getText(presence.getElementsByTagName('show')[0]) : "",
-                status   : (presence.getElementsByTagName('status').length != 0) ? Strophe.getText(presence.getElementsByTagName('status')[0]) : "",
-                priority : (presence.getElementsByTagName('priority').length != 0) ? Strophe.getText(presence.getElementsByTagName('priority')[0]) : ""
+                show     : (presence.getElementsByTagName('show').length !== 0) ? Strophe.getText(presence.getElementsByTagName('show')[0]) : "",
+                status   : (presence.getElementsByTagName('status').length !== 0) ? Strophe.getText(presence.getElementsByTagName('status')[0]) : "",
+                priority : (presence.getElementsByTagName('priority').length !== 0) ? Strophe.getText(presence.getElementsByTagName('priority')[0]) : ""
             };
         }
         else
@@ -371,7 +371,7 @@ Strophe.addConnectionPlugin('roster',
         var id = iq.getAttribute('id');
         var from = iq.getAttribute('from');
         // Receiving client MUST ignore stanza unless it has no from or from = user's JID.
-        if (from && from != "" && from != this._connection.jid && from != Strophe.getBareJidFromJid(this._connection.jid))
+        if (from && from !== "" && from != this._connection.jid && from != Strophe.getBareJidFromJid(this._connection.jid))
             return true;
         var iqresult = $iq({type: 'result', id: id, from: this._connection.jid});
         this._connection.send(iqresult);
@@ -384,7 +384,7 @@ Strophe.addConnectionPlugin('roster',
     _updateItems : function(iq)
     {
         var query = iq.getElementsByTagName('query');
-        if (query.length != 0)
+        if (query.length !== 0)
         {
             this.ver = query.item(0).getAttribute('ver');
             var self = this;
@@ -420,7 +420,7 @@ Strophe.addConnectionPlugin('roster',
             return;
         }
 
-        var item = this.findItem(jid);
+        item = this.findItem(jid);
         if (!item)
         {
             this.items.push({
