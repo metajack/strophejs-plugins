@@ -57,18 +57,25 @@ Strophe.addConnectionPlugin('register', {
         var connect_cb = conn._connect_cb.bind(conn);
         conn._connect_cb = function (req, callback, raw) {
             if (!self._registering) {
-                // exchange Input hooks to not print the stream:features twice
-                var xmlInput = conn.xmlInput;
-                conn.xmlInput = Strophe.Connection.prototype.xmlInput;
-                var rawInput = conn.rawInput;
-                conn.rawInput = Strophe.Connection.prototype.rawInput;
-                connect_cb(req, callback, raw);
-                conn.xmlInput = xmlInput;
-                conn.rawInput = rawInput;
+                if (self.processed_features) {
+                    // exchange Input hooks to not print the stream:features twice
+                    var xmlInput = conn.xmlInput;
+                    conn.xmlInput = Strophe.Connection.prototype.xmlInput;
+                    var rawInput = conn.rawInput;
+                    conn.rawInput = Strophe.Connection.prototype.rawInput;
+                    connect_cb(req, callback, raw);
+                    conn.xmlInput = xmlInput;
+                    conn.rawInput = rawInput;
+                    delete self.processed_features;
+                } else {
+                    connect_cb(req, callback, raw);
+                }
             } else {
                 // Save this request in case we want to authenticate later
                 self._connect_cb_data = {req: req,
                                          raw: raw};
+                // remember that we already processed stream:features
+                self.processed_features = true;
                 self._register_cb(req, callback, raw);
                 delete self._registering;
             }
