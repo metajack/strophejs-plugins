@@ -187,7 +187,7 @@
           xmlns: Strophe.NS.XHTML_IM
         }).c("body", {
           xmlns: Strophe.NS.XHTML
-        }).t(html_message);
+        }).h(html_message);
         if (msg.node.childNodes.length === 0) {
           parent = msg.node.parentNode;
           msg.up().up();
