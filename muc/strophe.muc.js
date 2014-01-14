@@ -575,7 +575,10 @@
       return this._connection.sendIQ(iq, handle_cb, error_cb);
     },
     test_append_nick: function(room, nick) {
-      return room + (nick != null ? "/" + (Strophe.escapeNode(nick)) : "");
+      var domain, node;
+      node = Strophe.escapeNode(Strophe.getNodeFromJid(room));
+      domain = Strophe.getDomainFromJid(room);
+      return node + "@" + domain + (nick != null ? "/" + nick : "");
     }
   });
 
