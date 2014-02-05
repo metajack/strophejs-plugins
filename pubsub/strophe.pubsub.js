@@ -149,7 +149,8 @@ Extend connection object to have plugin name 'pubsub'.
     // Called by Strophe on connection event
     statusChanged: function (status, condition) {
         var that = this._connection;
-        if (this._autoService && status === Strophe.Status.CONNECTED) {
+        if (this._autoService && 
+		(status === Strophe.Status.CONNECTED || status === Strophe.Status.ATTACHED)) {
             this.service =  'pubsub.'+Strophe.getDomainFromJid(that.jid);
             this.jid = that.jid;
         }
