@@ -483,7 +483,9 @@ Strophe.addConnectionPlugin 'muc',
     @_connection.sendIQ iq, handle_cb, error_cb
 
   test_append_nick: (room, nick) ->
-    room + if nick? then "/#{Strophe.escapeNode nick}" else ""
+    node = Strophe.escapeNode(Strophe.getNodeFromJid(room))
+    domain = Strophe.getDomainFromJid(room)
+    node + "@" + domain + if nick? then "/#{nick}" else ""
 
 class XmppRoom
 
