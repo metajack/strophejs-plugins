@@ -5,7 +5,7 @@ speaking XMPP in web applications. It supports extension via a plugin system.
 
 This is a collection of Strophe.js plugins created and maintained by the
 community. The homepage for this collection is
-https://github.com/metajack/strophejs-plugins .
+https://github.com/strophe/strophejs-plugins .
 
 ## Available Plugins
 
