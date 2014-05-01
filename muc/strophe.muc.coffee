@@ -49,7 +49,7 @@ Strophe.addConnectionPlugin 'muc',
     .c("x", xmlns: Strophe.NS.MUC)
 
     if history_attrs?
-      msg = msg.c("history", history_attrs).up
+      msg = msg.c("history", history_attrs).up()
 
     if password?
       msg.cnode Strophe.xmlElement("password", [], password)
