@@ -25,6 +25,7 @@ Strophe.addConnectionPlugin('roster',
     {
         this._connection = conn;
         this._callbacks = [];
+        this._callbacks_request = [];
         /** Property: items
          * Roster items
          * [
@@ -141,6 +142,12 @@ Strophe.addConnectionPlugin('roster',
     {
         this._callbacks.push(call_back);
     },
+
+    registerRequestCallback: function (call_back)
+    {
+        this._callbacks_request.push(call_back);
+    },
+
     /** Function: findItem
      * Find item by JID
      *
@@ -323,12 +330,16 @@ Strophe.addConnectionPlugin('roster',
         var jid = presence.getAttribute('from');
         var from = Strophe.getBareJidFromJid(jid);
         var item = this.findItem(from);
+        var type = presence.getAttribute('type');
         // not in roster
         if (!item)
         {
+            // if 'friend request' presence
+            if (type === 'subscribe') {
+                this._call_backs_request(from);
+            }
             return true;
         }
-        var type = presence.getAttribute('type');
         if (type == 'unavailable')
         {
             delete item.resources[Strophe.getResourceFromJid(jid)];
@@ -350,6 +361,17 @@ Strophe.addConnectionPlugin('roster',
         this._call_backs(this.items, item);
         return true;
     },
+    /** PrivateFunction: _call_backs_request
+     * call all the callbacks waiting for 'friend request' presences
+     */
+    _call_backs_request : function(from)
+    {
+        for (var i = 0; i < this._callbacks_request.length; i++) // [].forEach my love ...
+        {
+            this._callbacks_request[i](from);
+        }
+    },
+
     /** PrivateFunction: _call_backs
      *
      */
