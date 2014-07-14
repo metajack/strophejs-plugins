@@ -575,7 +575,7 @@
       }).c("query", {
         xmlns: Strophe.NS.MUC_REGISTER
       });
-      return this._connection.sendIQ(iq, (function(stanza) {
+      return this._connection.sendIQ(iq, function(stanza) {
         var $field, $fields, field, fields, length, _i, _len;
         $fields = stanza.getElementsByTagName('field');
         length = $fields.length;
@@ -597,7 +597,7 @@
           }
         }
         return handle_cb(fields);
-      }), error_cb);
+      }, error_cb);
     },
 
     /*Function

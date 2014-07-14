@@ -484,7 +484,7 @@ Strophe.addConnectionPlugin 'muc',
       )
     .c("query", xmlns: Strophe.NS.MUC_REGISTER)
 
-    @_connection.sendIQ iq, ((stanza) ->
+    @_connection.sendIQ iq, (stanza) ->
       $fields = stanza.getElementsByTagName 'field'
       length = $fields.length
       fields =
@@ -503,7 +503,7 @@ Strophe.addConnectionPlugin 'muc',
           fields.optional.push field
 
       handle_cb fields
-    ), error_cb
+    , error_cb
 
   ###Function
   Submits registration form.
