@@ -822,9 +822,8 @@
     XmppRoom._parsePresence = function(pres) {
       var a, c, c2, data, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
       data = {};
-      a = pres.attributes;
-      data.nick = Strophe.getResourceFromJid(a.from.textContent);
-      data.type = ((_ref = a.type) != null ? _ref.textContent : void 0) || null;
+      data.nick = Strophe.getResourceFromJid(pres.getAttribute("from"));
+      data.type = ((_ref = pres.getAttribute("type")) != null ? _ref.textContent : void 0) || null;
       data.states = [];
       _ref1 = pres.childNodes;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -837,22 +836,20 @@
             data.show = c.textContent || null;
             break;
           case "x":
-            a = c.attributes;
-            if (((_ref2 = a.xmlns) != null ? _ref2.textContent : void 0) === Strophe.NS.MUC_USER) {
+            if (((_ref2 = c.getAttribute("xmlns")) != null ? _ref2.textContent : void 0) === Strophe.NS.MUC_USER) {
               _ref3 = c.childNodes;
               for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
                 c2 = _ref3[_j];
                 switch (c2.nodeName) {
                   case "item":
-                    a = c2.attributes;
-                    data.affiliation = ((_ref4 = a.affiliation) != null ? _ref4.textContent : void 0) || null;
-                    data.role = ((_ref5 = a.role) != null ? _ref5.textContent : void 0) || null;
-                    data.jid = ((_ref6 = a.jid) != null ? _ref6.textContent : void 0) || null;
-                    data.newnick = ((_ref7 = a.nick) != null ? _ref7.textContent : void 0) || null;
+                    data.affiliation = ((_ref4 = c2.getAttribute("affiliation")) != null ? _ref4.textContent : void 0) || null;
+                    data.role = ((_ref5 = c2.getAttribute("role")) != null ? _ref5.textContent : void 0) || null;
+                    data.jid = ((_ref6 = c2.getAttribute("jid")) != null ? _ref6.textContent : void 0) || null;
+                    data.newnick = ((_ref7 = c2.getAttribute("nick")) != null ? _ref7.textContent : void 0) || null;
                     break;
                   case "status":
-                    if (c2.attributes.code) {
-                      data.states.push(c2.attributes.code.textContent);
+                    if (c2.getAttribute("code")) {
+                      data.states.push(c2.getAttribute("code"));
                     }
                 }
               }
@@ -893,11 +890,10 @@
             this.identities.push(identity);
             break;
           case "feature":
-            this.features.push(attrs["var"].textContent);
+            this.features.push(child.getAttribute("var"));
             break;
           case "x":
-            attrs = child.childNodes[0].attributes;
-            if ((!attrs["var"].textContent === 'FORM_TYPE') || (!attrs.type.textContent === 'hidden')) {
+            if (child.childNodes[0].getAttribute("var") !== 'FORM_TYPE' || child.childNodes[0].getAttribute("type") !== 'hidden') {
               break;
             }
             _ref = child.childNodes;
@@ -906,10 +902,9 @@
               if (!(!field.attributes.type)) {
                 continue;
               }
-              attrs = field.attributes;
               this.x.push({
-                "var": attrs["var"].textContent,
-                label: attrs.label.textContent || "",
+                "var": field.getAttribute("var"),
+                label: field.getAttribute("label") || "",
                 value: field.firstChild.textContent || ""
               });
             }
