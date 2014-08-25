@@ -312,6 +312,7 @@ Strophe.addConnectionPlugin('roster',
     _onReceiveRosterSuccess: function(userCallback, stanza)
     {
         this._updateItems(stanza);
+        this._call_backs(this.items);
         userCallback(this.items);
     },
     /** PrivateFunction: _onReceiveRosterError
@@ -414,7 +415,6 @@ Strophe.addConnectionPlugin('roster',
                 }
            );
         }
-        this._call_backs(this.items);
     },
     /** PrivateFunction: _updateItem
      * Update internal representation of roster item
@@ -436,20 +436,22 @@ Strophe.addConnectionPlugin('roster',
         if (subscription == "remove")
         {
             this.removeItem(jid);
+            this._call_backs(this.items, {jid: jid, subscription: 'remove'});
             return;
         }
 
         item = this.findItem(jid);
         if (!item)
         {
-            this.items.push({
+            item = {
                 name         : name,
                 jid          : jid,
                 subscription : subscription,
                 ask          : ask,
                 groups       : groups,
                 resources    : {}
-            });
+            };
+            this.items.push(item);
         }
         else
         {
@@ -458,5 +460,6 @@ Strophe.addConnectionPlugin('roster',
             item.ask = ask;
             item.groups = groups;
         }
+        this._call_backs(this.items, item);
     }
 });
