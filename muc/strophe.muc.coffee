@@ -554,7 +554,7 @@ class XmppRoom
 
   modifyAffiliation: (jid, affiliation, reason, success_cb, error_cb) ->
     @client.modifyAffiliation @name,
-      jid, affiliation, reason
+      jid, affiliation, reason,
       success_cb, error_cb
 
   ban: (jid, reason, handler_cb, error_cb) ->
@@ -669,9 +669,8 @@ class XmppRoom
   ###
   @_parsePresence: (pres) ->
     data = {}
-    a = pres.attributes
-    data.nick = Strophe.getResourceFromJid a.from.textContent
-    data.type = a.type?.textContent or null
+    data.nick = Strophe.getResourceFromJid pres.getAttribute("from")
+    data.type = pres.getAttribute("type")?.textContent or null
     data.states = []
     for c in pres.childNodes
       switch c.nodeName
@@ -680,19 +679,17 @@ class XmppRoom
         when "show"
           data.show = c.textContent or null
         when "x"
-          a = c.attributes
-          if a.xmlns?.textContent is Strophe.NS.MUC_USER
+          if c.getAttribute("xmlns")?.textContent is Strophe.NS.MUC_USER
             for c2 in c.childNodes
               switch c2.nodeName
                 when "item"
-                  a = c2.attributes
-                  data.affiliation = a.affiliation?.textContent or null
-                  data.role = a.role?.textContent or null
-                  data.jid = a.jid?.textContent or null
-                  data.newnick = a.nick?.textContent or null
+                  data.affiliation = c2.getAttribute("affiliation")?.textContent or null
+                  data.role = c2.getAttribute("role")?.textContent or null
+                  data.jid = c2.getAttribute("jid")?.textContent or null
+                  data.newnick = c2.getAttribute("nick")?.textContent or null
                 when "status"
-                  if c2.attributes.code
-                    data.states.push c2.attributes.code.textContent
+                  if c2.getAttribute("code")
+                    data.states.push c2.getAttribute("code")
     data
 
 class RoomConfig
@@ -713,17 +710,15 @@ class RoomConfig
           identity[attr.name] = attr.textContent for attr in attrs
           @identities.push identity
         when "feature"
-          @features.push attrs.var.textContent
+          @features.push child.getAttribute("var")
         when "x"
-          attrs = child.childNodes[0].attributes
           break if (
-            (not attrs.var.textContent is 'FORM_TYPE') or
-            (not attrs.type.textContent is 'hidden') )
+            (not child.childNodes[0].getAttribute("var") is 'FORM_TYPE') or
+            (not child.childNodes[0].getAttribute("type") is 'hidden') )
           for field in child.childNodes when not field.attributes.type
-            attrs = field.attributes
             @x.push (
-              var: attrs.var.textContent
-              label: attrs.label.textContent or ""
+              var: field.getAttribute("var")
+              label: field.getAttribute("label") or ""
               value: field.firstChild.textContent or "" )
 
     "identities": @identities, "features": @features, "x": @x
