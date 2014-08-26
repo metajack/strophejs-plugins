@@ -56,7 +56,7 @@
         xmlns: Strophe.NS.MUC
       });
       if (history_attrs != null) {
-        msg = msg.c("history", history_attrs).up;
+        msg = msg.c("history", history_attrs).up();
       }
       if (password != null) {
         msg.cnode(Strophe.xmlElement("password", [], password));
@@ -820,7 +820,7 @@
      */
 
     XmppRoom._parsePresence = function(pres) {
-      var a, c, c2, data, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+      var c, c2, data, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
       data = {};
       data.nick = Strophe.getResourceFromJid(pres.getAttribute("from"));
       data.type = ((_ref = pres.getAttribute("type")) != null ? _ref.textContent : void 0) || null;
@@ -893,20 +893,19 @@
             this.features.push(child.getAttribute("var"));
             break;
           case "x":
-            if (child.childNodes[0].getAttribute("var") !== 'FORM_TYPE' || child.childNodes[0].getAttribute("type") !== 'hidden') {
+            if ((!child.childNodes[0].getAttribute("var") === 'FORM_TYPE') || (!child.childNodes[0].getAttribute("type") === 'hidden')) {
               break;
             }
             _ref = child.childNodes;
             for (_k = 0, _len2 = _ref.length; _k < _len2; _k++) {
               field = _ref[_k];
-              if (!(!field.attributes.type)) {
-                continue;
+              if (!field.attributes.type) {
+                this.x.push({
+                  "var": field.getAttribute("var"),
+                  label: field.getAttribute("label") || "",
+                  value: field.firstChild.textContent || ""
+                });
               }
-              this.x.push({
-                "var": field.getAttribute("var"),
-                label: field.getAttribute("label") || "",
-                value: field.firstChild.textContent || ""
-              });
             }
         }
       }
