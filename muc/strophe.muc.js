@@ -28,7 +28,8 @@
       Strophe.addNamespace('MUC_OWNER', Strophe.NS.MUC + "#owner");
       Strophe.addNamespace('MUC_ADMIN', Strophe.NS.MUC + "#admin");
       Strophe.addNamespace('MUC_USER', Strophe.NS.MUC + "#user");
-      return Strophe.addNamespace('MUC_ROOMCONF', Strophe.NS.MUC + "#roomconfig");
+      Strophe.addNamespace('MUC_ROOMCONF', Strophe.NS.MUC + "#roomconfig");
+      return Strophe.addNamespace('MUC_REGISTER', "jabber:iq:register");
     },
 
     /*Function
@@ -555,6 +556,79 @@
         presence.c('status', status);
       }
       return this._connection.send(presence.tree());
+    },
+
+    /*Function
+    Registering with a room.
+    @see http://xmpp.org/extensions/xep-0045.html#register
+    Parameters:
+    (String) room - The multi-user chat room name.
+    (Function) handle_cb - Function to call for room list return.
+    (Function) error_cb - Function to call on error.
+     */
+    registrationRequest: function(room, handle_cb, error_cb) {
+      var iq;
+      iq = $iq({
+        to: room,
+        from: this._connection.jid,
+        type: "get"
+      }).c("query", {
+        xmlns: Strophe.NS.MUC_REGISTER
+      });
+      return this._connection.sendIQ(iq, function(stanza) {
+        var $field, $fields, field, fields, length, _i, _len;
+        $fields = stanza.getElementsByTagName('field');
+        length = $fields.length;
+        fields = {
+          required: [],
+          optional: []
+        };
+        for (_i = 0, _len = $fields.length; _i < _len; _i++) {
+          $field = $fields[_i];
+          field = {
+            "var": $field.getAttribute('var'),
+            label: $field.getAttribute('label'),
+            type: $field.getAttribute('type')
+          };
+          if ($field.getElementsByTagName('required').length > 0) {
+            fields.required.push(field);
+          } else {
+            fields.optional.push(field);
+          }
+        }
+        return handle_cb(fields);
+      }, error_cb);
+    },
+
+    /*Function
+    Submits registration form.
+    Parameters:
+    (String) room - The multi-user chat room name.
+    (Function) handle_cb - Function to call for room list return.
+    (Function) error_cb - Function to call on error.
+     */
+    submitRegistrationForm: function(room, fields, handle_cb, error_cb) {
+      var iq, key, val;
+      iq = $iq({
+        to: room,
+        type: "set"
+      }).c("query", {
+        xmlns: Strophe.NS.MUC_REGISTER
+      });
+      iq.c("x", {
+        xmlns: "jabber:x:data",
+        type: "submit"
+      });
+      iq.c('field', {
+        'var': 'FORM_TYPE'
+      }).c('value').t('http://jabber.org/protocol/muc#register').up().up();
+      for (key in fields) {
+        val = fields[key];
+        iq.c('field', {
+          'var': key
+        }).c('value').t(val).up().up();
+      }
+      return this._connection.sendIQ(iq, handle_cb, error_cb);
     },
 
     /*Function

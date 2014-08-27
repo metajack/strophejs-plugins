@@ -25,6 +25,7 @@ Strophe.addConnectionPlugin 'muc',
     Strophe.addNamespace 'MUC_ADMIN',     Strophe.NS.MUC+"#admin"
     Strophe.addNamespace 'MUC_USER',      Strophe.NS.MUC+"#user"
     Strophe.addNamespace 'MUC_ROOMCONF',  Strophe.NS.MUC+"#roomconfig"
+    Strophe.addNamespace 'MUC_REGISTER', "jabber:iq:register"
 
   ###Function
   Join a multi-user chat room
@@ -466,6 +467,71 @@ Strophe.addConnectionPlugin 'muc',
     presence.c('show', show).up() if show?
     presence.c('status', status) if status?
     @_connection.send presence.tree()
+
+  ###Function
+  Registering with a room.
+  @see http://xmpp.org/extensions/xep-0045.html#register
+  Parameters:
+  (String) room - The multi-user chat room name.
+  (Function) handle_cb - Function to call for room list return.
+  (Function) error_cb - Function to call on error.
+  ###
+  registrationRequest: (room, handle_cb, error_cb) ->
+    iq = $iq(
+        to: room,
+        from: @_connection.jid,
+        type: "get"
+      )
+    .c("query", xmlns: Strophe.NS.MUC_REGISTER)
+
+    @_connection.sendIQ iq, (stanza) ->
+      $fields = stanza.getElementsByTagName 'field'
+      length = $fields.length
+      fields =
+        required: []
+        optional: []
+
+      for $field in $fields
+        field =
+          var: $field.getAttribute 'var'
+          label: $field.getAttribute 'label'
+          type: $field.getAttribute 'type'
+
+        if $field.getElementsByTagName('required').length > 0
+          fields.required.push field
+        else
+          fields.optional.push field
+
+      handle_cb fields
+    , error_cb
+
+  ###Function
+  Submits registration form.
+  Parameters:
+  (String) room - The multi-user chat room name.
+  (Function) handle_cb - Function to call for room list return.
+  (Function) error_cb - Function to call on error.
+  ###
+  submitRegistrationForm: (room, fields, handle_cb, error_cb) ->
+    iq = $iq({
+      to: room,
+      type: "set"
+    }).c("query", xmlns: Strophe.NS.MUC_REGISTER);
+    iq.c("x",
+      xmlns: "jabber:x:data",
+      type: "submit"
+    );
+    iq.c('field', 'var': 'FORM_TYPE')
+    .c('value')
+    .t('http://jabber.org/protocol/muc#register')
+    .up().up()
+
+    for key, val of fields
+      iq.c('field', 'var': key)
+      .c('value')
+      .t(val).up().up()
+
+    @._connection.sendIQ iq, handle_cb, error_cb
 
   ###Function
   List all chat room available on a server.
