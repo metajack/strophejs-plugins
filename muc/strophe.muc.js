@@ -894,14 +894,14 @@
      */
 
     XmppRoom._parsePresence = function(pres) {
-      var c, c2, data, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+      var c, c2, data, _i, _j, _len, _len1, _ref, _ref1;
       data = {};
       data.nick = Strophe.getResourceFromJid(pres.getAttribute("from"));
-      data.type = ((_ref = pres.getAttribute("type")) != null ? _ref.textContent : void 0) || null;
+      data.type = pres.getAttribute("type");
       data.states = [];
-      _ref1 = pres.childNodes;
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        c = _ref1[_i];
+      _ref = pres.childNodes;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        c = _ref[_i];
         switch (c.nodeName) {
           case "status":
             data.status = c.textContent || null;
@@ -910,16 +910,16 @@
             data.show = c.textContent || null;
             break;
           case "x":
-            if (((_ref2 = c.getAttribute("xmlns")) != null ? _ref2.textContent : void 0) === Strophe.NS.MUC_USER) {
-              _ref3 = c.childNodes;
-              for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
-                c2 = _ref3[_j];
+            if (c.getAttribute("xmlns") === Strophe.NS.MUC_USER) {
+              _ref1 = c.childNodes;
+              for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+                c2 = _ref1[_j];
                 switch (c2.nodeName) {
                   case "item":
-                    data.affiliation = ((_ref4 = c2.getAttribute("affiliation")) != null ? _ref4.textContent : void 0) || null;
-                    data.role = ((_ref5 = c2.getAttribute("role")) != null ? _ref5.textContent : void 0) || null;
-                    data.jid = ((_ref6 = c2.getAttribute("jid")) != null ? _ref6.textContent : void 0) || null;
-                    data.newnick = ((_ref7 = c2.getAttribute("nick")) != null ? _ref7.textContent : void 0) || null;
+                    data.affiliation = c2.getAttribute("affiliation");
+                    data.role = c2.getAttribute("role");
+                    data.jid = c2.getAttribute("jid");
+                    data.newnick = c2.getAttribute("nick");
                     break;
                   case "status":
                     if (c2.getAttribute("code")) {
