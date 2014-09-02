@@ -369,7 +369,8 @@ class Option
   label: ""
   value: ""
 
-  toXML: => ($build "option", { label: @label })
+  toXML: =>
+    $build("option", { label: @label })
     .c("value")
     .t(@value.toString())
     .tree()
@@ -434,7 +435,8 @@ Strophe.addConnectionPlugin 'x',
 
   init : (conn) ->
     Strophe.addNamespace 'DATA', 'jabber:x:data'
-    conn.disco.addFeature Strophe.NS.DATA if conn.disco
+    conn.disco.addFeature Strophe.NS.DATA if conn.disco?.addFeature?
+    conn.disco.addNode Strophe.NS.DATA, {items:[]} if conn.disco?.addNode?
 
   parseFromResult: (result) ->
     if result.nodeName.toLowerCase() is "x"
