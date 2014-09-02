@@ -18,7 +18,7 @@
 		var child = req.find('> *:eq(0)'), childAttr = {};
 		if (child.length === 0) { return ; }
 		if (child.attr('xmlns')) { childAttr.xmlns = child.attr('xmlns'); }
-		if (child.attr('node')) { childAttr.node = child.attr('node'); } 
+		if (child.attr('node')) { childAttr.node = child.attr('node'); }
 		if ($.isEmptyObject(childAttr)) { res.c(child[0].tagName); }
 		else { res.c(child[0].tagName, childAttr); }
 	};
@@ -31,7 +31,7 @@
 		return res;
 	};
 
-	/// DISCO_INFO 
+	/// DISCO_INFO
 	DiscoInfoNode = function() { DiscoNode.apply(this,arguments); };
 	DiscoInfoNode.prototype = new DiscoNode();
 	DiscoInfoNode.prototype.addContent = function(req,res) {
@@ -50,9 +50,8 @@
 		var items = this.items || this.disco.items;
 		$.each(items, function(i,item){
 			if(!item.jid) { item.jid = this.disco._conn.jid; }
-			res.c('item', item).up(); 
+			res.c('item', item).up();
 		}.bind(this));
-		
 	};
 
 	/// NODE_NOT_FOUND
@@ -85,7 +84,7 @@
 	var noop = Strophe.Disco.noop;
 
 	function request(conn, type, args) {
-		var to = args[0], node = args[1], cb = args[2], err = args[3], 
+		var to = args[0], node = args[1], cb = args[2], err = args[3],
 			q = { xmlns: type };
 		if(typeof node === 'function') { err = cb; cb = node; node = undefined; }
 		if(node) { q.node = node; }
@@ -95,7 +94,7 @@
 
 	function reply(iq) {
 		var node = $('query',iq).attr('node') || $('query',iq).attr('xmlns');
-		var nodeImpl = this.features[node] || new DiscoNodeNotFound(); 
+		var nodeImpl = this.features[node] || new DiscoNodeNotFound();
 		if($.isPlainObject(nodeImpl)) {
 			var xmlns = $('query',iq).attr('xmlns');
 			var ctr = xmlns === INFO ? DiscoInfoNode : DiscoItemsNode;
