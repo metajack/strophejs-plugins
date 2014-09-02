@@ -540,7 +540,7 @@
         required: xml.find("required").length === 1,
         values: (function() {
           var _i, _len, _ref, _results;
-          _ref = xml.find("value");
+          _ref = xml.find(">value");
           _results = [];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             v = _ref[_i];

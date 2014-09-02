@@ -300,7 +300,7 @@ class Field
       label: xml.attr "label"
       desc:  xml.find("desc").text()
       required: (xml.find("required").length is 1)
-      values: ( ($ v).text() for v in xml.find "value" )
+      values: ( ($ v).text() for v in xml.find ">value" )
       options: ( Option.fromXML o for o in xml.find "option" )
 
   @_htmlElementToFieldType: (el) ->
