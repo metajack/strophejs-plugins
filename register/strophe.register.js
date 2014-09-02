@@ -41,8 +41,12 @@ Strophe.addConnectionPlugin('register', {
         Strophe.Status.CONFLICT        = i + 4;
         Strophe.Status.NOTACCEPTABLE   = i + 5;
 
-        if (conn.disco)
+        if (conn.disco) {
+          if(conn.disco.addFeature)
             conn.disco.addFeature(Strophe.NS.REGISTER);
+          if(conn.disco.addNode)
+            conn.disco.addNode(Strophe.NS.REGISTER, {items:[]});
+        }
 
         // hooking strophe's connection.reset
         var self = this, reset = conn.reset.bind(conn);
@@ -78,7 +82,7 @@ Strophe.addConnectionPlugin('register', {
                     // remember that we already processed stream:features
                     self.processed_features = true;
                     delete self._registering;
-                };
+                }
             }
         };
 
@@ -206,7 +210,7 @@ Strophe.addConnectionPlugin('register', {
                             null, "iq", null, null);
         conn.send($iq({type: "get"}).c("query",
             {xmlns: Strophe.NS.REGISTER}).tree());
-        
+
         return true;
     },
 
