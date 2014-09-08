@@ -3,11 +3,10 @@
  *
  * This file is MIT/X11 licensed. Please see the
  * LICENSE.txt file in the source package for more information.
- *
- * TODO:
- * Get RSM from the reply
- * Clean remove onMessage handler afterwards
- * queryid?
+ * 
+ * Modified by: Chris Tunbridge (github.com/Destreyf/)
+ * Updated to support v0.3 of the XMPP XEP-0313 standard
+ * http://xmpp.org/extensions/xep-0313.html
  *
  */
 
