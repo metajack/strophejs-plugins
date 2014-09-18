@@ -325,6 +325,27 @@ Strophe.addConnectionPlugin 'muc',
     @_connection.sendIQ roomiq.tree(), success_cb, error_cb
 
   ###Function
+  Parameters:
+  (String) room - The multi-user chat room name.
+  (Object) config - the configuration. ex: {"muc#roomconfig_publicroom": "0", "muc#roomconfig_persistentroom": "1"}
+  Returns:
+  id - the unique id used to create the chat room.
+  ###
+  createConfiguredRoom: (room, config, success_cb, error_cb) ->
+    roomiq = $iq(
+      to: room
+      type: "set" )
+    .c("query", xmlns: Strophe.NS.MUC_OWNER)
+    .c("x", xmlns: "jabber:x:data", type: "submit")
+
+    # Owner submits configuration form
+    roomiq.c('field', { 'var': 'FORM_TYPE' }).c('value').t('http://jabber.org/protocol/muc#roomconfig').up().up();
+
+    roomiq.c('field', { 'var': k}).c('value').t(v).up().up() for own k, v of config
+
+    @_connection.sendIQ roomiq.tree(), success_cb, error_cb
+
+  ###Function
   Set the topic of the chat room.
   Parameters:
   (String) room - The multi-user chat room name.

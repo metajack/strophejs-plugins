@@ -11,6 +11,7 @@
 
 (function() {
   var Occupant, RoomConfig, XmppRoom,
+    __hasProp = {}.hasOwnProperty,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   Strophe.addConnectionPlugin('muc', {
@@ -391,6 +392,37 @@
         xmlns: "jabber:x:data",
         type: "submit"
       });
+      return this._connection.sendIQ(roomiq.tree(), success_cb, error_cb);
+    },
+
+    /*Function
+    Parameters:
+    (String) room - The multi-user chat room name.
+    (Object) config - the configuration. ex: {"muc#roomconfig_publicroom": "0", "muc#roomconfig_persistentroom": "1"}
+    Returns:
+    id - the unique id used to create the chat room.
+     */
+    createConfiguredRoom: function(room, config, success_cb, error_cb) {
+      var k, roomiq, v;
+      roomiq = $iq({
+        to: room,
+        type: "set"
+      }).c("query", {
+        xmlns: Strophe.NS.MUC_OWNER
+      }).c("x", {
+        xmlns: "jabber:x:data",
+        type: "submit"
+      });
+      roomiq.c('field', {
+        'var': 'FORM_TYPE'
+      }).c('value').t('http://jabber.org/protocol/muc#roomconfig').up().up();
+      for (k in config) {
+        if (!__hasProp.call(config, k)) continue;
+        v = config[k];
+        roomiq.c('field', {
+          'var': k
+        }).c('value').t(v).up().up();
+      }
       return this._connection.sendIQ(roomiq.tree(), success_cb, error_cb);
     },
 
