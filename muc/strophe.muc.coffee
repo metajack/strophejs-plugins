@@ -330,7 +330,7 @@ Strophe.addConnectionPlugin 'muc',
   Returns:
   id - the unique id used to create the chat room.
   ###
-  createRoom: (room, config, success_cb, error_cb) ->
+  createConfiguredRoom: (room, config, success_cb, error_cb) ->
     roomiq = $iq(
       to: room
       type: "set" )

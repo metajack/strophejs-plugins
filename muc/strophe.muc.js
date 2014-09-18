@@ -401,7 +401,7 @@
     Returns:
     id - the unique id used to create the chat room.
      */
-    createRoom: function(room, config, success_cb, error_cb) {
+    createConfiguredRoom: function(room, config, success_cb, error_cb) {
       var k, roomiq, v;
       roomiq = $iq({
         to: room,
