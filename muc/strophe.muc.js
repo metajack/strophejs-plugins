@@ -887,7 +887,7 @@
       newnick = data.newnick || null;
       switch (data.type) {
         case 'error':
-          return;
+          return true;
         case 'unavailable':
           if (newnick) {
             data.nick = newnick;

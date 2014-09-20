@@ -722,7 +722,7 @@ class XmppRoom
     nick = data.nick
     newnick = data.newnick or null
     switch data.type
-      when 'error' then return
+      when 'error' then return true
       when 'unavailable'
         if newnick
           data.nick = newnick
