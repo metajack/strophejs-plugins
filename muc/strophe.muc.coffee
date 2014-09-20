@@ -213,6 +213,33 @@ Strophe.addConnectionPlugin 'muc',
     return msgid
 
   ###Function
+  Send a mediated multiple invitation.
+  Parameters:
+  (String) room - The multi-user chat room name.
+  (Array) receivers - The invitation's receivers.
+  (String) reason - Optional reason for joining the room.
+  Returns:
+  msgiq - the unique id used to send the invitation
+  ###
+  multipleInvites: (room, receivers, reason) ->
+    msgid = @_connection.getUniqueId()
+    invitation = $msg(
+      from: @_connection.jid
+      to: room
+      id: msgid )
+    .c('x', xmlns: Strophe.NS.MUC_USER)
+
+    for receiver in receivers
+      invitation.c 'invite', to: receiver
+      if reason?
+        invitation.c 'reason', reason
+        invitation.up()
+      invitation.up()
+
+    @_connection.send invitation
+    return msgid
+
+  ###Function
   Send a direct invitation.
   Parameters:
   (String) room - The multi-user chat room name.
@@ -602,6 +629,9 @@ class XmppRoom
 
   invite: (receiver, reason) ->
     @client.invite @name, receiver, reason
+
+  multipleInvites: (receivers, reason) ->
+    @client.invite @name, receivers, reason
 
   directInvite: (receiver, reason) ->
     @client.directInvite @name, receiver, reason, @password

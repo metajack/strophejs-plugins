@@ -248,6 +248,40 @@
     },
 
     /*Function
+    Send a mediated multiple invitation.
+    Parameters:
+    (String) room - The multi-user chat room name.
+    (Array) receivers - The invitation's receivers.
+    (String) reason - Optional reason for joining the room.
+    Returns:
+    msgiq - the unique id used to send the invitation
+     */
+    multipleInvites: function(room, receivers, reason) {
+      var invitation, msgid, receiver, _i, _len;
+      msgid = this._connection.getUniqueId();
+      invitation = $msg({
+        from: this._connection.jid,
+        to: room,
+        id: msgid
+      }).c('x', {
+        xmlns: Strophe.NS.MUC_USER
+      });
+      for (_i = 0, _len = receivers.length; _i < _len; _i++) {
+        receiver = receivers[_i];
+        invitation.c('invite', {
+          to: receiver
+        });
+        if (reason != null) {
+          invitation.c('reason', reason);
+          invitation.up();
+        }
+        invitation.up();
+      }
+      this._connection.send(invitation);
+      return msgid;
+    },
+
+    /*Function
     Send a direct invitation.
     Parameters:
     (String) room - The multi-user chat room name.
@@ -728,6 +762,10 @@
 
     XmppRoom.prototype.invite = function(receiver, reason) {
       return this.client.invite(this.name, receiver, reason);
+    };
+
+    XmppRoom.prototype.multipleInvites = function(receivers, reason) {
+      return this.client.invite(this.name, receivers, reason);
     };
 
     XmppRoom.prototype.directInvite = function(receiver, reason) {
