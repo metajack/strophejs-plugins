@@ -374,13 +374,16 @@ Strophe.addConnectionPlugin('roster',
     },
 
     /** PrivateFunction: _call_backs
-     *
+     * first parameter is the full roster
+     * second is optional, newly added or updated item
+     * third is otional, in case of update, send the previous state of the
+     *  update item
      */
-    _call_backs : function(items, item)
+    _call_backs : function(items, item, previousItem)
     {
         for (var i = 0; i < this._callbacks.length; i++) // [].forEach my love ...
         {
-            this._callbacks[i](items, item);
+            this._callbacks[i](items, item, previousItem);
         }
     },
     /** PrivateFunction: _onReceiveIQ
@@ -419,24 +422,33 @@ Strophe.addConnectionPlugin('roster',
     /** PrivateFunction: _updateItem
      * Update internal representation of roster item
      */
-    _updateItem : function(item)
+    _updateItem : function(itemTag)
     {
-        var jid           = item.getAttribute("jid");
-        var name          = item.getAttribute("name");
-        var subscription  = item.getAttribute("subscription");
-        var ask           = item.getAttribute("ask");
+        var jid           = itemTag.getAttribute("jid");
+        var name          = itemTag.getAttribute("name");
+        var subscription  = itemTag.getAttribute("subscription");
+        var ask           = itemTag.getAttribute("ask");
         var groups        = [];
-        Strophe.forEachChild(item, 'group',
+
+        Strophe.forEachChild(itemTag, 'group',
             function(group)
             {
                 groups.push(Strophe.getText(group));
             }
         );
 
+        var item;
+        var previousItem;
+
         if (subscription == "remove")
         {
-            this.removeItem(jid);
-            this._call_backs(this.items, {jid: jid, subscription: 'remove'});
+            var hashBeenRemoved = this.removeItem(jid);
+            if (hashBeenRemoved) {
+                this._call_backs(
+                    this.items,
+                    {jid: jid, subscription: 'remove'}
+                );
+            }
             return;
         }
 
@@ -455,11 +467,18 @@ Strophe.addConnectionPlugin('roster',
         }
         else
         {
+            previousItem = {
+                name: item.name,
+                subscription: item.subscription,
+                ask: item.ask,
+                groups: item.groups
+            }
+
             item.name = name;
             item.subscription = subscription;
             item.ask = ask;
             item.groups = groups;
         }
-        this._call_backs(this.items, item);
+        this._call_backs(this.items, item, previousItem);
     }
 });
