@@ -150,10 +150,10 @@ Strophe.addConnectionPlugin 'muc',
   Returns:
   msgiq - the unique id used to send the message
   ###
-  message: (room, nick, message, html_message, type) ->
+  message: (room, nick, message, html_message, type, msgid) ->
     room_nick = @test_append_nick(room, nick)
     type = type or if nick? then "chat" else "groupchat"
-    msgid = @_connection.getUniqueId()
+    msgid = msgid or @_connection.getUniqueId()
     msg = $msg(
       to: room_nick
       from: @_connection.jid
@@ -185,11 +185,12 @@ Strophe.addConnectionPlugin 'muc',
   (String) room - The multi-user chat room name.
   (String) message - The plaintext message to send to the room.
   (String) html_message - The message to send to the room with html markup.
+  (String) msgid - Optional unique ID which will be set as the 'id' attribute of the stanza
   Returns:
   msgiq - the unique id used to send the message
   ###
-  groupchat: (room, message, html_message) ->
-    @message room, null, message, html_message
+  groupchat: (room, message, html_message, msgid) ->
+    @message room, null, message, html_message, undefined, msgid
 
   ###Function
   Send a mediated invitation.
