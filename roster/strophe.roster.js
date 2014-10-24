@@ -69,8 +69,9 @@ Strophe.addConnectionPlugin('roster',
                     Strophe.error(e);
                 }
             }
-            if (oldCallback !== null)
+            if (typeof oldCallback === "function") {
                 oldCallback.apply(this, arguments);
+            }
         };
         conn.connect = function(jid, pass, callback, wait, hold, route)
         {
@@ -472,8 +473,7 @@ Strophe.addConnectionPlugin('roster',
                 subscription: item.subscription,
                 ask: item.ask,
                 groups: item.groups
-            }
-
+            };
             item.name = name;
             item.subscription = subscription;
             item.ask = ask;
