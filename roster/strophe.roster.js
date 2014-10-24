@@ -314,7 +314,9 @@ Strophe.addConnectionPlugin('roster',
     {
         this._updateItems(stanza);
         this._call_backs(this.items);
-        userCallback(this.items);
+        if (typeof userCallback === "function") {
+            userCallback(this.items);
+        }
     },
     /** PrivateFunction: _onReceiveRosterError
      *
