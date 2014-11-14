@@ -159,7 +159,7 @@ Strophe.addConnectionPlugin 'muc',
       from: @_connection.jid
       type: type
       id: msgid )
-    .c("body", xmlns: Strophe.NS.CLIENT)
+    .c("body")
     .t(message)
     msg.up()
     if html_message?
