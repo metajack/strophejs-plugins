@@ -86,6 +86,7 @@ extensions used in Internet of Things (IoT)
  
 - [Internet of Things - Control](/sensordata/) - Reading values from devices
   ([XEP 0325](http://xmpp.org/extensions/xep-0325.html))
+
 ### Other Plugins
 
 - [Serverdate](/serverdate/) - Syncs a local clock
