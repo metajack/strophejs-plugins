@@ -84,7 +84,7 @@ extensions used in Internet of Things (IoT)
 - [Internet of Things - Sensor Data](/sensordata/) - Reading values from devices
   ([XEP 0323](http://xmpp.org/extensions/xep-0325.html))
  
-- [Internet of Things - Control](/sensordata/) - Reading values from devices
+- [Internet of Things - Control](/control/) - Writing values to devices
   ([XEP 0325](http://xmpp.org/extensions/xep-0325.html))
 
 ### Other Plugins
