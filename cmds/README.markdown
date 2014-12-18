@@ -28,6 +28,22 @@ You can also use the interactive GUI mode
 
 ### Server side
 
+    conn.cmds.add({node: "nodename", name: "Command description"},
+        function(request, result) {
+            var command_successful = doSomething(request);
+
+            result.attrs({status: "completed"});
+
+            if (command_successful) {
+                result.c('note', {type: "info"}, 'infotext');
+            } else {
+                result.c('note', {type: "info"}, 'infotext');
+                result.c('error', {type: 'cancel'});
+                result.c('forbidden', {xmlns: 'urn:ietf:params:xml:ns:xmpp-stanzas'});
+            }
+            return result;
+    });
+
 ## Dependencies
 
 - strophe.disco.js

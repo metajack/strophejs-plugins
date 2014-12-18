@@ -43,6 +43,7 @@ To query, for example, your personal archive for conversations with
       onMessage: function(message) {
 				console.log("Message from ", $(message).find("forwarded message").attr("from"),
 					": ", $(message).find("forwarded message body").text());
+				return true;
       },
       onComplete: function(response) {
 				console.log("Got all the messages");

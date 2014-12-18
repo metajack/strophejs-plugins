@@ -5,7 +5,7 @@ Strophe.addConnectionPlugin('archive', {
   init: function(connection) {
     this._connection = connection;
     Strophe.addNamespace('DELAY', 'jabber:x:delay');
-    Strophe.addNamespace('ARCHIVE', 'http://www.xmpp.org/extensions/xep-0136.html#ns');
+    Strophe.addNamespace('ARCHIVE', 'urn:xmpp:archive');
   },
 
   listCollections: function(jid, rsm, callback) {
@@ -24,6 +24,24 @@ Strophe.addConnectionPlugin('archive', {
     }
     var responseRsm = new Strophe.RSM({xml: stanza.getElementsByTagName('set')[0]});
     callback(collections, responseRsm);
+  },
+
+  getAutoArchiving: function(callback) {
+    var xml = $iq({type: 'get', id: this._connection.getUniqueId('pref')}).c('pref', {xmlns: Strophe.NS.ARCHIVE});
+    this._connection.sendIQ(xml, this._handleGetPreferencesResponse.bind(this, callback));
+  },
+  
+  _handleGetPreferencesResponse: function(callback, stanza) {
+    var auto = false;
+	Strophe.forEachChild(stanza.children[0], 'auto', function(child) {
+        auto = child.attributes.save.value == "true";
+	});
+	callback(auto);
+  },
+
+  setAutoArchiving: function(save, success, error, timeout) {
+    var xml = $iq({type: 'set', id: this._connection.getUniqueId('auto')}).c('auto', {xmlns: Strophe.NS.ARCHIVE, save: save});
+    this._connection.sendIQ(xml, success, error, timeout);
   }
 });
 

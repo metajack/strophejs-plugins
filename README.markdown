@@ -5,7 +5,20 @@ speaking XMPP in web applications. It supports extension via a plugin system.
 
 This is a collection of Strophe.js plugins created and maintained by the
 community. The homepage for this collection is
-https://github.com/metajack/strophejs-plugins .
+https://github.com/strophe/strophejs-plugins .
+
+## How to use
+
+Strophe plugins extend the Strophe.Connection object by calling
+``Strophe.addConnectionPlugin``.
+
+This enables us to then access the plugin as an attribute on the connection
+object.
+
+For example, here the "roster" plugin is used:
+
+``var connection = new Strophe.Connection(bosh_service_url);```
+``connection.roster.get(function () {});```
 
 ## Available Plugins
 

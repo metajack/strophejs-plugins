@@ -1,0 +1,16 @@
+{
+    "name": "strophejs-plugins",
+    "version": "0.0.3",
+    "ignore": [
+        ".gitignore",
+        ".jshintignore",
+        ".jshintrc",
+        "bower.json",
+        "gruntfile.js",
+        "package.json",
+        "README.markdown"
+    ],
+    "dependencies": {
+        "strophe": ">=1.1.0"
+    }
+}

@@ -26,17 +26,6 @@ createExecIQ = (opt) ->
     iq.cnode opt.form.toXML()
   iq
 
-# we have to overrite reply, because we pass in the callback fn form
-# node requests handler, we can only send a response
-# once our cmd callback has returned
-Strophe.Disco.DiscoNode::reply = (iq, fn) ->
-  req = @parseRequest(iq)
-  res = @fromTo(req)
-  @fn = fn
-  @addFirstChild req, res
-  @addContent req, res
-  res
-
 class RemoteCommand
 
   constructor: (@conn, @jid, @node) ->
@@ -190,15 +179,6 @@ class CommandNode extends Strophe.Disco.DiscoNode
 
   constructor: (cfg) -> @[k] = v for k,v of cfg
 
-  send: -> $iq {}
-
-  callback: (onSucces, onError) -> @onSuccess {}
-
-  addContent: (req, res) ->
-    @req = req
-    @res = res
-    @callback.call @, @onSuccess.bind(@), @onError.bind(@)
-
   onError: ->
     res.attrs status: "error"
     @fn.call @, res
@@ -208,42 +188,57 @@ class CommandNode extends Strophe.Disco.DiscoNode
     item = @item
     res.attrs status: "completed"
     res.c(item).t(entry).up() for i, entry of obj if $.isArray(obj)
-    @fn.call @, res
+    conn.send res
+
+  reply: (iq, callback) ->
+    req = @parseRequest(iq)
+    res = @fromTo(req)
+    @addFirstChild req, res
+    if callback
+      callback req, res
+    else
+      res.attrs status: "completed"
+    res
 
 Strophe.Commands =
   CommandNode: CommandNode
   RemoteCommand: RemoteCommand
   create: create
 
-Strophe.addConnectionPlugin "cmds", do ->
+Strophe.addConnectionPlugin "cmds",
+  _conn: null
 
-  conn = cmds = null
-
-  init = (c) ->
+  init: (c) ->
     conn = c
+    @_conn = conn
+    @_command_handlers = {}
     Strophe.addNamespace "COMMANDS", CMD
-    cmds = conn.disco.features[CMD] = { items: [] }
+    conn.disco.addNode Strophe.NS.COMMANDS, items:[]
+    @_cmds = conn.disco.features[CMD]
 
-  add = (item) ->
+    @_command_handler = @_conn.addHandler(
+      (iq) =>
+        node = ($ "command", iq).attr("node")
+        n = $.grep(@_cmds.items, (n) -> n.node is node)
+        if n.length is 0
+          nodeImpl = new DiscoNodeNotFound
+          @_conn.send nodeImpl.reply iq
+        else
+          cb = @_command_handlers[node] or null
+          nodeImpl = n[0]
+          @_conn.send nodeImpl.reply(iq, cb)
+        true
+      CMD
+      "iq"
+      "set")
+
+  add: (item, callback) ->
     throw "command needs a node" unless item.node
-    item.jid = conn.jid unless item.jid
-    cmds.items.push new CommandNode item
+    item.jid = @_conn.jid unless item.jid
+    @_cmds.items.push new CommandNode item
+    @_command_handlers[item.node] = callback
 
-  reply = (iq) ->
-    node = ($ "command", iq).attr("node")
-    n = $.grep(cmds.items, (n) -> n.node is node)
-    if n.length is 0
-      nodeImpl = new DiscoNodeNotFound
-      conn.send nodeImpl.reply iq
-    else
-      nodeImpl = n[0]
-      nodeImpl.reply(iq, (res) => conn.send res)
-    true
-
-  statusChanged = (status, condition) ->
-    conn.addHandler reply.bind(@), CMD, "iq", "set"  if status is Strophe.Status.CONNECTED
-
-  execute = (jid, node, opt={}) ->
+  execute: (jid, node, opt={}) ->
 
     iq = createExecIQ
       jid: jid
@@ -252,14 +247,7 @@ Strophe.addConnectionPlugin "cmds", do ->
       sid: opt.sid
       data: opt.data
       form: opt.form
-      item: $.grep(cmds.items, (n) -> n.node is node)
+      item: $.grep(@_cmds.items, (n) -> n.node is node)
 
     noop = Strophe.Disco.noop
-    conn.sendIQ iq, opt.success or noop, opt.error or noop
-
-  # public API
-  init: init
-  statusChanged: statusChanged
-  add: add
-  execute:execute
-  exec:execute
+    @_conn.sendIQ iq, opt.success or noop, opt.error or noop

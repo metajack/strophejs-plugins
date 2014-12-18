@@ -300,7 +300,7 @@ class Field
       label: xml.attr "label"
       desc:  xml.find("desc").text()
       required: (xml.find("required").length is 1)
-      values: ( ($ v).text() for v in xml.find "value" )
+      values: ( ($ v).text() for v in xml.find ">value" )
       options: ( Option.fromXML o for o in xml.find "option" )
 
   @_htmlElementToFieldType: (el) ->
@@ -369,7 +369,8 @@ class Option
   label: ""
   value: ""
 
-  toXML: => ($build "option", { label: @label })
+  toXML: =>
+    $build("option", { label: @label })
     .c("value")
     .t(@value.toString())
     .tree()
@@ -434,7 +435,8 @@ Strophe.addConnectionPlugin 'x',
 
   init : (conn) ->
     Strophe.addNamespace 'DATA', 'jabber:x:data'
-    conn.disco.addFeature Strophe.NS.DATA if conn.disco
+    conn.disco.addFeature Strophe.NS.DATA if conn.disco?.addFeature?
+    conn.disco.addNode Strophe.NS.DATA, {items:[]} if conn.disco?.addNode?
 
   parseFromResult: (result) ->
     if result.nodeName.toLowerCase() is "x"
