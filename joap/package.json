@@ -4,6 +4,7 @@
   "description": "XEP-0075 (JOAP) plugin for strophe.js",
   "main": "strophe.joap.js",
   "scripts": {
+    "lint": "coffeelint *.coffee",
     "test": "cake test"
   },
   "repository": {
@@ -24,8 +25,9 @@
   },
   "homepage": "https://github.com/strophe/strophejs-plugins",
   "devDependencies": {
-    "buster-coffee": "~0.1.4",
     "buster": "~0.7.8",
-    "coffee-script": "~1.6.3"
+    "buster-coffee": "~0.1.4",
+    "coffee-script": "~1.8.0",
+    "coffeelint": "^1.7.1"
   }
 }

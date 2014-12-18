@@ -2,7 +2,7 @@
 
 /*
 This program is distributed under the terms of the MIT license.
-Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
+Copyright 2012 - 2014 (c) Markus Kohlhase <mail@markus-kohlhase.de>
  */
 
 (function() {
@@ -609,6 +609,8 @@ Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
         return conn.disco.addFeature(Strophe.NS.JOAP);
       }
     };
+
+    /* public API */
     return {
       init: init,
       describe: describe,

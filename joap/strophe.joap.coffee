@@ -1,6 +1,6 @@
 ###
 This program is distributed under the terms of the MIT license.
-Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
+Copyright 2012 - 2014 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 ###
 
 JOAP_NS = "jabber:iq:joap"
@@ -23,7 +23,9 @@ onError = (cb=->) -> (iq) ->
 addXMLAttributes = (iq, attrs) ->
   return if not attrs?
   if attrs instanceof Array
-    return console?.warn? "No attributes added: attribute parameter is not an object"
+    return console?.warn? "No attributes added: \
+      attribute parameter is not an object"
+
   else if typeof attrs is "object"
     for k,v of attrs
       iq.c("attribute")
@@ -84,25 +86,25 @@ parseDesc = (desc) ->
   res
 
 parseDescription = (iq) ->
-  result = desc: {}, attributes: {}, methods: {}, classes: []
+  result   = desc: {}, attributes: {}, methods: {}, classes: []
   describe = iq.getElementsByTagName("describe")[0]
   if describe?
-   for c in describe.childNodes
-     switch c.tagName.toLowerCase()
-       when "desc"
-         result.desc[c.getAttribute "xml:lang"] = c.textContent
-       when "attributedescription"
-         ad = parseAttributeDescription c
-         result.attributes[ad.name] = ad
-       when "methoddescription"
-         md = parseMethodDescription c
-         result.methods[md.name] = md
-       when "superclass"
-         result.superclass = new JID(c.textContent).toString()
-       when "timestamp"
-         result.timestamp = c.textContent
-       when "class"
-         classes.push = c.textContent
+    for c in describe.childNodes
+      switch c.tagName.toLowerCase()
+        when "desc"
+          result.desc[c.getAttribute "xml:lang"] = c.textContent
+        when "attributedescription"
+          ad = parseAttributeDescription c
+          result.attributes[ad.name] = ad
+        when "methoddescription"
+          md = parseMethodDescription c
+          result.methods[md.name] = md
+        when "superclass"
+          result.superclass = new JID(c.textContent).toString()
+        when "timestamp"
+          result.timestamp = c.textContent
+        when "class"
+          classes.push = c.textContent
   result
 
 getAddress = (clazz, service, instance) ->
@@ -206,9 +208,13 @@ methodCall = (method, address, params, cb) ->
 createEventWrapper = (type, jid, fn) ->
   return (-> false) unless typeof fn is "function"
   match = switch type
-    when "server"   then (from) -> from.domain is jid.domain
-    when "class"    then (from) -> from.user is jid.user and from.domain is jid.domain
-    when "instance" then (from) -> from.equals jid
+    when "server"
+      (from) -> from.domain is jid.domain
+    when "class"
+      (from) -> from.user is jid.user and from.domain is jid.domain
+    when "instance"
+      (from) -> from.equals jid
+
   (xml) ->
     from = new JID xml.getAttribute 'from'
     if match from
@@ -332,22 +338,25 @@ Strophe.addConnectionPlugin 'joap', do ->
     Strophe.addNamespace "JOAP", JOAP_NS
 
     if not conn.hasOwnProperty "disco"
-      Strophe.warn "You need the discovery plugin to have JOAP fully implemented."
+      Strophe.warn "You need the discovery plugin \
+        to have JOAP fully implemented."
     else
       conn.disco.addIdentity "automation", "joap"
       conn.disco.addFeature Strophe.NS.JOAP
 
-  # public API
-  init: init
-  describe: describe
-  add: add
-  read: read
-  edit: edit
-  delete: del
-  search: search
-  searchAndRead: searchAndRead
-  methodCall: methodCall
-  JOAPError: JOAPError
-  JOAPServer: JOAPServer
-  JOAPObject: JOAPObject
-  JOAPClass: JOAPClass
+  ### public API ###
+  {
+    init
+    describe
+    add
+    read
+    edit
+    delete: del
+    search
+    searchAndRead
+    methodCall
+    JOAPError
+    JOAPServer
+    JOAPObject
+    JOAPClass
+  }
