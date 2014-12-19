@@ -1,6 +1,6 @@
 ###
 This program is distributed under the terms of the MIT license.
-Copyright 2012 - 2013 (c) Markus Kohlhase <mail@markus-kohlhase.de>
+Copyright 2012 - 2014 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 ###
 
 JOAP_NS = "jabber:iq:joap"
@@ -23,7 +23,9 @@ onError = (cb=->) -> (iq) ->
 addXMLAttributes = (iq, attrs) ->
   return if not attrs?
   if attrs instanceof Array
-    return console?.warn? "No attributes added: attribute parameter is not an object"
+    return console?.warn? "No attributes added: \
+      attribute parameter is not an object"
+
   else if typeof attrs is "object"
     for k,v of attrs
       iq.c("attribute")
@@ -51,9 +53,10 @@ parseAttributes = (iq) ->
   data
 
 parseRPCParams = (iq) ->
-  conn.rpc._convertFromXML iq
-    .getElementsByTagName("param")[0]
-    .getElementsByTagName("value")[0]
+  conn.rpc._convertFromXML(
+    iq.getElementsByTagName("param")[0]
+      .getElementsByTagName("value")[0]
+  )
 
 parseNewAddress = (iq) ->
   a = iq.getElementsByTagName("newAddress")[0]
@@ -84,38 +87,39 @@ parseDesc = (desc) ->
   res
 
 parseDescription = (iq) ->
-  result = desc: {}, attributes: {}, methods: {}, classes: []
+  result   = desc: {}, attributes: {}, methods: {}, classes: []
   describe = iq.getElementsByTagName("describe")[0]
   if describe?
-   for c in describe.childNodes
-     switch c.tagName.toLowerCase()
-       when "desc"
-         result.desc[c.getAttribute "xml:lang"] = c.textContent
-       when "attributedescription"
-         ad = parseAttributeDescription c
-         result.attributes[ad.name] = ad
-       when "methoddescription"
-         md = parseMethodDescription c
-         result.methods[md.name] = md
-       when "superclass"
-         result.superclass = new JID(c.textContent).toString()
-       when "timestamp"
-         result.timestamp = c.textContent
-       when "class"
-         classes.push = c.textContent
+    for c in describe.childNodes
+      switch c.tagName.toLowerCase()
+        when "desc"
+          result.desc[c.getAttribute "xml:lang"] = c.textContent
+        when "attributedescription"
+          ad = parseAttributeDescription c
+          result.attributes[ad.name] = ad
+        when "methoddescription"
+          md = parseMethodDescription c
+          result.methods[md.name] = md
+        when "superclass"
+          result.superclass = new JID(c.textContent).toString()
+        when "timestamp"
+          result.timestamp = c.textContent
+        when "class"
+          classes.push = c.textContent
   result
 
 getAddress = (clazz, service, instance) ->
   (new JID clazz, service, instance).toString()
 
-createIq = (type, to) ->
+createIq = (type, to, customAttrs) ->
   iqType = if (type in ["read", "search", "describe"]) then "get" else "set"
   xmlns  = if type is "query" then RPC_NS else JOAP_NS
-  $iq(to: to, type: iqType)
-    .c(type, xmlns: xmlns)
+  attrs  = xmlns: xmlns
+  attrs[k]=v for k,v of customAttrs when v? if customAttrs?
+  $iq(to: to, type: iqType).c(type, attrs)
 
 sendRequest = (type, to, cb, opt={}) ->
-  iq = createIq type, to
+  iq = createIq type, to, opt.attrs
   opt.beforeSend? iq
   success = (res) -> cb? res, null, opt.onResult?(res)
   conn.sendIQ iq, success, onError(cb)
@@ -150,6 +154,25 @@ search = (clazz, attrs, cb) ->
     beforeSend: (iq) -> addXMLAttributes iq, attrs
     onResult: parseSearch
 
+subscribe = (clazz, cb, handler, opt={}) ->
+  if handler?
+    ref = conn.addHandler handler, JOAP_NS, "message"
+  sendRequest "subscribe", clazz, cb,
+    attrs: { bare: opt.bare, type: opt.type }
+    onResult: (iq) ->
+      if handler?
+        if iq.getAttribute 'type' is 'error'
+          conn.deleteHandler ref
+        else
+          ref
+
+unsubscribe = (clazz, cb, handler, opt={}) ->
+  sendRequest "unsubscribe", clazz, cb,
+    attrs: { bare: opt.bare, type: opt.type }
+    onResult: (iq) ->
+      if handler?
+        conn.deleteHandler handler
+
 searchAndRead = (clazz, attrs, limits, cb) ->
   if typeof limits is "function"
     cb = limits; limits = null
@@ -182,6 +205,22 @@ methodCall = (method, address, params, cb) ->
   sendRequest "query", address, cb,
     beforeSend: (iq) -> addRPCElements iq, method, params
     onResult: parseRPCParams
+
+createEventWrapper = (type, jid, fn) ->
+  return (-> false) unless typeof fn is "function"
+  match = switch type
+    when "server"
+      (from) -> from.domain is jid.domain
+    when "class"
+      (from) -> from.user is jid.user and from.domain is jid.domain
+    when "instance"
+      (from) -> from.equals jid
+
+  (xml) ->
+    from = new JID xml.getAttribute 'from'
+    if match from
+      fn xml, parseAttributes(xml.getElementsByTagName("event")[0]), from
+    else true
 
 class JOAPError extends Error
 
@@ -238,6 +277,13 @@ class JOAPObject
 
   describe: (cb) -> describe @jid.toString(), cb
 
+  subscribe: (cb, handler, opt) ->
+    wrapper = createEventWrapper "instance", @jid, handler
+    subscribe @jid.toString(), cb, wrapper, opt
+
+  unsubscribe: (cb, handlerRef, opt) ->
+    unsubscribe @jid.toString(), cb, handlerRef, opt
+
   methodCall: (method, params, cb) ->
     if typeof params is "function"
       cb = params; params = null
@@ -272,6 +318,13 @@ class JOAPClass
   searchAndRead: (attrs, limits, cb) ->
     searchAndRead getAddress(@jid.user, @jid.domain), attrs, limits, cb
 
+  subscribe: (cb, handler, opt) ->
+    wrapper = createEventWrapper "class", @jid, handler
+    subscribe getAddress(@jid.user, @jid.domain), cb, wrapper, opt
+
+  unsubscribe: (cb, handlerRef, opt) ->
+    unsubscribe getAddress(@jid.user, @jid.domain), cb, handlerRef, opt
+
   methodCall: (method, instance, params, cb) ->
     if typeof instance is "function"
       cb = instance; instance = params = null
@@ -286,22 +339,25 @@ Strophe.addConnectionPlugin 'joap', do ->
     Strophe.addNamespace "JOAP", JOAP_NS
 
     if not conn.hasOwnProperty "disco"
-      Strophe.warn "You need the discovery plugin to have JOAP fully implemented."
+      Strophe.warn "You need the discovery plugin \
+        to have JOAP fully implemented."
     else
       conn.disco.addIdentity "automation", "joap"
       conn.disco.addFeature Strophe.NS.JOAP
 
-  # public API
-  init: init
-  describe: describe
-  add: add
-  read: read
-  edit: edit
-  delete: del
-  search: search
-  searchAndRead: searchAndRead
-  methodCall: methodCall
-  JOAPError: JOAPError
-  JOAPServer: JOAPServer
-  JOAPObject: JOAPObject
-  JOAPClass: JOAPClass
+  ### public API ###
+  {
+    init
+    describe
+    add
+    read
+    edit
+    delete: del
+    search
+    searchAndRead
+    methodCall
+    JOAPError
+    JOAPServer
+    JOAPObject
+    JOAPClass
+  }

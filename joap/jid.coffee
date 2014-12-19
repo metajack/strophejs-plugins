@@ -1,6 +1,6 @@
 ###
 This program is distributed under the terms of the MIT license.
-Copyright 2012 (c) Markus Kohlhase <mail@markus-kohlhase.de>
+Copyright 2012 - 2014 (c) Markus Kohlhase <mail@markus-kohlhase.de>
 ###
 
 ###
@@ -8,7 +8,7 @@ This is coffee-script fork of
 https://github.com/astro/node-xmpp/blob/master/lib/xmpp/jid.js
 ###
 
-toUnicode  = punycode?.toUnicode or (a) -> a
+toUnicode = punycode?.toUnicode or (a) -> a
 
 class JID
 
@@ -29,11 +29,11 @@ class JID
 
   parseJID: (s) ->
     if  s.indexOf('@') >= 0
-        @setUser(s.substr(0, s.indexOf('@')))
-        s = s.substr(s.indexOf('@') + 1)
+      @setUser(s.substr(0, s.indexOf('@')))
+      s = s.substr(s.indexOf('@') + 1)
     if (s.indexOf('/') >= 0)
-        @resource = s.substr(s.indexOf('/') + 1)
-        s = s.substr(0, s.indexOf('/'))
+      @resource = s.substr(s.indexOf('/') + 1)
+      s = s.substr(0, s.indexOf('/'))
     @setDomain s
 
   toString: ->

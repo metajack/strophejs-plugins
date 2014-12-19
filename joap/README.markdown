@@ -75,6 +75,9 @@ aClass.searchAndRead filter, limits, (iq, err, arrayOfInstances) ->
 
 # creating a new instance
 aClass.add { aProperty:"aValue" }, (iq, err, instanceAddress) ->
+
+# subscribe to attribute changes of all instances
+aClass.subscribe successHandler, changeHandler, {bare:true}
 ```
 
 ### Object
@@ -84,6 +87,9 @@ obj = new connection.joap.JOAPObject "myClass@component.example.org/instanceId"
 
 # modifying properties
 obj.edit { key: 'value' }, (iq, err) ->
+
+# subscribe to attribute changes of this instance
+aClass.subscribe successHandler, changeHandler, {bare:true}
 ```
 
 ## Dependencies
@@ -97,21 +103,8 @@ obj.edit { key: 'value' }, (iq, err) ->
 
 - [node-xmpp-joap](https://github.com/flosse/node-xmpp-joap)
 
-## Tests & specs
-
-[buster.js](https://github.com/busterjs/) and
-[buster-coffee](https://github.com/jodal/buster-coffee) and
-are required (`npm install -g buster buster-coffee`) for running the tests.
-
-First start a test server
+## Run tests
 
 ```bash
-buster server
-```
-
-Then navigate with one or more browsers to `localhost:1111` and capture them.
-Afterwards you can run the specs:
-
-```bash
-cake test
+npm i && npm test
 ```
