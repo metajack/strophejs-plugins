@@ -53,9 +53,10 @@ parseAttributes = (iq) ->
   data
 
 parseRPCParams = (iq) ->
-  conn.rpc._convertFromXML iq
-    .getElementsByTagName("param")[0]
-    .getElementsByTagName("value")[0]
+  conn.rpc._convertFromXML(
+    iq.getElementsByTagName("param")[0]
+      .getElementsByTagName("value")[0]
+  )
 
 parseNewAddress = (iq) ->
   a = iq.getElementsByTagName("newAddress")[0]

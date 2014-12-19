@@ -94,7 +94,7 @@ Copyright 2012 - 2014 (c) Markus Kohlhase <mail@markus-kohlhase.de>
   };
 
   parseRPCParams = function(iq) {
-    return conn.rpc._convertFromXML(iq).getElementsByTagName("param")[0].getElementsByTagName("value")[0];
+    return conn.rpc._convertFromXML(iq.getElementsByTagName("param")[0].getElementsByTagName("value")[0]);
   };
 
   parseNewAddress = function(iq) {
