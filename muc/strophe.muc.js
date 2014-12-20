@@ -181,9 +181,7 @@
         from: this._connection.jid,
         type: type,
         id: msgid
-      }).c("body", {
-        xmlns: Strophe.NS.CLIENT
-      }).t(message);
+      }).c("body").t(message);
       msg.up();
       if (html_message != null) {
         msg.c("html", {
