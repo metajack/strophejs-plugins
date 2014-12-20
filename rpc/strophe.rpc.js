@@ -299,8 +299,10 @@ Strophe.addConnectionPlugin("rpc", {
   _convertToXML: function(obj) {
     var key;
 
-    var xml  = new Strophe.Builder("value");
-    var type = new RegExp("function (.*?)\\(\\) \\{.*").exec(obj.constructor.toString())[1];
+    var xml   = new Strophe.Builder("value");
+    var regex = new RegExp("function (.*?)\\(\\) \\{.*");
+    var _ref, _ref1;
+    var type = (_ref = regex.exec(typeof obj !== "undefined" && obj !== null ? (_ref1 = obj.constructor) != null ? _ref1.toString() : void 0 : void 0)) != null ? _ref[1] : void 0;
 
     switch (type) {
       case "Number":
