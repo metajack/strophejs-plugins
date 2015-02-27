@@ -48,7 +48,7 @@
     (Object) history_attrs - Optional attributes for retrieving history
     (XML DOM Element) extended_presence - Optional XML for extending presence
      */
-    join: function(room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password, history_attrs) {
+    join: function(room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password, history_attrs, extended_presence) {
       var msg, room_nick;
       room_nick = this.test_append_nick(room, nick);
       msg = $pres({
@@ -63,7 +63,7 @@
       if (password != null) {
         msg.cnode(Strophe.xmlElement("password", [], password));
       }
-      if (typeof extended_presence !== "undefined" && extended_presence !== null) {
+      if (extended_presence != null) {
         msg.up.cnode(extended_presence);
       }
       if (this._muc_handler == null) {

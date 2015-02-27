@@ -42,7 +42,7 @@ Strophe.addConnectionPlugin 'muc',
   (Object) history_attrs - Optional attributes for retrieving history
   (XML DOM Element) extended_presence - Optional XML for extending presence
   ###
-  join: (room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password, history_attrs) ->
+  join: (room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password, history_attrs, extended_presence) ->
     room_nick = @test_append_nick(room, nick)
     msg = $pres(
       from: @_connection.jid
