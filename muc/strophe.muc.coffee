@@ -56,7 +56,7 @@ Strophe.addConnectionPlugin 'muc',
       msg.cnode Strophe.xmlElement("password", [], password)
 
     if extended_presence?
-      msg.up.cnode extended_presence
+      msg.up().cnode extended_presence
 
     # One handler for all rooms that dispatches to room callbacks
     @_muc_handler ?=  @_connection.addHandler (stanza) =>
