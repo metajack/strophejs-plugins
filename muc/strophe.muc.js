@@ -64,7 +64,7 @@
         msg.cnode(Strophe.xmlElement("password", [], password));
       }
       if (extended_presence != null) {
-        msg.up.cnode(extended_presence);
+        msg.up().cnode(extended_presence);
       }
       if (this._muc_handler == null) {
         this._muc_handler = this._connection.addHandler((function(_this) {
