@@ -73,7 +73,7 @@ Strophe.addConnectionPlugin('roster',
                 oldCallback.apply(this, arguments);
             }
         };
-        conn.connect = function(jid, pass, callback, wait, hold, route)
+        conn.connect = function(jid, pass, callback, wait, hold, route, authcid)
         {
             oldCallback = callback;
             if (typeof jid  == "undefined")
@@ -81,7 +81,7 @@ Strophe.addConnectionPlugin('roster',
             if (typeof pass == "undefined")
                 pass = null;
             callback = newCallback;
-            _connect.apply(conn, [jid, pass, callback, wait, hold, route]);
+            _connect.apply(conn, [jid, pass, callback, wait, hold, route, authcid]);
         };
         conn.attach = function(jid, sid, rid, callback, wait, hold, wind)
         {
