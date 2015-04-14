@@ -11,6 +11,6 @@
         "README.markdown"
     ],
     "dependencies": {
-        "strophe": ">=1.1.0"
+        "strophe": ">=1.1"
     }
 }
