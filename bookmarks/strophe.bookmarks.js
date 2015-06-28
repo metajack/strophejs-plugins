@@ -32,8 +32,26 @@ Strophe.addConnectionPlugin('bookmarks', {
 
 		return true;
 	},
-	add : function(roomJid) {
-		this.connection.sendIQ($iq({
+	/**
+	 * Add bookmark to storage.
+	 *
+	 * @param {string} roomJid - The JabberID of the chat roomJid
+	 * @param {string} [alias] - A friendly name for the bookmark
+	 * @param {string} [nick] - The users's preferred roomnick for the chatroom
+	 * @param {boolean} [autojoin=false] - Whether the client should automatically join 
+	 * the conference room on login.
+	 */
+	add : function(roomJid, alias, nick, autojoin) {
+		var conferenceAttr = {
+			jid: roomJid,
+			autojoin: autojoin || false
+		};
+
+		if (alias) {
+			conferenceAttr.name = alias;
+		}
+
+		var stanza = $iq({
 			type : 'set'
 		}).c('pubsub', {
 			xmlns : Strophe.NS.PUBSUB
@@ -43,10 +61,13 @@ Strophe.addConnectionPlugin('bookmarks', {
 			id : roomJid
 		}).c('storage', {
 			xmlns : Strophe.NS.BOOKMARKS
-		}).c('conference', {
-			autojoin : 'true',
-			jid : roomJid
-		}));
+		}).c('conference', conferenceAttr);
+
+		if (nick) {
+			stanza.c('nick').t(nick);
+		}
+
+		this.connection.sendIQ(stanza);
 	},
 	/**
 	 * Retrieve all stored bookmarks.
