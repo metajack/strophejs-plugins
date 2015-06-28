@@ -47,6 +47,21 @@ Strophe.addConnectionPlugin('bookmarks', {
 			autojoin : 'true',
 			jid : roomJid
 		}));
+	},
+	/**
+	 * Retrieve all stored bookmarks.
+	 *
+	 * @param {function} success - Callback after success
+	 * @param {function} error - Callback after error
+	 */
+	get: function(success, error) {
+		this.connection.sendIQ($iq({
+			type : 'get'
+		}).c('pubsub', {
+			xmlns : Strophe.NS.PUBSUB
+		}).c('items', {
+			node : Strophe.NS.BOOKMARKS
+		}), success, error);
 	}
 
 });
