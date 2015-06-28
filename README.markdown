@@ -36,6 +36,9 @@ For example, here the "roster" plugin is used:
 - [Multi-User Chat](/muc/)
   ([XEP 0045](http://xmpp.org/extensions/xep-0045.html))
 
+- [Bookmarks](/bookmarks/)
+  ([XEP 0048](http://xmpp.org/extensions/xep-0048.html))
+
 - [Private XML Storage](/private/)
   ([XEP 0049](http://xmpp.org/extensions/xep-0049.html))
 
