@@ -46,8 +46,10 @@ Strophe.addConnectionPlugin('bookmarks', {
 	 * @param {string} [nick] - The users's preferred roomnick for the chatroom
 	 * @param {boolean} [autojoin=false] - Whether the client should automatically join 
 	 * the conference room on login.
+	 * @param {function} [success] - Callback after success
+	 * @param {function} [error] - Callback after error
 	 */
-	add : function(roomJid, alias, nick, autojoin) {
+	add : function(roomJid, alias, nick, autojoin, success, error) {
 		var conferenceAttr = {
 			jid: roomJid,
 			autojoin: autojoin || false
@@ -73,7 +75,7 @@ Strophe.addConnectionPlugin('bookmarks', {
 			stanza.c('nick').t(nick);
 		}
 
-		this.connection.sendIQ(stanza);
+		this.connection.sendIQ(stanza, success, error);
 	},
 	/**
 	 * Retrieve all stored bookmarks.
