@@ -8,7 +8,13 @@ Strophe.addConnectionPlugin('bookmarks', {
 		Strophe.addNamespace('PUBSUB', 'http://jabber.org/protocol/pubsub');
 		
 	},
-	createBookmarksNode : function() {
+	/**
+	 * Create private bookmark node.
+	 *
+	 * @param {function} success - Callback after success
+	 * @param {function} error - Callback after error
+	 */
+	createBookmarksNode : function(success, error) {
 		// We do this instead of using publish-options because this is not
 		// mandatory to implement according to XEP-0060
 		this.connection.sendIQ($iq({
@@ -28,7 +34,7 @@ Strophe.addConnectionPlugin('bookmarks', {
 					'var' : 'pubsub#persist_items'
 				}).c('value').t('1').up().up().c('field', {
 					'var' : 'pubsub#access_model'
-				}).c('value').t('whitelist'));
+				}).c('value').t('whitelist'), success, error);
 
 		return true;
 	},
