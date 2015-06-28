@@ -11,8 +11,8 @@ Strophe.addConnectionPlugin('bookmarks', {
 	/**
 	 * Create private bookmark node.
 	 *
-	 * @param {function} success - Callback after success
-	 * @param {function} error - Callback after error
+	 * @param {function} [success] - Callback after success
+	 * @param {function} [error] - Callback after error
 	 */
 	createBookmarksNode : function(success, error) {
 		// We do this instead of using publish-options because this is not
@@ -78,8 +78,8 @@ Strophe.addConnectionPlugin('bookmarks', {
 	/**
 	 * Retrieve all stored bookmarks.
 	 *
-	 * @param {function} success - Callback after success
-	 * @param {function} error - Callback after error
+	 * @param {function} [success] - Callback after success
+	 * @param {function} [error] - Callback after error
 	 */
 	get: function(success, error) {
 		this.connection.sendIQ($iq({
@@ -88,6 +88,26 @@ Strophe.addConnectionPlugin('bookmarks', {
 			xmlns : Strophe.NS.PUBSUB
 		}).c('items', {
 			node : Strophe.NS.BOOKMARKS
+		}), success, error);
+	},
+	/**
+	 * Delete the given entry for roomJid.
+	 *
+	 * @param {string} roomJid - The JabberID of the chat roomJid you want to remove
+	 * @param {function} [success] - Callback after success
+	 * @param {function} [error] - Callback after error
+	 * @param {boolean} [notify=false] - True: notify all subscribers
+	 */
+	delete: function(roomJid, success, error, notify) {
+		this.connection.sendIQ($iq({
+			type : 'set'
+		}).c('pubsub', {
+			xmlns : Strophe.NS.PUBSUB
+		}).c('retract', {
+			node : Strophe.NS.BOOKMARKS,
+			notify: notify || false
+		}).c('item', {
+			id: roomJid
 		}), success, error);
 	}
 
