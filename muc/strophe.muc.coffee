@@ -42,7 +42,7 @@ Strophe.addConnectionPlugin 'muc',
   (Object) history_attrs - Optional attributes for retrieving history
   (XML DOM Element) extended_presence - Optional XML for extending presence
   ###
-  join: (room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password, history_attrs) ->
+  join: (room, nick, msg_handler_cb, pres_handler_cb, roster_cb, password, history_attrs, extended_presence) ->
     room_nick = @test_append_nick(room, nick)
     msg = $pres(
       from: @_connection.jid
@@ -56,7 +56,7 @@ Strophe.addConnectionPlugin 'muc',
       msg.cnode Strophe.xmlElement("password", [], password)
 
     if extended_presence?
-      msg.up.cnode extended_presence
+      msg.up().cnode extended_presence
 
     # One handler for all rooms that dispatches to room callbacks
     @_muc_handler ?=  @_connection.addHandler (stanza) =>
