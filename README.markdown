@@ -93,6 +93,16 @@ For example, here the "roster" plugin is used:
 - [SI File Transfer](/si-filetransfer/)
   ([XEP 0096](http://xmpp.org/extensions/xep-0096.html))
 
+### XMPP-IoT
+
+extensions used in Internet of Things (IoT) 
+
+- [Internet of Things - Sensor Data](/sensordata/) - Reading values from devices
+  ([XEP 0323](http://xmpp.org/extensions/xep-0325.html))
+ 
+- [Internet of Things - Control](/control/) - Writing values to devices
+  ([XEP 0325](http://xmpp.org/extensions/xep-0325.html))
+
 ### Other Plugins
 
 - [Serverdate](/serverdate/) - Syncs a local clock
