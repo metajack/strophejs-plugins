@@ -391,7 +391,7 @@
       }).c("query", {
         xmlns: Strophe.NS.MUC_OWNER
       });
-      if (typeof Form !== "undefined" && config instanceof Form) {
+      if (typeof Strophe.x !== "undefined" && typeof Strophe.x.Form !== "undefined" && config instanceof Strophe.x.Form) {
         config.type = "submit";
         iq.cnode(config.toXML());
       } else {
