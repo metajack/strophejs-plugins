@@ -30,7 +30,7 @@ Strophe.addConnectionPlugin('mam', {
             mamAttr.queryid = options['queryid'];
             delete options['queryid'];
         }
-        var iq = $iq(attr).c('query', mamAttr).c('x',{xmlns:'jabber:x:data'});
+        var iq = $iq(attr).c('query', mamAttr).c('x',{xmlns:'jabber:x:data', type:'submit'});
 
         iq.c('field',{var:'FORM_TYPE'}).c('value').t('urn:xmpp:mam:0').up().up();
         var i;

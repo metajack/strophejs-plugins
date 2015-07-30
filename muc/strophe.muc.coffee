@@ -91,12 +91,10 @@ Strophe.addConnectionPlugin 'muc',
 
     unless @rooms.hasOwnProperty(room)
       @rooms[room] = new XmppRoom(@, room, nick, password )
+      @rooms[room].addHandler 'presence', pres_handler_cb if pres_handler_cb
+      @rooms[room].addHandler 'message', msg_handler_cb if msg_handler_cb
+      @rooms[room].addHandler 'roster', roster_cb if roster_cb
       @roomNames.push room
-
-    @rooms[room].addHandler 'presence', pres_handler_cb if pres_handler_cb
-    @rooms[room].addHandler 'message', msg_handler_cb if msg_handler_cb
-    @rooms[room].addHandler 'roster', roster_cb if roster_cb
-
 
     @_connection.send msg
 
@@ -329,7 +327,7 @@ Strophe.addConnectionPlugin 'muc',
       to: room
       type: "set" )
     .c("query", xmlns: Strophe.NS.MUC_OWNER)
-    if typeof Form isnt "undefined" and config instanceof Form
+    if typeof Strophe.x isnt "undefined" and typeof Strophe.x.Form isnt "undefined" and config instanceof Strophe.x.Form
       config.type = "submit"
       iq.cnode config.toXML()
     else
