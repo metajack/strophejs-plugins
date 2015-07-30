@@ -91,12 +91,10 @@ Strophe.addConnectionPlugin 'muc',
 
     unless @rooms.hasOwnProperty(room)
       @rooms[room] = new XmppRoom(@, room, nick, password )
+      @rooms[room].addHandler 'presence', pres_handler_cb if pres_handler_cb
+      @rooms[room].addHandler 'message', msg_handler_cb if msg_handler_cb
+      @rooms[room].addHandler 'roster', roster_cb if roster_cb
       @roomNames.push room
-
-    @rooms[room].addHandler 'presence', pres_handler_cb if pres_handler_cb
-    @rooms[room].addHandler 'message', msg_handler_cb if msg_handler_cb
-    @rooms[room].addHandler 'roster', roster_cb if roster_cb
-
 
     @_connection.send msg
 
