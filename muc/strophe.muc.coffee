@@ -609,7 +609,7 @@ class XmppRoom
     @_presence_handlers = {}
     @_roster_handlers = {}
     @_handler_ids = 0
-    @client = client.muc if client.muc
+    @client = @client.muc if @client.muc
     @name = Strophe.getBareJidFromJid name
     @addHandler 'presence', @_roomRosterHandler
 
