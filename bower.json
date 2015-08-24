@@ -1,14 +1,13 @@
 {
     "name": "strophejs-plugins",
-    "version": "0.0.3",
+    "version": "0.0.5",
     "ignore": [
         ".gitignore",
         ".jshintignore",
         ".jshintrc",
         "bower.json",
         "gruntfile.js",
-        "package.json",
-        "README.markdown"
+        "package.json"
     ],
     "dependencies": {
         "strophe": ">=1.1"
