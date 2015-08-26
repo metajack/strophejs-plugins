@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.6 (26 August 2015)
+
+- Update package.json so that the plugin files are included in the NPM package.
+
 ## 0.0.5 (25 August 2015)
 
 - Fix missing var statements causing error on strophe.roster.js
