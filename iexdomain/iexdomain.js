@@ -5,6 +5,7 @@ Strophe.addConnectionPlugin('iexdomain', {
         if (window.XDomainRequest && ! ("withCredentials" in nativeXHR)) {
             Strophe.Request.prototype._newXHR = function() {
                 var xhr = new XDomainRequest();
+                xhr.setRequestHeader = function () {} ;
                 xhr.readyState = 0;
 
                 xhr.onreadystatechange = this.func.prependArg(this);
