@@ -8,7 +8,7 @@ Strophe.addConnectionPlugin('iexdomain', {
                 xhr.setRequestHeader = function () {} ;
                 xhr.readyState = 0;
 
-                xhr.onreadystatechange = this.func.prependArg(this);
+                xhr.onreadystatechange = this.func.bind(undefined, this);
                 xhr.onerror = function() {
                     xhr.readyState = 4;
                     xhr.status = 500;
