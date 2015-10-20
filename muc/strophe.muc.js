@@ -734,7 +734,7 @@ XmppRoom = (function() {
     if (this.client.muc) {
       this.client = this.client.muc;
     }
-    this.name = Strophe.getBareJidFromJid(name);
+    this.name = Strophe.getBareJidFromJid(this.name);
     this.addHandler('presence', this._roomRosterHandler);
   }
 
