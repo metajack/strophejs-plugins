@@ -610,7 +610,7 @@ class XmppRoom
     @_roster_handlers = {}
     @_handler_ids = 0
     @client = @client.muc if @client.muc
-    @name = Strophe.getBareJidFromJid name
+    @name = Strophe.getBareJidFromJid @name
     @addHandler 'presence', @_roomRosterHandler
 
   join: (msg_handler_cb, pres_handler_cb, roster_cb) ->
