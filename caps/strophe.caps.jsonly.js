@@ -148,8 +148,8 @@
 		} else {
 			this._jidVerIndex[from] = ver;
 		}
-		if (!this._jidVerIndex[from] || !this._jidVerIndex[from] !== ver) {
-			this._jidVerIndex[from] = ver;
+		if (!this._jidVerIndex[from] || !this._jidVerIndex[from] !== ver) {
+			this._jidVerIndex[from] = ver;
 		}
 		return true;
 	},
@@ -169,8 +169,8 @@
 	 *   (Boolean) - true
 	 */
 	_requestCapabilities: function(to, node, ver) {
-		if (to !== this._connection.jid) {
-			var id = this._connection.disco.info(to, node + '#' + ver);
+		if (to !== this._connection.jid) {
+			var id = this._connection.disco.info(to, node + '#' + ver);
 			this._connection.addHandler(this._handleDiscoInfoReply.bind(this), Strophe.NS.DISCO_INFO, 'iq', 'result', id, to);
 		}
 		return true;
@@ -192,16 +192,16 @@
 			ver = node[1],
 			from = stanza.getAttribute('from');
 		if (!this._knownCapabilities[ver]) {
-			var childNodes = query.childNodes,
-				childNodesLen = childNodes.length;
-			this._knownCapabilities[ver] = [];
+			var childNodes = query.childNodes,
+				childNodesLen = childNodes.length;
+			this._knownCapabilities[ver] = [];
 			for(var i = 0; i < childNodesLen; i++) {
-				var node = childNodes[i];
-				this._knownCapabilities[ver].push({name: node.nodeName, attributes: node.attributes});
+				var node =childNodes[i];
+				this._knownCapabilities[ver].push({name: node.nodeName, attributes: node.attributes});
 			}
 			this._jidVerIndex[from] = ver;
-		} else if (!this._jidVerIndex[from] || !this._jidVerIndex[from] !== ver) {
-			this._jidVerIndex[from] = ver;
+		} else if (!this._jidVerIndex[from] || !this._jidVerIndex[from] !== ver) {
+			this._jidVerIndex[from] = ver;
 		}
 		return false;
 	},
