@@ -31,8 +31,12 @@ Strophe.addConnectionPlugin 'vcard',
       (Function) handler_cb - The callback function used to handle the request.
       (String) jid - optional - The name of the entity to request the vCard
          If no jid is given, this function retrieves the current user's vcard.
+      (Function) error_cb - The callback function used to handle error repsonse.
     ###
     get: (handler_cb, jid, error_cb) ->
+        if typeof jid == 'function'
+            error_cb = jid
+            jid = null
         iq = buildIq "get", jid
         this._connection.sendIQ iq, handler_cb, error_cb
 
