@@ -102,7 +102,13 @@
 
     _fail: function (cb, stanza) {
       var err = 'timed out';
-      if (stanza) err = stanza;
+      if (stanza) {
+        var $error = $(stanza).find("iq > error");
+        var element = $error.children()[0]
+        if (element) {
+          err = element.tagName.toLowerCase();
+        }
+      }
       cb(new Error(err));
     },
 
