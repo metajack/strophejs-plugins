@@ -53,7 +53,7 @@ For example, here the "roster" plugin is used:
 
 - [Publish-Subscribe](/pubsub/)
   ([XEP 0060](http://xmpp.org/extensions/xep-0060.html))
-  
+
 - [Out of Band Data](/outofband/)
   ([XEP 0066](http://xmpp.org/extensions/xep-0066.html))
 
@@ -93,13 +93,16 @@ For example, here the "roster" plugin is used:
 - [SI File Transfer](/si-filetransfer/)
   ([XEP 0096](http://xmpp.org/extensions/xep-0096.html))
 
+- [Stream Management](/stream-management/)
+  ([XEP 0198](http://xmpp.org/extensions/xep-0198.html))
+
 ### XMPP-IoT
 
-extensions used in Internet of Things (IoT) 
+extensions used in Internet of Things (IoT)
 
 - [Internet of Things - Sensor Data](/sensordata/) - Reading values from devices
   ([XEP 0323](http://xmpp.org/extensions/xep-0325.html))
- 
+
 - [Internet of Things - Control](/control/) - Writing values to devices
   ([XEP 0325](http://xmpp.org/extensions/xep-0325.html))
 
