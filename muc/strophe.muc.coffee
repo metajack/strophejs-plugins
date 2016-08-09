@@ -790,6 +790,9 @@ class XmppRoom
     data.states = []
     for c in pres.childNodes
       switch c.nodeName
+        when "error"
+          data.errorcode = c.getAttribute("code")
+          data.error = c.childNodes[0]?.nodeName
         when "status"
           data.status = c.textContent or null
         when "show"

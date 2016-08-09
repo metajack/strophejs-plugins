@@ -968,6 +968,10 @@ XmppRoom = (function() {
     for (i = 0, len = ref.length; i < len; i++) {
       c = ref[i];
       switch (c.nodeName) {
+        case "error":
+          data.errorcode = c.getAttribute("code");
+          data.error = (ref1 = c.childNodes[0]) != null ? ref1.nodeName : undefined;
+          break;
         case "status":
           data.status = c.textContent || null;
           break;
