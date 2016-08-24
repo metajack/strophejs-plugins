@@ -160,13 +160,16 @@ Strophe.addConnectionPlugin('roster',
      */
     findItem : function(jid)
     {
-        for (var i = 0; i < this.items.length; i++)
-        {
-            if (this.items[i] && this.items[i].jid == jid)
-            {
-                return this.items[i];
-            }
-        }
+        if(this.items)
+	{
+          for (var i = 0; i < this.items.length; i++)
+          {
+              if (this.items[i] && this.items[i].jid == jid)
+              {
+                  return this.items[i];
+              }
+          }
+	}
         return false;
     },
     /** Function: removeItem
