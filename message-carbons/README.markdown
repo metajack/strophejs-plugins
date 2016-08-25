@@ -7,17 +7,17 @@ strophe.message-carbons.js is a plugin to provide simplified support for Message
 
 ### Enabling message carbons
 
-This call will send the proper IQ packet to the server to enable message carbons for this connection, and set up the callback that gets called when a carbon is recieved.
-
 `connection.messageCarbons.enable(onMessageCarbon)`
 
 `onMessageCarbon` is a function that gets called back when new message carbons are recieved.  More information about this handler is found in the section below.
 
+Sometime after connecting to a server, call this function to send the proper IQ packet to the server to enable message carbons for this connection.  Additionally, pass in a callback that gets called when a carbon is recieved.
+
 ### Disabling message carbons
 
-This call will send the proper IQ packet to the server to disable message carbons for this connection.
-
 `connection.messageCarbons.disable()`
+
+This call will send the proper IQ packet to the server to disable message carbons for this connection.  The only real use of this function is to save bandwidth for the remainder of the connection, as it's better to just not call `enable` in the first place if carbons are not desired.
 
 ### Handling carbons
 
@@ -26,8 +26,8 @@ The function passed into the `enable` function is called whenever a Message Carb
 `onMessageCarbon(carbon)`
 
 `carbon` is defined as follows:
-`
-	{
+
+`	{
 		// Direction of the carbon message
 		direction: 'sent' | 'received',
 		
@@ -50,8 +50,7 @@ The function passed into the `enable` function is called whenever a Message Carb
 
 ### Example
 
-`
-	function onConnected() {
+`	function onConnected() {
 		// ...
 		connection.messageCarbons.enable(onMessageCarbon);
 	}
