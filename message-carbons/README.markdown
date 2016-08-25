@@ -27,7 +27,7 @@ The function passed into the `enable` function is called whenever a Message Carb
 
 `carbon` is defined as follows:
 
-`	{
+	{
 		// Direction of the carbon message
 		direction: 'sent' | 'received',
 		
@@ -46,17 +46,17 @@ The function passed into the `enable` function is called whenever a Message Carb
 		// The inner message object
 		innerMessage: {}
 	}
-`
 
 ### Example
 
-`	function onConnected() {
+	function onConnected() {
 		// ...
 		connection.messageCarbons.enable(onMessageCarbon);
 	}
 	
 	function onMessageCarbon(carbon) {
-		// Status messages are also sent as carbons.  Instead of filtering them at a module level, we let you decide if you want to handle them.
+		// Status messages are also sent as carbons.  Instead of filtering them 
+		// at a module level, we let you decide if you want to handle them.
 		var body = $(carbon.innerMessage).children("body").text() || "";
 		if (!body)
 			return;
@@ -71,9 +71,8 @@ The function passed into the `enable` function is called whenever a Message Carb
 			}
 		}
 		else {
-			// On received messages, unless you have a special way to display them, you can just call your original message handler
+			// On received messages, unless you have a special way to display them, 
+			// you can just call your original message handler
 			onMessage(carbon.innerMessage);
 		}
 	}
-
-`
