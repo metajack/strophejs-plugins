@@ -86,6 +86,9 @@ connection.roster.get(function () {});
 - [Roster Versioning](/roster/)
   ([XEP 0237](http://xmpp.org/extensions/xep-0237.html))
 
+- [Message Carbons](/message-carbons/)
+  ([XEP 0280](http://xmpp.org/extensions/xep-0280.html))
+
 - [Message Archive Management](/mam/)
   ([XEP 0313](http://xmpp.org/extensions/xep-0313.html))
 
