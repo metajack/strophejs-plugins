@@ -17,8 +17,8 @@ object.
 
 For example, here the "roster" plugin is used:
 
-``var connection = new Strophe.Connection(bosh_service_url);```
-``connection.roster.get(function () {});```
+``var connection = new Strophe.Connection(bosh_service_url);``
+``connection.roster.get(function () {});``
 
 ## Available Plugins
 
