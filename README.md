@@ -17,8 +17,10 @@ object.
 
 For example, here the "roster" plugin is used:
 
-``var connection = new Strophe.Connection(bosh_service_url);```
-``connection.roster.get(function () {});```
+```
+var connection = new Strophe.Connection(bosh_service_url);
+connection.roster.get(function () {});
+```
 
 ## Available Plugins
 
@@ -83,6 +85,9 @@ For example, here the "roster" plugin is used:
 
 - [Roster Versioning](/roster/)
   ([XEP 0237](http://xmpp.org/extensions/xep-0237.html))
+
+- [Message Carbons](/message-carbons/)
+  ([XEP 0280](http://xmpp.org/extensions/xep-0280.html))
 
 - [Message Archive Management](/mam/)
   ([XEP 0313](http://xmpp.org/extensions/xep-0313.html))
