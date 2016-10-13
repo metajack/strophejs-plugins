@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.0.7 (13 October 2016)
+
+- #108 [muc]: Pass error code and name along from MUC errors
+- #110 [roster]: Add check for items
+- #111 Add a plugin for Message Carbons - XEP-0280
+- #83 [muc] Fix reference to name in XmppRoom class
+- #88 [caps] Replace odd chars with space
+- #90 [pubsub] Fix typo
+- #91 [vcard]  Overload get
+- #92: Add plugin strophe.streamManagement.js - XEP-0198
+- Add AMD-enabled versions of strophe.vcard and strophe.ping
+- Make iexdomain work with newer strophe.js versions
+
 ## 0.0.6 (26 August 2015)
 
 - Update package.json so that the plugin files are included in the NPM package.

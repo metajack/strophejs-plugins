@@ -1,7 +1,7 @@
 {
   "name": "strophejs-plugins",
   "description": "Strophe.js community plugins",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "homepage": "https://github.com/strophe/strophejs-plugins",
   "repository": {
     "type": "git",
