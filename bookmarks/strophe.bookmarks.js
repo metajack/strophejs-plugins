@@ -50,15 +50,7 @@ Strophe.addConnectionPlugin('bookmarks', {
 	 * @param {function} [error] - Callback after error
 	 */
 	add : function(roomJid, alias, nick, autojoin, success, error) {
-		var conferenceAttr = {
-			jid: roomJid,
-			autojoin: autojoin || false
-		};
-
-		if (alias) {
-			conferenceAttr.name = alias;
-		}
-
+		var self = this;
 		var stanza = $iq({
 			type : 'set'
 		}).c('pubsub', {
@@ -66,16 +58,54 @@ Strophe.addConnectionPlugin('bookmarks', {
 		}).c('publish', {
 			node : Strophe.NS.BOOKMARKS
 		}).c('item', {
-			id : roomJid
+			id : 'current'
 		}).c('storage', {
 			xmlns : Strophe.NS.BOOKMARKS
-		}).c('conference', conferenceAttr);
+		});
 
-		if (nick) {
-			stanza.c('nick').t(nick);
+		function bookmarkGroupChat() {
+			var conferenceAttr = {
+				jid : roomJid, autojoin : autojoin || false
+			};
+
+			if (alias) {
+				conferenceAttr.name = alias;
+			}
+
+			stanza.c('conference', conferenceAttr);
+			if (nick) {
+				stanza.c('nick').t(nick);
+			}
+
+			self.connection.sendIQ(stanza, success, error);
 		}
 
-		this.connection.sendIQ(stanza, success, error);
+		self.get(function(s) {
+			var confs = s.getElementsByTagName('conference');
+			for (var i = 0; i < confs.length; i++) {
+				var conferenceAttr = {
+					jid : confs[i].getAttribute('jid'), autojoin : confs[i].getAttribute('autojoin') || false
+				};
+				var roomName = confs[i].getAttribute('name');
+				if (roomName) {
+					conferenceAttr.name = roomName;
+				}
+				stanza.c('conference', conferenceAttr);
+				var nickname = confs[i].getElementsByTagName('nick');
+				if (nickname.length === 1) {
+					stanza.c('nick').t(nickname[0].innerHTML);
+				}
+				stanza.up().up();
+			}
+
+			bookmarkGroupChat();
+		}, function(s) {
+			if (s.getElementsByTagName('item-not-found').length > 0) {
+				bookmarkGroupChat();
+			} else {
+				error(s);
+			}
+		});
 	},
 	/**
 	 * Retrieve all stored bookmarks.
