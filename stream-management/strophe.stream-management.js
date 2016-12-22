@@ -11,6 +11,11 @@
  */
 Strophe.addConnectionPlugin('streamManagement', {
 
+		/**
+		 * @property {Boolean} logging: Set to true to enable logging regarding out of sync stanzas.
+		 */
+		logging: true,
+
     /**
      * @property {Boolean} autoSendCountOnEveryIncomingStanza: Set to true to send an 'a' response after every stanza.
      * @default false
@@ -25,6 +30,13 @@ Strophe.addConnectionPlugin('streamManagement', {
      * @public
      */
     requestResponseInterval: 5,
+
+		/**
+     * @property {Function} processAcknowledgedStanza: Callback for each stanza acknowledged by the server.
+		 * Provides the packet id of the stanza as a parameter.
+     * @public
+     */
+    _acknowledgedStanzaListeners: [],
 
     /**
      * @property {Pointer} _c: Strophe connection instance.
@@ -72,7 +84,7 @@ Strophe.addConnectionPlugin('streamManagement', {
      * @type {Handler}
      * @private
      */
-    _originalSend: null,
+    _originalXMLOutput: null,
 
     /**
      * @property {Handler} _requestHandler: Stores reference to handler that process count request from server.
@@ -91,13 +103,18 @@ Strophe.addConnectionPlugin('streamManagement', {
      */
     _requestResponseIntervalCount: 0,
 
+		/**
+		 * @property {Queue} _unacknowledgedStanzas: Maintains a list of packet ids for stanzas which have yet to be acknowledged.
+		 */
+		_unacknowledgedStanzas: [],
+
     init: function(conn) {
         this._c = conn;
         Strophe.addNamespace('SM', this._NS);
 
-        // Storing origina send function to use additional logic
-        this._originalSend = this._c.send;
-        this._c.send = this.send.bind(this);
+        // Storing origina xmlOutput function to use additional logic
+        this._originalXMLOutput = this._c.xmlOutput;
+        this._c.xmlOutput = this.xmlOutput.bind(this);
     },
 
     statusChanged: function (status) {
@@ -110,6 +127,8 @@ Strophe.addConnectionPlugin('streamManagement', {
 
             this._isStreamManagementEnabled = false;
             this._requestResponseIntervalCount = 0;
+
+						this._unacknowledgedStanzas = [];
 
             if (this._requestHandler) {
                 this._c.deleteHandler(this._requestHandler);
@@ -126,7 +145,13 @@ Strophe.addConnectionPlugin('streamManagement', {
 
     enable: function() {
         this._c.send($build('enable', {xmlns: this._NS, resume: false}));
+				this._c.flush();
+				this._c.pause();
     },
+
+		addAcknowledgedStanzaListener(listener) {
+			this._acknowledgedStanzaListeners.push(listener);
+		},
 
     /**
      * This method overrides the send method implemented by Strophe.Connection
@@ -135,19 +160,27 @@ Strophe.addConnectionPlugin('streamManagement', {
      * @method Send
      * @public
      */
-    send: function(elem) {
-        if (Strophe.isTagEqual(elem, 'iq') ||
-            Strophe.isTagEqual(elem, 'presence') ||
-            (elem.node && elem.node.tagName === 'message')) {
-            this._increaseSentStanzasCounter();
-        }
+    xmlOutput: function(elem) {
+				var child;
+				for (var i = 0; i < elem.children.length; i++) {
+					child = elem.children[i];
+	        if (Strophe.isTagEqual(child, 'iq') ||
+	            Strophe.isTagEqual(child, 'presence') ||
+							Strophe.isTagEqual(child, 'message')) {
+							if (this._isStreamManagementEnabled) {
+								this._unacknowledgedStanzas.push(child.getAttribute('id'));
+							}
+	            this._increaseSentStanzasCounter();
+	        }
+				}
 
-        return this._originalSend.call(this._c, elem);
+        return this._originalXMLOutput.call(this._c, elem);
     },
 
     _incomingStanzaHandler: function(elem) {
         if (Strophe.isTagEqual(elem, 'enabled') && elem.getAttribute('xmlns') === this._NS) {
             this._isStreamManagementEnabled = true;
+						this._c.resume();
         }
 
         if (Strophe.isTagEqual(elem, 'iq') || Strophe.isTagEqual(elem, 'presence') || Strophe.isTagEqual(elem, 'message'))  {
@@ -159,26 +192,45 @@ Strophe.addConnectionPlugin('streamManagement', {
         }
 
         if (Strophe.isTagEqual(elem, 'a')) {
-            this._setSentStanzasCounter(parseInt(elem.getAttribute('h')));
+            var handledCount = parseInt(elem.getAttribute('h'));
+						this._handleAcknowledgedStanzas(handledCount, this._serverProcesssedStanzasCounter);
+						this._serverProcesssedStanzasCounter = handledCount;
 
-            if (this.requestResponseInterval > 0) {
-                this._requestResponseIntervalCount = 0;
-            }
+						if (this.requestResponseInterval > 0) {
+							this._requestResponseIntervalCount = 0;
+						}
         }
 
         return true;
     },
 
-    getClientSentStanzasCounter: function() {
-        return this._clientSentStanzasCounter;
+		_handleAcknowledgedStanzas: function(reportedHandledCount, lastKnownHandledCount) {
+				var delta = reportedHandledCount - lastKnownHandledCount;
+
+				if (delta < 0) {
+					console.error('New reported stanza count lower than previous. New: ' + reportedHandledCount + ' - Previous: ' + lastKnownHandledCount);
+					// throw new Error('New reported stanza count lower than previous. New: ' + reportedHandledCount + ' - Previous: ' + lastKnownHandledCount);
+				}
+
+				if (delta > this._unacknowledgedStanzas.length) {
+					console.error('Higher reported acknowledge count than unacknowledged stanzas. Reported Acknowledge Count: ' + delta + ' - Unacknowledge Stanza Count: ' + this._unacknowledgedStanzas.length + ' - New: ' + reportedHandledCount + ' - Previous: ' + lastKnownHandledCount);
+					// throw new Error('Higher reported acknowledge count than unacknowledged stanzas. Reported Acknowledge Count: ' + delta + ' - Unacknowledge Stanza Count: ' + this._unacknowledgedStanzas.length + ' - New: ' + reportedHandledCount + ' - Previous: ' + lastKnownHandledCount);
+				}
+
+				for(var i = 0; i < delta; i++) {
+					var stanza = this._unacknowledgedStanzas.shift();
+					for (var j = 0; j < this._acknowledgedStanzaListeners.length; j++) {
+						this._acknowledgedStanzaListeners[j](stanza);
+					}
+				}
+
+				if (this.logging && this._unacknowledgedStanzas.length > 0) {
+					console.warn('Unacknowledged stanzas. Unacknowledged Count: ' + delta);
+				}
     },
 
-    _setSentStanzasCounter: function(count) {
-        this._serverProcesssedStanzasCounter = count;
-
-        if (this._clientSentStanzasCounter !== this._serverProcesssedStanzasCounter) {
-            console.error('Stream Management stanzas counter mismatch. Client value: ' + this._clientSentStanzasCounter + ' - Server value: ' + this._serverProcesssedStanzasCounter);
-        }
+    getClientSentStanzasCounter: function() {
+        return this._clientSentStanzasCounter;
     },
 
     _handleServerRequestHandler: function() {
@@ -203,7 +255,7 @@ Strophe.addConnectionPlugin('streamManagement', {
                 if (this._requestResponseIntervalCount === this.requestResponseInterval) {
                     this._requestResponseIntervalCount = 0;
                     setTimeout(function(){
-                        this._originalSend.call(this._c, $build('r', { xmlns: this._NS }));
+                        this._c.send($build('r', { xmlns: this._NS }));
                     }.bind(this), 100);
                 }
             }
