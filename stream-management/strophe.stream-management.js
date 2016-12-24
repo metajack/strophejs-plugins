@@ -236,7 +236,7 @@ Strophe.addConnectionPlugin('streamManagement', {
 		}
 
 		if (this.logging && this._unacknowledgedStanzas.length > 0) {
-			console.warn('Unacknowledged stanzas. Unacknowledged Count: ' + delta);
+			console.warn('Unacknowledged stanzas', this._unacknowledgedStanzas);
 		}
 	},
 

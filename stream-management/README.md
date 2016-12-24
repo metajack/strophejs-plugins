@@ -24,6 +24,17 @@ setting the value of requestResponseInterval. To disable this feature set to zer
     connection.streamManagement.requestResponseInterval = 5;
 ```
 
+You may also manually request an acknowledgement at any point:
+
+```
+    connection.streamManagement.requestAcknowledgement();
+```
+
+By adding a listener, you will receive the ID of each sent stanza that has been acknowledged by the server.
+
+```
+    connection.streamManagement.addAcknowledgedStanzaListener(myFunc(id))
+```
 
 To get sent stanzas stream count use:
 
@@ -37,10 +48,27 @@ To get received stream count use:
 	connection.streamManagement.getIncomingCounter();
 ```
 
+You may enable logging to have the console notify you when the server has acknowledged some but not all stanzas.
+Such instances can occur due to transmission delay and is therefore not necessarily a critical error.
+Logging is disabled by default.
+
+```
+	connection.streamManagement.logging = true;
+```
+
+# Notes
+
+Please note that between requesting the enablement of stream management and the server confirming support.
+The sending stream is paused. This means that if the server does not support XEP-198, your application
+will stop sending stanzas until to you manually resume the stream 'connection.resume()'.
+
+You may also run into issues if you use 'connection.pause()' or 'connection.resume' elsewhere in your codebase.
+
 ## Contributors
 
 - Tom Evans
 - Javier Vega
+- Emmet McPoland
 
 
 ##TODO
