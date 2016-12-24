@@ -254,9 +254,7 @@ Strophe.addConnectionPlugin('streamManagement', {
 
                 if (this._requestResponseIntervalCount === this.requestResponseInterval) {
                     this._requestResponseIntervalCount = 0;
-                    setTimeout(function(){
-                        this._c.send($build('r', { xmlns: this._NS }));
-                    }.bind(this), 100);
+										this._c.send($build('r', { xmlns: this._NS }));
                 }
             }
         }
