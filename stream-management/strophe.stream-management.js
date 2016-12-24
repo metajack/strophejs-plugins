@@ -213,13 +213,11 @@ Strophe.addConnectionPlugin('streamManagement', {
 				var delta = reportedHandledCount - lastKnownHandledCount;
 
 				if (delta < 0) {
-					console.error('New reported stanza count lower than previous. New: ' + reportedHandledCount + ' - Previous: ' + lastKnownHandledCount);
-					// throw new Error('New reported stanza count lower than previous. New: ' + reportedHandledCount + ' - Previous: ' + lastKnownHandledCount);
+					this._throwError('New reported stanza count lower than previous. New: ' + reportedHandledCount + ' - Previous: ' + lastKnownHandledCount);
 				}
 
 				if (delta > this._unacknowledgedStanzas.length) {
-					console.error('Higher reported acknowledge count than unacknowledged stanzas. Reported Acknowledge Count: ' + delta + ' - Unacknowledge Stanza Count: ' + this._unacknowledgedStanzas.length + ' - New: ' + reportedHandledCount + ' - Previous: ' + lastKnownHandledCount);
-					// throw new Error('Higher reported acknowledge count than unacknowledged stanzas. Reported Acknowledge Count: ' + delta + ' - Unacknowledge Stanza Count: ' + this._unacknowledgedStanzas.length + ' - New: ' + reportedHandledCount + ' - Previous: ' + lastKnownHandledCount);
+					this._throwError('Higher reported acknowledge count than unacknowledged stanzas. Reported Acknowledge Count: ' + delta + ' - Unacknowledge Stanza Count: ' + this._unacknowledgedStanzas.length + ' - New: ' + reportedHandledCount + ' - Previous: ' + lastKnownHandledCount);
 				}
 
 				for(var i = 0; i < delta; i++) {
@@ -268,6 +266,11 @@ Strophe.addConnectionPlugin('streamManagement', {
         if (this._isStreamManagementEnabled) {
             this._clientProcessedStanzasCounter++;
         }
-    }
+    },
+
+		_throwError(msg) {
+			console.error(msg);
+			throw new Error(msg);
+		}
 
 });
