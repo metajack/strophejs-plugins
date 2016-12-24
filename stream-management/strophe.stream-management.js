@@ -123,15 +123,19 @@ Strophe.addConnectionPlugin('streamManagement', {
 		this._c.send($build('r', { xmlns: this._NS }));
 	},
 
-	getClientSentStanzasCounter: function() {
+	getOutgoingCounter: function() {
 		return this._clientSentStanzasCounter;
+	},
+
+	getIncomingCounter: function() {
+		return this._clientProcessedStanzasCounter;
 	},
 
 	init: function(conn) {
 		this._c = conn;
 		Strophe.addNamespace('SM', this._NS);
 
-		// Storing origina xmlOutput function to use additional logic
+		// Storing original xmlOutput function to use additional logic
 		this._originalXMLOutput = this._c.xmlOutput;
 		this._c.xmlOutput = this.xmlOutput.bind(this);
 	},
