@@ -4,10 +4,10 @@ Strophe.stream-management.js is a plugin that implements stream management on XM
 
 ## Usage
 
-After you connected sucessfully to the XMPP server you can enable stream management:
+After you connected successfully to the XMPP server you can enable stream management:
 
 ```
-    connection.streamManagement.enable();
+	connection.streamManagement.enable();
 ```
 
 
@@ -21,19 +21,27 @@ By default the client will request a response every 5 stanzas sent. You can chan
 setting the value of requestResponseInterval. To disable this feature set to zero.
 
 ```
-    connection.streamManagement.requestResponseInterval = 5;
+	connection.streamManagement.requestResponseInterval = 5;
 ```
 
 You may also manually request an acknowledgement at any point:
 
 ```
-    connection.streamManagement.requestAcknowledgement();
+	connection.streamManagement.requestAcknowledgement();
 ```
 
 By adding a listener, you will receive the ID of each sent stanza that has been acknowledged by the server.
+There is currently no way remove a listener.
 
 ```
-    connection.streamManagement.addAcknowledgedStanzaListener(myFunc(id))
+	connection.streamManagement.addAcknowledgedStanzaListener(myFunc(id));
+```
+
+The default behavior is to return only the stanza ID.
+You can request that the whole stanza is instead returned.
+
+```
+	connection.streamManagement.returnWholeStanza = true;
 ```
 
 To get sent stanzas stream count use:
