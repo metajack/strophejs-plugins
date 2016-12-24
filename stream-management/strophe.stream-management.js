@@ -32,13 +32,6 @@ Strophe.addConnectionPlugin('streamManagement', {
 	requestResponseInterval: 5,
 
 	/**
-	* @property {Function} processAcknowledgedStanza: Callback for each stanza acknowledged by the server.
-	* Provides the packet id of the stanza as a parameter.
-	* @public
-	*/
-	_acknowledgedStanzaListeners: [],
-
-	/**
 	* @property {Pointer} _c: Strophe connection instance.
 	* @private
 	*/
@@ -79,8 +72,8 @@ Strophe.addConnectionPlugin('streamManagement', {
 	_clientSentStanzasCounter: null,
 
 	/**
-	* Stores a reference to Strophe connection send function to wrap counting functionality.
-	* @method _originalSend
+	* Stores a reference to Strophe connection xmlOutput function to wrap counting functionality.
+	* @method _originalXMLOutput
 	* @type {Handler}
 	* @private
 	*/
@@ -93,7 +86,7 @@ Strophe.addConnectionPlugin('streamManagement', {
 	_requestHandler: null,
 
 	/**
-	* @property {Handler} _incomingHanlder: Stores reference to hanlder that processes incoming stanzas count.
+	* @property {Handler} _incomingHandler: Stores reference to handler that processes incoming stanzas count.
 	* @private
 	*/
 	_incomingHandler: null,
@@ -107,6 +100,32 @@ Strophe.addConnectionPlugin('streamManagement', {
 	* @property {Queue} _unacknowledgedStanzas: Maintains a list of packet ids for stanzas which have yet to be acknowledged.
 	*/
 	_unacknowledgedStanzas: [],
+
+	/**
+	* @property {Array} _acknowledgedStanzaListeners: Stores callbacks for each stanza acknowledged by the server.
+	* Provides the packet id of the stanza as a parameter.
+	* @private
+	*/
+	_acknowledgedStanzaListeners: [],
+
+	addAcknowledgedStanzaListener(listener) {
+		this._acknowledgedStanzaListeners.push(listener);
+	},
+
+	enable: function() {
+		this._c.send($build('enable', {xmlns: this._NS, resume: false}));
+		this._c.flush();
+		this._c.pause();
+	},
+
+	requestAcknowledgement: function() {
+		this._requestResponseIntervalCount = 0;
+		this._c.send($build('r', { xmlns: this._NS }));
+	},
+
+	getClientSentStanzasCounter: function() {
+		return this._clientSentStanzasCounter;
+	},
 
 	init: function(conn) {
 		this._c = conn;
@@ -141,21 +160,6 @@ Strophe.addConnectionPlugin('streamManagement', {
 			this._requestHandler = this._c.addHandler(this._handleServerRequestHandler.bind(this), this._NS, 'r');
 			this._incomingHandler = this._c.addHandler(this._incomingStanzaHandler.bind(this));
 		}
-	},
-
-	requestAcknowledgement: function() {
-		this._requestResponseIntervalCount = 0;
-		this._c.send($build('r', { xmlns: this._NS }));
-	},
-
-	enable: function() {
-		this._c.send($build('enable', {xmlns: this._NS, resume: false}));
-		this._c.flush();
-		this._c.pause();
-	},
-
-	addAcknowledgedStanzaListener(listener) {
-		this._acknowledgedStanzaListeners.push(listener);
 	},
 
 	/**
@@ -230,10 +234,6 @@ Strophe.addConnectionPlugin('streamManagement', {
 		if (this.logging && this._unacknowledgedStanzas.length > 0) {
 			console.warn('Unacknowledged stanzas. Unacknowledged Count: ' + delta);
 		}
-	},
-
-	getClientSentStanzasCounter: function() {
-		return this._clientSentStanzasCounter;
 	},
 
 	_handleServerRequestHandler: function() {
