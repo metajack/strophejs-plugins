@@ -143,6 +143,11 @@ Strophe.addConnectionPlugin('streamManagement', {
         }
     },
 
+		requestAcknowledgement: function() {
+				this._requestResponseIntervalCount = 0;
+				this._c.send($build('r', { xmlns: this._NS }));
+    },
+
     enable: function() {
         this._c.send($build('enable', {xmlns: this._NS, resume: false}));
 				this._c.flush();
@@ -253,8 +258,7 @@ Strophe.addConnectionPlugin('streamManagement', {
                 this._requestResponseIntervalCount++;
 
                 if (this._requestResponseIntervalCount === this.requestResponseInterval) {
-                    this._requestResponseIntervalCount = 0;
-										this._c.send($build('r', { xmlns: this._NS }));
+                    this.requestAcknowledgement();
                 }
             }
         }
