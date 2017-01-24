@@ -39,7 +39,10 @@ Strophe.addConnectionPlugin('bookmarks', {
 		return true;
 	},
 	/**
-	 * Add bookmark to storage.
+	 * Add bookmark to storage or update it.
+	 *
+	 * The specified room is bookmarked into the remote bookmark storage. If the room is
+	 * already bookmarked, then it is updated with the specified arguments.
 	 *
 	 * @param {string} roomJid - The JabberID of the chat roomJid
 	 * @param {string} [alias] - A friendly name for the bookmark
@@ -63,18 +66,20 @@ Strophe.addConnectionPlugin('bookmarks', {
 			xmlns : Strophe.NS.BOOKMARKS
 		});
 
-		function bookmarkGroupChat() {
-			var conferenceAttr = {
-				jid : roomJid, autojoin : autojoin || false
-			};
+		function bookmarkGroupChat(bookmarkit) {
+			if (bookmarkit) {
+				var conferenceAttr = {
+					jid : roomJid, autojoin : autojoin || false
+				};
 
-			if (alias) {
-				conferenceAttr.name = alias;
-			}
+				if (alias) {
+					conferenceAttr.name = alias;
+				}
 
-			stanza.c('conference', conferenceAttr);
-			if (nick) {
-				stanza.c('nick').t(nick);
+				stanza.c('conference', conferenceAttr);
+				if (nick) {
+					stanza.c('nick').t(nick);
+				}
 			}
 
 			self.connection.sendIQ(stanza, success, error);
@@ -82,26 +87,46 @@ Strophe.addConnectionPlugin('bookmarks', {
 
 		self.get(function(s) {
 			var confs = s.getElementsByTagName('conference');
+			var bookmarked = false;
 			for (var i = 0; i < confs.length; i++) {
 				var conferenceAttr = {
 					jid : confs[i].getAttribute('jid'), autojoin : confs[i].getAttribute('autojoin') || false
 				};
 				var roomName = confs[i].getAttribute('name');
-				if (roomName) {
-					conferenceAttr.name = roomName;
-				}
-				stanza.c('conference', conferenceAttr);
 				var nickname = confs[i].getElementsByTagName('nick');
-				if (nickname.length === 1) {
-					stanza.c('nick').t(nickname[0].innerHTML);
+				
+				if (conferenceAttr.jid === roomJid) {
+					// the room is already bookmarked, then update it
+					bookmarked = true;
+					
+					conferenceAttr.autojoin = autojoin || false;
+					
+					if (alias) {
+						conferenceAttr.name = alias;
+					}
+					stanza.c('conference', conferenceAttr);
+					
+					if (nick) {
+						stanza.c('nick').t(nick).up();
+					}
+				} else {
+					if (roomName) {
+						conferenceAttr.name = roomName;
+					}
+					stanza.c('conference', conferenceAttr);
+				
+					if (nickname.length === 1) {
+						stanza.c('nick').t(nickname[0].innerHTML).up();
+					}
 				}
-				stanza.up().up();
+				
+				stanza.up();
 			}
-
-			bookmarkGroupChat();
+			
+			bookmarkGroupChat(!bookmarked);
 		}, function(s) {
 			if (s.getElementsByTagName('item-not-found').length > 0) {
-				bookmarkGroupChat();
+				bookmarkGroupChat(true);
 			} else {
 				error(s);
 			}
@@ -123,24 +148,54 @@ Strophe.addConnectionPlugin('bookmarks', {
 		}), success, error);
 	},
 	/**
-	 * Delete the given entry for roomJid.
+	 * Delete the bookmark with the given roomJid in the bookmark storage.
+	 *
+	 * The whole remote bookmark storage is just updated by removing the 
+	 * bookmark corresponding to the specified room. 
 	 *
 	 * @param {string} roomJid - The JabberID of the chat roomJid you want to remove
 	 * @param {function} [success] - Callback after success
 	 * @param {function} [error] - Callback after error
-	 * @param {boolean} [notify=false] - True: notify all subscribers
 	 */
-	delete: function(roomJid, success, error, notify) {
-		this.connection.sendIQ($iq({
+	delete: function(roomJid, success, error) {
+		var self = this;
+		var stanza = $iq({
 			type : 'set'
 		}).c('pubsub', {
 			xmlns : Strophe.NS.PUBSUB
-		}).c('retract', {
-			node : Strophe.NS.BOOKMARKS,
-			notify: notify || false
+		}).c('publish', {
+			node : Strophe.NS.BOOKMARKS
 		}).c('item', {
-			id: roomJid
-		}), success, error);
+			id : 'current'
+		}).c('storage', {
+			xmlns : Strophe.NS.BOOKMARKS
+		});
+
+		self.get(function(s) {
+			var confs = s.getElementsByTagName('conference');
+			for (var i = 0; i < confs.length; i++) {
+				var conferenceAttr = {
+					jid : confs[i].getAttribute('jid'),
+					autojoin : confs[i].getAttribute('autojoin') || false
+				};
+				if (conferenceAttr.jid === roomJid) {
+					continue;
+				}
+				var roomName = confs[i].getAttribute('name');
+				if (roomName) {
+					conferenceAttr.name = roomName;
+				}
+				stanza.c('conference', conferenceAttr);
+				var nickname = confs[i].getElementsByTagName('nick');
+				if (nickname.length === 1) {
+					stanza.c('nick').t(nickname[0].innerHTML).up();
+				}
+				stanza.up();
+			}
+			self.connection.sendIQ(stanza, success, error);
+		}, function(s) {
+			error(s);
+		});
 	}
 
 });
