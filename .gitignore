@@ -1,7 +1,0 @@
-*.min.js
-bower_components/
-doc/
-ndproj/
-node_modules
-*.swp
-npm-debug.log

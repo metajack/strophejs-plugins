@@ -1,11 +1,16 @@
 # Strophe.js Plugins
 
+**Please Note:**
+*This repository used to contain all the plugins. They have since been split
+out into their own repositories so that they can be managed and released
+independently. For more info, see ticket [#123](https://github.com/strophe/strophejs-plugins/issues/123)*
+
 [Strophe.js](http://code.stanziq.com/strophe) is a JavaScript library for
 speaking XMPP in web applications. It supports extension via a plugin system.
 
-This is a collection of Strophe.js plugins created and maintained by the
+Below is listed a collection Strophe.js plugins created and maintained by the
 community. The homepage for this collection is
-https://github.com/strophe/strophejs-plugins .
+https://github.com/strophe/strophejs-plugins
 
 ## How to use
 
@@ -26,107 +31,105 @@ connection.roster.get(function () {});
 
 ### XMPP Extensions
 
-- [Data Forms](/dataforms/)
+- [Data Forms](https://github.com/strophe/strophejs-plugin-dataforms)
   ([XEP 0004](http://xmpp.org/extensions/xep-0004.html))
 
-- [Jabber-RPC](/rpc/)
+- [Jabber-RPC](https://github.com/strophe/strophejs-plugin-rpc)
   ([XEP 0009](http://xmpp.org/extensions/xep-0009.html))
 
-- [Service Discovery](/disco/)
+- [Service Discovery](https://github.com/strophe/strophejs-plugin-disco)
   ([XEP 0030](http://xmpp.org/extensions/xep-0030.html))
 
-- [Multi-User Chat](/muc/)
+- [Multi-User Chat](https://github.com/strophe/strophejs-plugin-muc)
   ([XEP 0045](http://xmpp.org/extensions/xep-0045.html))
 
-- [Bookmarks](/bookmarks/)
+- [Bookmarks](https://github.com/strophe/strophejs-plugin-bookmarks)
   ([XEP 0048](http://xmpp.org/extensions/xep-0048.html))
 
-- [Private XML Storage](/private/)
+- [Private XML Storage](https://github.com/strophe/strophejs-plugin-private)
   ([XEP 0049](http://xmpp.org/extensions/xep-0049.html))
 
-- [Ad-Hoc Commands](/cmds/)
+- [Ad-Hoc Commands](https://github.com/strophe/strophejs-plugin-cmds)
   ([XEP 0050](http://xmpp.org/extensions/xep-0050.html))
 
-- [vcard-temp](/vcard/)
+- [vcard-temp](https://github.com/strophe/strophejs-plugin-vcard)
   ([XEP 0054](http://xmpp.org/extensions/xep-0054.html))
 
-- [Result Set Management](/rsm/)
+- [Result Set Management](https://github.com/strophe/strophejs-plugin-rsm)
   ([XEP 0059](http://xmpp.org/extensions/xep-0059.html))
 
-- [Publish-Subscribe](/pubsub/)
+- [Publish-Subscribe](https://github.com/strophe/strophejs-plugin-pubsub)
   ([XEP 0060](http://xmpp.org/extensions/xep-0060.html))
 
-- [Out of Band Data](/outofband/)
+- [Out of Band Data](https://github.com/strophe/strophejs-plugin-outofband)
   ([XEP 0066](http://xmpp.org/extensions/xep-0066.html))
 
-- [Jabber Object Access Protocol](/joap/)
+- [Jabber Object Access Protocol](https://github.com/strophe/strophejs-plugin-joap)
   ([XEP 0075](http://xmpp.org/extensions/xep-0075.html))
 
-- [In-Band Registration](/register/)
+- [In-Band Registration](https://github.com/strophe/strophejs-plugin-register)
   ([XEP 0077](http://xmpp.org/extensions/xep-0077.html))
 
-- [Chat State Notifications](/chatstates/)
+- [Chat State Notifications](https://github.com/strophe/strophejs-plugin-chatstates)
   ([XEP 0085](http://xmpp.org/extensions/xep-0085.html))
 
-- [Entity Capabilities](/caps/)
+- [Entity Capabilities](https://github.com/strophe/strophejs-plugin-caps)
   ([XEP 0115](http://xmpp.org/extensions/xep-0115.html))
 
-- [Message Archiving](/archive/)
+- [Message Archiving](https://github.com/strophe/strophejs-plugin-archive)
   ([XEP 0136](http://xmpp.org/extensions/xep-0136.html))
 
-- [Personal Eventing Protocol](/pep/)
+- [Personal Eventing Protocol](https://github.com/strophe/strophejs-plugin-pep)
   ([XEP 0163](http://xmpp.org/extensions/xep-0163.html))
 
-- [Message Delivery Receipts](/receipts/)
+- [Message Delivery Receipts](https://github.com/strophe/strophejs-plugin-receipts)
   ([XEP 0184](http://xmpp.org/extensions/xep-0184.html))
 
-- [XMPP Ping](/ping/)
+- [XMPP Ping](https://github.com/strophe/strophejs-plugin-ping)
   ([XEP 0199](http://xmpp.org/extensions/xep-0199.html))
 
-- [Roster Versioning](/roster/)
+- [Roster Versioning](https://github.com/strophe/strophejs-plugin-roster)
   ([XEP 0237](http://xmpp.org/extensions/xep-0237.html))
 
-- [Message Carbons](/message-carbons/)
+- [Message Carbons](https://github.com/strophe/strophejs-plugin-message-carbons)
   ([XEP 0280](http://xmpp.org/extensions/xep-0280.html))
 
-- [Message Archive Management](/mam/)
+- [Message Archive Management](https://github.com/strophe/strophejs-plugin-mam)
   ([XEP 0313](http://xmpp.org/extensions/xep-0313.html))
 
-- [In-Band Bytestreams](/ibb/)
+- [In-Band Bytestreams](https://github.com/strophe/strophejs-plugin-ibb)
   ([XEP 0047](http://xmpp.org/extensions/xep-0047.html))
 
-- [SI File Transfer](/si-filetransfer/)
+- [SI File Transfer](https://github.com/strophe/strophejs-plugin-si-filetransfer)
   ([XEP 0096](http://xmpp.org/extensions/xep-0096.html))
 
-- [Stream Management](/stream-management/)
+- [Stream Management](https://github.com/strophe/strophejs-plugin-stream-management)
   ([XEP 0198](http://xmpp.org/extensions/xep-0198.html))
 
 ### XMPP-IoT
 
 extensions used in Internet of Things (IoT)
 
-- [Internet of Things - Sensor Data](/sensordata/) - Reading values from devices
+- [Internet of Things - Sensor Data](https://github.com/strophe/strophejs-plugin-sensordata) - Reading values from devices
   ([XEP 0323](http://xmpp.org/extensions/xep-0325.html))
 
-- [Internet of Things - Control](/control/) - Writing values to devices
+- [Internet of Things - Control](https://github.com/strophe/strophejs-plugin-control) - Writing values to devices
   ([XEP 0325](http://xmpp.org/extensions/xep-0325.html))
 
 ### Other Plugins
 
-- [Serverdate](/serverdate/) - Syncs a local clock
+- [Serverdate](https://github.com/strophe/strophejs-plugin-serverdate) - Syncs a local clock
   to the servers
 
-- [epic](/epic/)
+- [epic](https://github.com/strophe/strophejs-plugin-epic)
 
-- [iexdomain](/iexdomain/) - Support for IE
+- [iexdomain](https://github.com/strophe/strophejs-plugin-iexdomain) - Support for IE
   XDomainRequest
 
 ## Contribute
 
-If you would like to make your plugin available here, simply fork this
-repository, commit your plugin and issue a pull request.
-The same instructions also work for any changes you wish to make to existing
-plugins.
+If you would like to make your own plugin available here, please create a
+ticket in the issue tracker and someone will create a new repository for you.
 
 ## Literature
 
