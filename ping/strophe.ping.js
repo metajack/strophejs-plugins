@@ -22,14 +22,14 @@ Strophe.addConnectionPlugin('ping', {
 	},
 
 	/**
-	 * Function: ping
-	 *
-	 * Parameters:
-	 * (String) to - The JID you want to ping
-	 * (Function) success - Callback function on success
-	 * (Function) error - Callback function on error
-	 * (Integer) timeout - Timeout in milliseconds
-	 */
+	* Function: ping
+	*
+	* Parameters:
+	* @param {string} to - The JID you want to ping
+	* @param {function} success - Callback function on success
+	* @param {function} error - Callback function on error
+	* @param {number} timeout - Timeout in milliseconds
+	*/
 	ping: function(jid, success, error, timeout)
 	{
 		var id = this._c.getUniqueId('ping');
@@ -39,11 +39,11 @@ Strophe.addConnectionPlugin('ping', {
 	},
 
 	/**
-	 * Function: pong
-	 *
-	 * Parameters:
-	 * (Object) ping - The ping stanza from the server 
-	 */
+	* Function: pong
+	*
+	* Parameters:
+	* @param {Object} ping - The ping stanza from the server 
+	*/
 	pong: function(ping)
 	{
 		var from = ping.getAttribute('from');
@@ -53,14 +53,13 @@ Strophe.addConnectionPlugin('ping', {
 	},
 
 	/**
-	 * Function: addPingHandler
-	 *
-	 * Parameters:
-	 * (Function) handler - Ping handler
-	 *
-	 * Returns:
-	 * A reference to the handler that can be used to remove it.
-	 */
+	* Function: addPingHandler
+	*
+	* Parameters:
+	* @param {Function} handler - Ping handler
+	*
+	* @returns A reference to the handler that can be used to remove it.
+	*/
 	addPingHandler: function(handler)
 	{
 		return this._c.addHandler(handler, Strophe.NS.PING, "iq", "get");
