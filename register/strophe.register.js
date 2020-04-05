@@ -103,7 +103,7 @@ Strophe.addConnectionPlugin('register', {
         that.hold = hold || that.hold;
 
         // build the body tag
-        var body = that._buildBody().attrs({
+        var body = that._proto._buildBody().attrs({
             to: that.domain,
             "xml:lang": "en",
             wait: that.wait,
@@ -116,12 +116,12 @@ Strophe.addConnectionPlugin('register', {
 
         that._changeConnectStatus(Strophe.Status.CONNECTING, null);
 
-        that._requests.push(
+        that._proto._requests.push(
             new Strophe.Request(body.tree(),
-                                that._onRequestStateChange.bind(
-                                    that, this._register_cb.bind(this)),
+                                that._proto._onRequestStateChange.bind(
+                                    that._proto, this._register_cb.bind(this)),
                                 body.tree().getAttribute("rid")));
-        that._throttledRequestHandler();
+        that._proto._throttledRequestHandler();
     },
 
     /** PrivateFunction: _register_cb
@@ -169,8 +169,8 @@ Strophe.addConnectionPlugin('register', {
 
         // check to make sure we don't overwrite these if _connect_cb is
         // called multiple times in the case of missing stream:features
-        if (!that.sid) {
-            that.sid = bodyWrap.getAttribute("sid");
+        if (!that._proto.sid) {
+            that._proto.sid = bodyWrap.getAttribute("sid");
         }
         if (!that.stream_id) {
             that.stream_id = bodyWrap.getAttribute("authid");
@@ -190,13 +190,13 @@ Strophe.addConnectionPlugin('register', {
         if (register.length === 0 && mechanisms.length === 0) {
             // we didn't get stream:features yet, so we need wait for it
             // by sending a blank poll request
-            var body = that._buildBody();
-            that._requests.push(
+            var body = that._proto._buildBody();
+            that._proto._requests.push(
                 new Strophe.Request(body.tree(),
-                                    that._onRequestStateChange.bind(
-                                        that, this._register_cb.bind(this)),
+                                    that._proto._onRequestStateChange.bind(
+                                        that._proto, this._register_cb.bind(this)),
                                     body.tree().getAttribute("rid")));
-            that._throttledRequestHandler();
+            that._proto._throttledRequestHandler();
             return;
         }
 
@@ -209,6 +209,8 @@ Strophe.addConnectionPlugin('register', {
                 this.authentication.sasl_plain = true;
             } else if (mech == 'ANONYMOUS') {
                 this.authentication.sasl_anonymous = true;
+            } else if (mech == 'SCRAM-SHA-1') {
+                this.authentication.sasl_scram_sha_1 = true;
             }
         }
 
@@ -332,6 +334,7 @@ Strophe.addConnectionPlugin('register', {
         if (this.registered) {
             that.jid  = this.fields.username + "@" + that.domain;
             that.pass = this.fields.password;
+            error = null;
         }
 
         if (error === null) {
@@ -354,8 +357,17 @@ Strophe.addConnectionPlugin('register', {
      *  connection.register.registered is true under the circumstances that an
      *  already existing account with the appendant password was supplied.
      */
-    authenticate: function () {
+    authenticate: function (callback) {
         var auth_str, hashed_auth_str, that = this._connection;
+        /** Variable: authzid
+         *  Authorization identity.
+         */
+        that.authzid = Strophe.getBareJidFromJid(that.jid);
+
+        /** Variable: authcid
+         *  Authentication identity (User name).
+         */
+        that.authcid = Strophe.getNodeFromJid(that.jid);
 
         if (Strophe.getNodeFromJid(that.jid) === null &&
             this.authentication.sasl_anonymous) {
@@ -377,10 +389,28 @@ Strophe.addConnectionPlugin('register', {
             that._changeConnectStatus(Strophe.Status.CONNFAIL,
                                       'x-strophe-bad-non-anon-jid');
             that.disconnect();
+        } else if(this.authentication.sasl_scram_sha_1){
+          that._changeConnectStatus(Strophe.Status.AUTHENTICATING, null);
+            that._sasl_success_handler = that._addSysHandler(
+                that._sasl_success_cb.bind(that), null, "success", null, null);
+            that._sasl_challenge_handler = that._addSysHandler(
+                that._sasl_challenge_cb.bind(that), null, "challenge", null, null);
+            that._sasl_failure_handler = that._addSysHandler(
+                that._sasl_failure_cb.bind(that), null, "failure", null, null);
+            this._connection._sasl_mechanism = new Strophe.SASLSHA1();
+            this._connection._sasl_mechanism.onStart(this._connection);
+
+            var request_auth_exchange = $build("auth", {
+                xmlns: Strophe.NS.SASL,
+                mechanism: "SCRAM-SHA-1"
+            });
+            var response = this._connection._sasl_mechanism.onChallenge(this._connection, null);
+            request_auth_exchange.t(btoa(response));
+            that.send(request_auth_exchange.tree());
         } else if (this.authentication.sasl_digest_md5) {
             that._changeConnectStatus(Strophe.Status.AUTHENTICATING, null);
             that._sasl_challenge_handler = that._addSysHandler(
-                that._sasl_challenge1_cb.bind(that), null,
+                that._sasl_challenge_cb.bind(that), null,
                 "challenge", null, null);
             that._sasl_failure_handler = that._addSysHandler(
                 that._sasl_failure_cb.bind(that), null,
