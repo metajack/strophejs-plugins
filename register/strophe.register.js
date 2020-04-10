@@ -332,7 +332,7 @@ Strophe.addConnectionPlugin('register', {
             this.registered = true;
 
         if (this.registered) {
-            that.jid  = this.fields.username + "@" + that.domain;
+            that.jid  = this.fields.username + "@" + that.domain + '/' + that.stream_id;
             that.pass = this.fields.password;
             error = null;
         }
@@ -357,7 +357,7 @@ Strophe.addConnectionPlugin('register', {
      *  connection.register.registered is true under the circumstances that an
      *  already existing account with the appendant password was supplied.
      */
-    authenticate: function (callback) {
+    authenticate: function () {
         var auth_str, hashed_auth_str, that = this._connection;
         /** Variable: authzid
          *  Authorization identity.
